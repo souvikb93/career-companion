@@ -61,9 +61,23 @@ export default function CoverLetterPage() {
   const [hoverPreview, setHoverPreview] = useState(false);
   const [savedOpen, setSavedOpen] = useState(false);
   const [saveOpen, setSaveOpen] = useState(false);
-  const { list: savedLetters, save: saveLetter, remove: removeLetter } = useSavedCVs<LetterDoc>("saved_letters_v1", () => [
-    { id: "demo-letter-1", name: "Sample Cover Letter", savedAt: new Date().toISOString(), data: { letter: DEFAULT_LETTER } },
-  ]);
+  const { list: savedLetters, save: saveLetter, remove: removeLetter } = useSavedCVs<LetterDoc>("saved_letters_v2", () => {
+    const daysAgo = (n: number) => new Date(Date.now() - n * 86400000).toISOString();
+    const seeds: Array<{ company: string; role: string; desc: string; days: number }> = [
+      { company: "Zalando", role: "Senior Product Designer", desc: "Shape the future of European fashion commerce across web and mobile", days: 2 },
+      { company: "Delivery Hero", role: "Product Engineer", desc: "Build delightful ordering experiences for millions of customers", days: 4 },
+      { company: "N26", role: "Product Designer", desc: "Design money tools that feel calm, clear, and trustworthy", days: 6 },
+      { company: "FlixBus", role: "Brand Designer", desc: "Bring the FlixBus brand to life across every passenger touchpoint", days: 8 },
+      { company: "Bolt", role: "Frontend Engineer", desc: "Ship polished, accessible frontends for our rider and driver apps", days: 9 },
+      { company: "GetYourGuide", role: "Senior Engineer", desc: "Help travellers discover and book unforgettable experiences", days: 11 },
+    ];
+    return seeds.map((s, i) => ({
+      id: `demo-letter-${i + 1}`,
+      name: `Cover Letter — ${s.company}, ${s.role}`,
+      savedAt: daysAgo(s.days),
+      data: { letter: letterFor(s.company, s.role, s.desc), jobLabel: `${s.company} — ${s.role}` },
+    }));
+  });
   const scrollRef = useRef<HTMLDivElement>(null);
   // Override storage key indirectly: not needed — saved-cvs is shared. We'll namespace via name prefix.
 
