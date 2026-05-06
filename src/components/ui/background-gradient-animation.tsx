@@ -17,13 +17,13 @@ interface Props {
 }
 
 export function BackgroundGradientAnimation({
-  firstColor = "255, 90, 47",
+  firstColor = "255, 120, 80",
   secondColor = "255, 200, 130",
-  thirdColor = "180, 200, 255",
-  fourthColor = "240, 220, 255",
-  fifthColor = "255, 240, 200",
-  size = "80%",
-  blendingValue = "soft-light",
+  thirdColor = "150, 180, 255",
+  fourthColor = "230, 200, 255",
+  fifthColor = "255, 230, 180",
+  size = "70%",
+  blendingValue = "normal",
   className,
   containerClassName,
   interactive = false,
