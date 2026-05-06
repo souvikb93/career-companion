@@ -1,6 +1,16 @@
 import { Job, JobStatus, STATUS_ORDER, STATUS_LABEL } from "@/lib/jobs-data";
-import { StatusBadge } from "./StatusBadge";
+import { useJobs } from "@/lib/jobs-store";
+import { useNavigate } from "react-router-dom";
 import { X, ExternalLink, FileText, Mail } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+const STATUS_DOT: Record<JobStatus, string> = {
+  saved: "bg-ink-muted",
+  applied: "bg-ink-2",
+  interviewing: "bg-brand",
+  offer: "bg-success",
+  rejected: "bg-chip-grey-fg",
+};
 
 interface Props {
   job: Job | null;
@@ -9,13 +19,19 @@ interface Props {
 }
 
 export function JobDetailPanel({ job, onClose, onUpdate }: Props) {
+  const navigate = useNavigate();
+  const { setTargetJobId } = useJobs();
   if (!job) return null;
+
+  const goTo = (path: "/cv" | "/cover-letter") => {
+    setTargetJobId(job.id);
+    onClose();
+    navigate(path);
+  };
+
   return (
     <>
-      <div
-        className="fixed inset-0 z-40 bg-ink/20 animate-panel-in"
-        onClick={onClose}
-      />
+      <div className="fixed inset-0 z-40 bg-ink/20 animate-panel-in" onClick={onClose} />
       <aside className="fixed top-0 right-0 z-50 h-screen w-full max-w-[440px] bg-popover border-l border-line overflow-y-auto animate-slide-in-right">
         <div className="p-8">
           <div className="flex items-start justify-between gap-4 mb-6">
@@ -27,25 +43,28 @@ export function JobDetailPanel({ job, onClose, onUpdate }: Props) {
               type="button"
               onClick={onClose}
               aria-label="Close"
-              className="h-9 w-9 rounded-full grid place-items-center border border-line text-ink hover:bg-surface-2 transition-colors duration-180"
+              className="h-9 w-9 rounded-full grid place-items-center border border-line text-ink hover:bg-surface-2 transition-colors duration-200"
             >
               <X className="h-4 w-4" />
             </button>
           </div>
 
-          <div className="mb-6">
-            <StatusBadge status={job.status} />
+          <div className="mb-6 inline-flex items-center gap-2 text-[13px] text-ink">
+            <span className={cn("h-2 w-2 rounded-full", STATUS_DOT[job.status])} />
+            {STATUS_LABEL[job.status]}
           </div>
 
           {job.link && (
-            <a
-              href={job.link}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1.5 text-[13px] text-brand font-semibold mb-6 hover:opacity-80 transition-opacity duration-180"
-            >
-              View original posting <ExternalLink className="h-3.5 w-3.5" />
-            </a>
+            <div>
+              <a
+                href={job.link}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 text-[13px] text-brand font-semibold mb-6 hover:opacity-80 transition-opacity duration-200"
+              >
+                View original posting <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+            </div>
           )}
 
           <div className="card-surface p-5 mb-5">
@@ -94,13 +113,15 @@ export function JobDetailPanel({ job, onClose, onUpdate }: Props) {
           <div className="mt-8 flex gap-3">
             <button
               type="button"
-              className="flex-1 h-12 rounded-full border border-ink-2 text-ink text-[12px] font-bold uppercase tracking-[0.08em] transition-colors duration-180 hover:bg-surface-2 inline-flex items-center justify-center gap-2"
+              onClick={() => goTo("/cv")}
+              className="flex-1 h-12 rounded-full border border-ink-2 text-ink text-[12px] font-bold uppercase tracking-[0.08em] transition-colors duration-200 hover:bg-surface-2 inline-flex items-center justify-center gap-2"
             >
               <FileText className="h-4 w-4" /> Custom CV
             </button>
             <button
               type="button"
-              className="flex-1 h-12 rounded-full bg-brand text-primary-foreground text-[12px] font-bold uppercase tracking-[0.08em] transition-opacity duration-180 hover:opacity-90 inline-flex items-center justify-center gap-2"
+              onClick={() => goTo("/cover-letter")}
+              className="flex-1 h-12 rounded-full bg-brand text-primary-foreground text-[12px] font-bold uppercase tracking-[0.08em] transition-opacity duration-200 hover:opacity-90 inline-flex items-center justify-center gap-2"
             >
               <Mail className="h-4 w-4" /> Cover Letter
             </button>
