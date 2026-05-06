@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { Plus, X, Loader2, Sparkles, FolderOpen } from "lucide-react";
+import { Plus, X, Loader2, Sparkles, FolderOpen, Save } from "lucide-react";
 import { useJobs } from "@/lib/jobs-store";
 import { ZoomControls } from "@/components/ZoomControls";
 import { ExportMenu } from "@/components/ExportMenu";
 import { SavedCVsPanel } from "@/components/SavedCVsPanel";
+import { SaveModal } from "@/components/SaveModal";
 import { useSavedCVs } from "@/lib/saved-cvs";
 import { exportAs, ExportFormat } from "@/lib/exporters";
 import { supabase } from "@/integrations/supabase/client";
@@ -66,6 +67,8 @@ export default function CVBuilderPage() {
   const [jdUrl, setJdUrl] = useState("");
   const [building, setBuilding] = useState(false);
   const [savedOpen, setSavedOpen] = useState(false);
+  const [saveOpen, setSaveOpen] = useState(false);
+  const [hoverPreview, setHoverPreview] = useState(false);
   const { getJob, targetJobId, setTargetJobId } = useJobs();
   const { list: savedCVs, save: saveCV, remove: removeCV } = useSavedCVs<CV>();
   const { toast } = useToast();
@@ -121,7 +124,7 @@ export default function CVBuilderPage() {
     <div className="w-full">
       <div className="px-8 py-5 flex items-center justify-between border-b border-line bg-surface flex-wrap gap-3">
         <div>
-          <h1 className="text-[24px] font-semibold text-ink">CV Builder</h1>
+          <h1 className="text-[24px] font-semibold text-ink">Resume</h1>
           <p className="text-[13px] text-ink-muted mt-0.5">
             {targetJob ? `For: ${targetJob.company} — ${targetJob.role}` : "Edit on the left, preview on the right."}
           </p>
@@ -129,15 +132,21 @@ export default function CVBuilderPage() {
         <div className="flex items-center gap-3">
           <button
             type="button"
+            onClick={() => setSaveOpen(true)}
+            className="inline-flex items-center gap-2 h-11 px-5 rounded-full border border-ink-2 text-ink text-[12px] font-bold uppercase tracking-[0.08em] transition-colors duration-200 hover:bg-surface-2"
+          >
+            <Save className="h-4 w-4" /> Save
+          </button>
+          <button
+            type="button"
             onClick={() => setSavedOpen(true)}
             className="inline-flex items-center gap-2 h-11 px-5 rounded-full border border-ink-2 text-ink text-[12px] font-bold uppercase tracking-[0.08em] transition-colors duration-200 hover:bg-surface-2"
           >
-            <FolderOpen className="h-4 w-4" /> Saved CVs
+            <FolderOpen className="h-4 w-4" /> Library
             {savedCVs.length > 0 && (
               <span className="ml-1 text-ink-muted">{savedCVs.length}</span>
             )}
           </button>
-          <ZoomControls zoom={zoom} onChange={setZoom} />
           <ExportMenu onExport={handleExport} />
         </div>
       </div>
@@ -145,18 +154,26 @@ export default function CVBuilderPage() {
       <SavedCVsPanel
         open={savedOpen}
         onClose={() => setSavedOpen(false)}
+        title="Resume Library"
         list={savedCVs}
         onLoad={(item) => {
           setCv(item.data);
           setSavedOpen(false);
-          toast({ title: "CV loaded", description: item.name });
+          toast({ title: "Resume loaded", description: item.name });
         }}
         onDelete={(id) => removeCV(id)}
-        onSaveCurrent={(name) => {
-          const item = saveCV(name || (targetJob ? `CV for ${targetJob.company}` : cv.fullName || "Untitled CV"), cv);
-          toast({ title: "CV saved", description: item.name });
+      />
+
+      <SaveModal
+        open={saveOpen}
+        onClose={() => setSaveOpen(false)}
+        title="Save Resume"
+        defaultName={targetJob ? `Resume — ${targetJob.company}` : cv.fullName}
+        onSave={(name, format) => {
+          const item = saveCV(name, cv);
+          handleExport(format);
+          toast({ title: "Resume saved", description: `${item.name} · ${format.toUpperCase()}` });
         }}
-        defaultName={targetJob ? `CV for ${targetJob.company} — ${targetJob.role}` : cv.fullName}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-2" style={{ minHeight: "calc(100vh - 64px - 81px)" }}>
@@ -190,7 +207,7 @@ export default function CVBuilderPage() {
             />
           </Card>
 
-          <h2 className="text-[20px] font-semibold text-ink mb-6 mt-6">Edit your CV</h2>
+          <h2 className="text-[20px] font-semibold text-ink mb-6 mt-6">Edit your Resume</h2>
 
           <Card title="Personal information">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -310,10 +327,18 @@ export default function CVBuilderPage() {
           </Card>
         </section>
 
-        {/* Preview */}
-        <section className="bg-popover p-10 overflow-auto" style={{ maxHeight: "calc(100vh - 64px - 81px)" }}>
-          <div style={{ transform: `scale(${zoom})`, transformOrigin: "top left", width: `${100 / zoom}%` }}>
-            <article className="max-w-[640px] mx-auto">
+        {/* Preview - canvas with A4 page */}
+        <section
+          className="relative bg-[hsl(var(--surface-2))] p-10 overflow-auto"
+          style={{ maxHeight: "calc(100vh - 64px - 81px)" }}
+          onMouseEnter={() => setHoverPreview(true)}
+          onMouseLeave={() => setHoverPreview(false)}
+        >
+          <div style={{ transform: `scale(${zoom})`, transformOrigin: "top center", width: `${100 / zoom}%` }}>
+            <article
+              className="mx-auto bg-white text-ink shadow-2xl"
+              style={{ width: "794px", minHeight: "1123px", padding: "64px" }}
+            >
               <header className="text-center mb-8">
                 <h2 className="text-[28px] font-semibold text-ink">{cv.fullName || "Your name"}</h2>
                 <p className="text-[12px] text-ink-muted mt-2">
@@ -359,6 +384,17 @@ export default function CVBuilderPage() {
                 </Section>
               )}
             </article>
+          </div>
+
+          {/* Floating zoom controls */}
+          <div
+            className={
+              "sticky bottom-4 ml-auto mt-4 w-fit transition-opacity duration-200 " +
+              (hoverPreview ? "opacity-100" : "opacity-60")
+            }
+            style={{ float: "right", position: "sticky" }}
+          >
+            <ZoomControls zoom={zoom} onChange={setZoom} floating />
           </div>
         </section>
       </div>
