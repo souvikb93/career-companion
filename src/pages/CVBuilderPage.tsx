@@ -191,9 +191,6 @@ export default function CVBuilderPage() {
           </button>
           <button type="button" onClick={() => setSavedOpen(true)} className="btn-ghost">
             <FolderOpen className="h-4 w-4" /> Library
-            {savedCVs.length > 0 && (
-              <span className="ml-1 opacity-70">{savedCVs.length}</span>
-            )}
           </button>
           <ExportMenu onExport={handleExport} />
         </div>

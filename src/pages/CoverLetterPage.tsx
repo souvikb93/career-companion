@@ -165,9 +165,6 @@ export default function CoverLetterPage() {
           </button>
           <button type="button" onClick={() => setSavedOpen(true)} className="btn-ghost">
             <FolderOpen className="h-4 w-4" /> Library
-            {savedLetters.length > 0 && (
-              <span className="ml-1 opacity-70">{savedLetters.length}</span>
-            )}
           </button>
           <ExportMenu onExport={handleExport} />
         </div>
