@@ -4,10 +4,12 @@ import { BackgroundGradientAnimation } from "./ui/background-gradient-animation"
 
 export function AppLayout() {
   return (
-    <div className="relative min-h-screen w-full bg-background">
+    <div className="relative min-h-screen w-full">
       <BackgroundGradientAnimation />
-      <TopNav />
-      <Outlet />
+      <div className="relative z-0">
+        <TopNav />
+        <Outlet />
+      </div>
     </div>
   );
 }
