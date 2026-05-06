@@ -144,10 +144,10 @@
     @apply transition-colors duration-200 ease-out hover:bg-surface-2;
   }
   .btn-ghost {
-    @apply inline-flex items-center gap-2 h-11 px-5 rounded-full border border-ink-2 text-ink text-[12px] font-bold uppercase tracking-[0.08em] transition-all duration-200 ease-out hover:bg-ink hover:text-background hover:border-ink hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:shadow-none;
+    @apply inline-flex items-center gap-2 h-11 px-5 rounded-full bg-surface-2 border border-line text-ink text-[12px] font-bold uppercase tracking-[0.08em] transition-colors duration-200 ease-out hover:bg-surface-hover disabled:opacity-50 disabled:hover:bg-surface-2;
   }
   .btn-primary {
-    @apply inline-flex items-center gap-2 h-11 px-5 rounded-full bg-brand text-primary-foreground text-[12px] font-bold uppercase tracking-[0.08em] transition-all duration-200 ease-out hover:opacity-95 hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 active:shadow-none;
+    @apply inline-flex items-center gap-2 h-11 px-5 rounded-full bg-ink text-white text-[12px] font-bold uppercase tracking-[0.08em] transition-colors duration-200 ease-out hover:bg-brand active:bg-brand disabled:opacity-50 disabled:hover:bg-ink;
   }
   .logo-wordmark {
     font-family: "ABeeZee", "Helvetica Neue", system-ui, sans-serif;
