@@ -102,9 +102,10 @@ export default function JobsPage() {
           <button
             type="button"
             onClick={() => setAddOpen(true)}
-            className="hidden sm:inline-flex h-12 px-5 rounded-full bg-brand text-primary-foreground text-[12px] font-bold uppercase tracking-[0.08em] items-center justify-center gap-2 transition-opacity duration-180 hover:opacity-90 whitespace-nowrap"
+            aria-label="Add job"
+            className="hidden sm:grid place-items-center h-12 w-12 rounded-full bg-brand text-primary-foreground transition-opacity duration-200 hover:opacity-90"
           >
-            <Plus className="h-4 w-4" /> Add Job
+            <Plus className="h-5 w-5" />
           </button>
         </div>
 
