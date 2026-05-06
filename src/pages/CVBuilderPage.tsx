@@ -180,10 +180,7 @@ export default function CVBuilderPage() {
     <div className="w-full">
       <div className="px-8 py-5 flex items-center justify-between border-b border-line bg-surface flex-wrap gap-3">
         <div>
-          <h1 className="text-[24px] font-semibold text-ink">Resume</h1>
-          <p className="text-[13px] text-ink-muted mt-0.5">
-            {targetJob ? `For: ${targetJob.company} — ${targetJob.role}` : "Edit on the left, preview on the right."}
-          </p>
+          <h1 className="text-[24px] font-semibold text-ink">Resume Builder</h1>
         </div>
         <div className="flex items-center gap-3">
           <button type="button" onClick={() => setSaveOpen(true)} className="btn-ghost">
@@ -293,9 +290,12 @@ export default function CVBuilderPage() {
             }
           >
             <div className="space-y-3">
-              {cv.experiences.map((exp) => (
-                <div key={exp.id} className="rounded-2xl border border-line p-4 relative">
-                  <RemoveBtn onClick={() => update("experiences", cv.experiences.filter((e) => e.id !== exp.id))} />
+              {cv.experiences.map((exp, idx) => (
+                <div key={exp.id} className="rounded-2xl border border-line p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-[14px] font-semibold text-ink">Experience {idx + 1}</h4>
+                    <RemoveBtn onClick={() => update("experiences", cv.experiences.filter((e) => e.id !== exp.id))} />
+                  </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <input className="input-base" placeholder="Job title" value={exp.title}
                       onChange={(e) => update("experiences", cv.experiences.map((x) => x.id === exp.id ? { ...x, title: e.target.value } : x))} />
@@ -322,9 +322,12 @@ export default function CVBuilderPage() {
             }
           >
             <div className="space-y-3">
-              {cv.education.map((ed) => (
-                <div key={ed.id} className="rounded-2xl border border-line p-4 relative">
-                  <RemoveBtn onClick={() => update("education", cv.education.filter((e) => e.id !== ed.id))} />
+              {cv.education.map((ed, idx) => (
+                <div key={ed.id} className="rounded-2xl border border-line p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-[14px] font-semibold text-ink">Education {idx + 1}</h4>
+                    <RemoveBtn onClick={() => update("education", cv.education.filter((e) => e.id !== ed.id))} />
+                  </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <input className="input-base" placeholder="School" value={ed.school}
                       onChange={(e) => update("education", cv.education.map((x) => x.id === ed.id ? { ...x, school: e.target.value } : x))} />
@@ -505,7 +508,7 @@ function AddBtn({ children, onClick }: { children: React.ReactNode; onClick: () 
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex items-center gap-1.5 h-9 px-4 rounded-full border border-brand text-brand text-[12px] font-bold uppercase tracking-[0.08em] transition-colors duration-180 hover:bg-brand/5"
+      className="inline-flex items-center gap-1 text-brand text-[13px] font-medium hover:underline transition-colors"
     >
       <Plus className="h-3.5 w-3.5" /> {children}
     </button>
