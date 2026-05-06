@@ -397,11 +397,11 @@ export default function CVBuilderPage() {
 
         </section>
 
-          {/* Floating zoom controls */}
+          {/* Floating zoom controls — only on hover */}
           <div
             className={
-              "absolute bottom-4 right-4 z-10 transition-opacity duration-200 " +
-              (hoverPreview ? "opacity-100" : "opacity-70")
+              "absolute bottom-8 right-6 z-10 transition-all duration-200 " +
+              (hoverPreview ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1 pointer-events-none")
             }
           >
             <ZoomControls zoom={zoom} onChange={setZoom} floating />
