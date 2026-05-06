@@ -71,6 +71,11 @@ export default {
         success: "hsl(var(--success))",
         "chip-grey": "hsl(var(--chip-grey))",
         "chip-grey-fg": "hsl(var(--chip-grey-fg))",
+        "status-saved": "hsl(var(--status-saved))",
+        "status-applied": "hsl(var(--status-applied))",
+        "status-active": "hsl(var(--status-active))",
+        "status-assessment": "hsl(var(--status-assessment))",
+        "status-offer": "hsl(var(--status-offer))",
       },
       borderRadius: {
         lg: "var(--radius)",
