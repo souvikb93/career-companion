@@ -221,7 +221,7 @@ export default function CoverLetterPage() {
                   type="button"
                   onClick={fetchFromUrl}
                   disabled={fetching || !jobUrl.trim()}
-                  className="h-11 px-4 rounded-full bg-brand text-primary-foreground text-[12px] font-bold uppercase tracking-[0.08em] inline-flex items-center gap-2 transition-all duration-200 ease-out hover:opacity-95 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:shadow-none disabled:opacity-60"
+                  className="btn-primary"
                 >
                   {fetching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
                   {fetching ? "…" : "Tailor"}
@@ -269,7 +269,7 @@ export default function CoverLetterPage() {
                 type="button"
                 onClick={send}
                 aria-label="Send"
-                className="h-11 w-11 rounded-full bg-brand text-primary-foreground grid place-items-center transition-all duration-200 ease-out hover:opacity-95 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:shadow-none"
+                className="h-11 w-11 rounded-full bg-ink text-white grid place-items-center transition-colors duration-200 ease-out hover:bg-brand active:bg-brand"
               >
                 <Send className="h-4 w-4" />
               </button>

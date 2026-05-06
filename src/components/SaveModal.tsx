@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X } from "lucide-react";
+import { X, ChevronDown } from "lucide-react";
 import { ExportFormat } from "@/lib/exporters";
 
 interface Props {
@@ -11,9 +11,9 @@ interface Props {
 }
 
 const FORMATS: { f: ExportFormat; label: string }[] = [
-  { f: "pdf", label: "PDF" },
-  { f: "docx", label: "DOC" },
-  { f: "txt", label: "TXT" },
+  { f: "pdf", label: "PDF (.pdf)" },
+  { f: "docx", label: "Word (.docx)" },
+  { f: "txt", label: "Plain text (.txt)" },
 ];
 
 export function SaveModal({ open, onClose, title = "Save", defaultName = "", onSave }: Props) {
@@ -32,7 +32,7 @@ export function SaveModal({ open, onClose, title = "Save", defaultName = "", onS
               type="button"
               onClick={onClose}
               aria-label="Close"
-              className="h-9 w-9 rounded-full grid place-items-center border border-line text-ink hover:bg-surface-2 transition-colors duration-200"
+              className="h-9 w-9 rounded-full grid place-items-center bg-surface-2 border border-line text-ink transition-colors duration-200 ease-out hover:bg-surface-hover"
             >
               <X className="h-4 w-4" />
             </button>
@@ -48,38 +48,33 @@ export function SaveModal({ open, onClose, title = "Save", defaultName = "", onS
             autoFocus
           />
 
-          <p className="field-label">Format</p>
-          <div className="grid grid-cols-3 gap-2 mb-6">
-            {FORMATS.map(({ f, label }) => {
-              const active = format === f;
-              return (
-                <button
-                  key={f}
-                  type="button"
-                  onClick={() => setFormat(f)}
-                  className={
-                    "h-11 rounded-full border text-[13px] font-semibold transition-colors duration-180 " +
-                    (active ? "border-brand text-brand bg-brand/5" : "border-line text-ink hover:bg-surface-2")
-                  }
-                >
-                  {label}
-                </button>
-              );
-            })}
+          <label className="field-label" htmlFor="save-format">Format</label>
+          <div className="relative mb-6">
+            <select
+              id="save-format"
+              value={format}
+              onChange={(e) => setFormat(e.target.value as ExportFormat)}
+              className="input-base appearance-none pr-10 cursor-pointer"
+            >
+              {FORMATS.map(({ f, label }) => (
+                <option key={f} value={f}>{label}</option>
+              ))}
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-muted" />
           </div>
 
           <div className="flex gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 h-11 rounded-full border border-line text-ink text-[12px] font-bold uppercase tracking-[0.08em] transition-all duration-200 ease-out hover:bg-surface-2 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:shadow-none"
+              className="btn-ghost flex-1 justify-center"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={() => { onSave(name.trim() || "Untitled", format); onClose(); }}
-              className="flex-1 h-11 rounded-full bg-brand text-primary-foreground text-[12px] font-bold uppercase tracking-[0.08em] transition-all duration-200 ease-out hover:opacity-95 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:shadow-none"
+              className="btn-primary flex-1 justify-center"
             >
               Save
             </button>
