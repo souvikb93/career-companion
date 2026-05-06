@@ -23,7 +23,8 @@ function StatusDot({ status }: { status: JobStatus }) {
 }
 
 function formatDate(iso: string) {
-  const d = new Date(iso);
+  const [year, month, day] = iso.split("-").map(Number);
+  const d = year && month && day ? new Date(year, month - 1, day) : new Date(iso);
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
