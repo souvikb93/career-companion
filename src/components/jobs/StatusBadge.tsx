@@ -9,6 +9,7 @@ const STYLES: Record<JobStatus, string> = {
   assessment: "bg-status-assessment text-primary-foreground",
   offer: "bg-status-offer text-primary-foreground",
   accepted: "bg-status-offer text-primary-foreground",
+  rejected: "bg-ink-muted text-primary-foreground",
 };
 
 export function StatusBadge({ status, className }: { status: JobStatus; className?: string }) {

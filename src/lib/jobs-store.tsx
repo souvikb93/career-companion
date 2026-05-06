@@ -12,7 +12,7 @@ interface Ctx {
 }
 
 const JobsContext = createContext<Ctx | null>(null);
-const STORAGE_KEY = "jobs_v2";
+const STORAGE_KEY = "jobs_v3";
 
 export function JobsProvider({ children }: { children: ReactNode }) {
   const [jobs, setJobsState] = useState<Job[]>(() => {
