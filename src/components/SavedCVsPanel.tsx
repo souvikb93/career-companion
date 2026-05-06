@@ -26,7 +26,7 @@ export function SavedCVsPanel<T>({ open, onClose, title = "Library", list, onLoa
               type="button"
               onClick={onClose}
               aria-label="Close"
-              className="h-9 w-9 rounded-full grid place-items-center border border-line text-ink hover:bg-surface-2 transition-colors duration-200"
+              className="h-9 w-9 grid place-items-center rounded-full text-ink-muted hover:text-ink hover:bg-surface-2 transition-colors"
             >
               <X className="h-4 w-4" />
             </button>

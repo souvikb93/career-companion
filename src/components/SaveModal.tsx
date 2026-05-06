@@ -25,20 +25,18 @@ export function SaveModal({ open, onClose, title = "Save", defaultName = "", onS
     <>
       <div className="fixed inset-0 z-50 bg-ink/40 animate-panel-in" onClick={onClose} />
       <div className="fixed inset-0 z-50 grid place-items-center p-4 pointer-events-none">
-        <div className="pointer-events-auto w-full max-w-md rounded-3xl bg-popover border border-line p-6 shadow-2xl">
-          <div className="flex items-start justify-between mb-5">
-            <h3 className="text-[20px] font-semibold text-ink">{title}</h3>
-            <button
-              type="button"
-              onClick={onClose}
-              aria-label="Close"
-              className="h-9 w-9 rounded-full grid place-items-center bg-surface-2 border border-line text-ink transition-colors duration-200 ease-out hover:bg-surface-hover"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
+        <div className="relative pointer-events-auto w-full max-w-md rounded-3xl bg-popover border border-line p-6 shadow-2xl">
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="absolute top-4 right-4 h-9 w-9 grid place-items-center rounded-full text-ink-muted hover:text-ink hover:bg-surface-2 transition-colors"
+          >
+            <X className="h-4 w-4" />
+          </button>
+          <h3 className="text-[20px] font-semibold text-ink mb-5 pr-10">{title}</h3>
 
-          <label className="field-label" htmlFor="save-name">Name</label>
+          <label className="field-label" htmlFor="save-name">File name</label>
           <input
             id="save-name"
             value={name}
