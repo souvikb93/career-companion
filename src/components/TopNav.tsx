@@ -1,8 +1,14 @@
 import { NavLink } from "react-router-dom";
-import { useEffect, useRef, useState } from "react";
 import { User, Globe, Settings, LifeBuoy, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/logo.svg";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@/components/ui/material-ui-dropdown-menu";
 
 const NAV = [
   { to: "/", label: "Tracker", end: true },
