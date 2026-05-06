@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
-import { Plus, X, Loader2, Sparkles } from "lucide-react";
+import { Plus, X, Loader2, Sparkles, FolderOpen } from "lucide-react";
 import { useJobs } from "@/lib/jobs-store";
 import { ZoomControls } from "@/components/ZoomControls";
 import { ExportMenu } from "@/components/ExportMenu";
+import { SavedCVsPanel } from "@/components/SavedCVsPanel";
+import { useSavedCVs } from "@/lib/saved-cvs";
 import { exportAs, ExportFormat } from "@/lib/exporters";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -63,7 +65,9 @@ export default function CVBuilderPage() {
   const [jdText, setJdText] = useState("");
   const [jdUrl, setJdUrl] = useState("");
   const [building, setBuilding] = useState(false);
+  const [savedOpen, setSavedOpen] = useState(false);
   const { getJob, targetJobId, setTargetJobId } = useJobs();
+  const { list: savedCVs, save: saveCV, remove: removeCV } = useSavedCVs<CV>();
   const { toast } = useToast();
   const targetJob = targetJobId ? getJob(targetJobId) : null;
 
