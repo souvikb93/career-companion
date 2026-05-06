@@ -87,7 +87,7 @@ export function AddJobModal({ open, onClose }: AddJobModalProps) {
             type="button"
             onClick={onClose}
             disabled={loading}
-            className="flex-1 h-12 rounded-full border border-ink-2 text-ink text-[12px] font-bold uppercase tracking-[0.08em] transition-colors duration-200 hover:bg-surface-2 disabled:opacity-50"
+            className="flex-1 h-12 rounded-full border border-ink-2 text-ink text-[12px] font-bold uppercase tracking-[0.08em] transition-all duration-200 ease-out hover:bg-surface-2 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:shadow-none disabled:opacity-50"
           >
             Cancel
           </button>
@@ -95,7 +95,7 @@ export function AddJobModal({ open, onClose }: AddJobModalProps) {
             type="button"
             onClick={fetchJob}
             disabled={loading || !url.trim()}
-            className="flex-1 h-12 rounded-full bg-brand text-primary-foreground text-[12px] font-bold uppercase tracking-[0.08em] transition-opacity duration-200 hover:opacity-90 inline-flex items-center justify-center gap-2 disabled:opacity-60"
+            className="flex-1 h-12 rounded-full bg-brand text-primary-foreground text-[12px] font-bold uppercase tracking-[0.08em] transition-all duration-200 ease-out hover:opacity-95 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:shadow-none inline-flex items-center justify-center gap-2 disabled:opacity-60"
           >
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
             {loading ? "Fetching…" : "Fetch Job"}
