@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { CSSProperties, ReactNode, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -13,15 +13,15 @@ interface Props {
   className?: string;
   containerClassName?: string;
   interactive?: boolean;
-  children?: React.ReactNode;
+  children?: ReactNode;
 }
 
 export function BackgroundGradientAnimation({
-  firstColor = "255, 120, 80",
-  secondColor = "255, 200, 130",
-  thirdColor = "150, 180, 255",
-  fourthColor = "230, 200, 255",
-  fifthColor = "255, 230, 180",
+  firstColor = "var(--brand)",
+  secondColor = "42 72% 70%",
+  thirdColor = "218 84% 74%",
+  fourthColor = "281 65% 82%",
+  fifthColor = "160 84% 39%",
   size = "70%",
   blendingValue = "normal",
   className,
@@ -36,57 +36,65 @@ export function BackgroundGradientAnimation({
 
   useEffect(() => {
     if (!interactive) return;
+    const handlePointerMove = (event: PointerEvent) => {
+      tgt.current.x = event.clientX;
+      tgt.current.y = event.clientY;
+    };
+
+    tgt.current.x = window.innerWidth / 2;
+    tgt.current.y = window.innerHeight / 2;
+    cur.current.x = tgt.current.x;
+    cur.current.y = tgt.current.y;
+    window.addEventListener("pointermove", handlePointerMove, { passive: true });
+
     const tick = () => {
       if (interactiveRef.current) {
-        cur.current.x += (tgt.current.x - cur.current.x) / 20;
-        cur.current.y += (tgt.current.y - cur.current.y) / 20;
-        interactiveRef.current.style.transform = `translate(${Math.round(cur.current.x)}px, ${Math.round(cur.current.y)}px)`;
+        cur.current.x += (tgt.current.x - cur.current.x) / 18;
+        cur.current.y += (tgt.current.y - cur.current.y) / 18;
+        interactiveRef.current.style.transform = `translate3d(${Math.round(cur.current.x)}px, ${Math.round(cur.current.y)}px, 0) translate(-50%, -50%)`;
       }
       raf.current = requestAnimationFrame(tick);
     };
     raf.current = requestAnimationFrame(tick);
-    return () => { if (raf.current) cancelAnimationFrame(raf.current); };
+    return () => {
+      window.removeEventListener("pointermove", handlePointerMove);
+      if (raf.current) cancelAnimationFrame(raf.current);
+    };
   }, [interactive]);
 
-  const onMove = (e: React.MouseEvent) => {
-    if (!interactiveRef.current) return;
-    const r = interactiveRef.current.getBoundingClientRect();
-    tgt.current.x = e.clientX - r.left;
-    tgt.current.y = e.clientY - r.top;
-  };
-
-  const style: React.CSSProperties = {
-    ["--first-color" as any]: firstColor,
-    ["--second-color" as any]: secondColor,
-    ["--third-color" as any]: thirdColor,
-    ["--fourth-color" as any]: fourthColor,
-    ["--fifth-color" as any]: fifthColor,
-    ["--size" as any]: size,
-    ["--blending-value" as any]: blendingValue,
-  };
+  const style = {
+    "--first-color": firstColor,
+    "--second-color": secondColor,
+    "--third-color": thirdColor,
+    "--fourth-color": fourthColor,
+    "--fifth-color": fifthColor,
+    "--size": size,
+    "--blending-value": blendingValue,
+  } as CSSProperties & Record<`--${string}`, string>;
 
   return (
     <div
       className={cn("pointer-events-none fixed inset-0 -z-10 overflow-hidden", containerClassName)}
       style={style}
-      onMouseMove={interactive ? onMove : undefined}
     >
       <style>{`
-        @keyframes bga-1 { 0%,100% { transform: translate(0,0) } 50% { transform: translate(-10%, 10%) } }
-        @keyframes bga-2 { 0%,100% { transform: translate(0,0) } 50% { transform: translate(15%, -5%) } }
-        @keyframes bga-3 { 0%,100% { transform: translate(0,0) } 50% { transform: translate(-15%, -10%) } }
-        @keyframes bga-4 { 0%,100% { transform: translate(0,0) } 50% { transform: translate(20%, 15%) } }
-        @keyframes bga-5 { 0%,100% { transform: translate(0,0) } 50% { transform: translate(-20%, 5%) } }
-        .bga-blob { position:absolute; width:var(--size); height:var(--size); border-radius:9999px; mix-blend-mode:var(--blending-value); filter: blur(60px); opacity:0.55; }
+        @keyframes bga-1 { 0%,100% { transform: translate3d(0,0,0) scale(1) } 50% { transform: translate3d(-10%, 9%,0) scale(1.08) } }
+        @keyframes bga-2 { 0%,100% { transform: translate3d(0,0,0) scale(1) } 50% { transform: translate3d(13%, -6%,0) scale(0.95) } }
+        @keyframes bga-3 { 0%,100% { transform: translate3d(0,0,0) scale(1) } 50% { transform: translate3d(-14%, -9%,0) scale(1.06) } }
+        @keyframes bga-4 { 0%,100% { transform: translate3d(0,0,0) scale(0.98) } 50% { transform: translate3d(18%, 12%,0) scale(1.08) } }
+        @keyframes bga-5 { 0%,100% { transform: translate3d(0,0,0) scale(1) } 50% { transform: translate3d(-18%, 5%,0) scale(1.05) } }
+        .bga-blob { position:absolute; width:var(--size); height:var(--size); border-radius:9999px; mix-blend-mode:var(--blending-value); filter: blur(70px); opacity:0.42; will-change:transform; }
+        .bga-cursor { width:46vmax; height:46vmax; opacity:0.34; transition:opacity 180ms ease; }
+        @media (prefers-reduced-motion: reduce) { .bga-blob { animation:none !important; } .bga-cursor { display:none; } }
       `}</style>
       <div className={cn("absolute inset-0", className)}>
-        <div className="bga-blob" style={{ background: `radial-gradient(circle, rgba(var(--first-color),0.45) 0%, rgba(var(--first-color),0) 60%)`, top: "-20%", left: "-10%", animation: "bga-1 22s ease-in-out infinite" }} />
-        <div className="bga-blob" style={{ background: `radial-gradient(circle, rgba(var(--second-color),0.5) 0%, rgba(var(--second-color),0) 60%)`, top: "30%", left: "60%", animation: "bga-2 28s ease-in-out infinite" }} />
-        <div className="bga-blob" style={{ background: `radial-gradient(circle, rgba(var(--third-color),0.5) 0%, rgba(var(--third-color),0) 60%)`, top: "60%", left: "-10%", animation: "bga-3 30s ease-in-out infinite" }} />
-        <div className="bga-blob" style={{ background: `radial-gradient(circle, rgba(var(--fourth-color),0.45) 0%, rgba(var(--fourth-color),0) 60%)`, top: "10%", left: "30%", animation: "bga-4 26s ease-in-out infinite" }} />
-        <div className="bga-blob" style={{ background: `radial-gradient(circle, rgba(var(--fifth-color),0.45) 0%, rgba(var(--fifth-color),0) 60%)`, top: "55%", left: "40%", animation: "bga-5 24s ease-in-out infinite" }} />
+        <div className="bga-blob" style={{ background: `radial-gradient(circle, hsl(var(--first-color) / 0.22) 0%, hsl(var(--first-color) / 0) 62%)`, top: "-20%", left: "-10%", animation: "bga-1 18s ease-in-out infinite" }} />
+        <div className="bga-blob" style={{ background: `radial-gradient(circle, hsl(var(--second-color) / 0.18) 0%, hsl(var(--second-color) / 0) 62%)`, top: "30%", left: "60%", animation: "bga-2 22s ease-in-out infinite" }} />
+        <div className="bga-blob" style={{ background: `radial-gradient(circle, hsl(var(--third-color) / 0.2) 0%, hsl(var(--third-color) / 0) 62%)`, top: "60%", left: "-10%", animation: "bga-3 24s ease-in-out infinite" }} />
+        <div className="bga-blob" style={{ background: `radial-gradient(circle, hsl(var(--fourth-color) / 0.18) 0%, hsl(var(--fourth-color) / 0) 62%)`, top: "10%", left: "30%", animation: "bga-4 20s ease-in-out infinite" }} />
+        <div className="bga-blob" style={{ background: `radial-gradient(circle, hsl(var(--fifth-color) / 0.14) 0%, hsl(var(--fifth-color) / 0) 62%)`, top: "55%", left: "40%", animation: "bga-5 21s ease-in-out infinite" }} />
         {interactive && (
-          <div ref={interactiveRef} className="bga-blob" style={{ background: `radial-gradient(circle, rgba(var(--first-color),0.4) 0%, rgba(var(--first-color),0) 60%)` }} />
+          <div ref={interactiveRef} className="bga-blob bga-cursor" style={{ background: `radial-gradient(circle, hsl(var(--first-color) / 0.26) 0%, hsl(var(--second-color) / 0.12) 34%, hsl(var(--first-color) / 0) 66%)` }} />
         )}
       </div>
       {children}
