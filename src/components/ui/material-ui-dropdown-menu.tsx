@@ -233,7 +233,7 @@ const DropdownMenuItem = React.forwardRef<
       ref={ref}
       onSelect={handleSelect}
       className={cn(
-        "group relative flex cursor-pointer select-none items-stretch overflow-hidden rounded-xl outline-none transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-40",
+        "group relative flex cursor-pointer select-none items-stretch overflow-hidden rounded-xl outline-none transition-colors duration-200 hover:bg-surface-2 focus:bg-surface-2 data-[highlighted]:bg-surface-2 data-[disabled]:pointer-events-none data-[disabled]:opacity-40",
         enterAnimation && "m3-item-enter",
         className,
       )}
@@ -242,10 +242,10 @@ const DropdownMenuItem = React.forwardRef<
       <div
         {...(events as any)}
         ref={(node) => { (surfaceRef as any).current = node; }}
-        className={cn("relative flex flex-1 items-center", inset && "pl-8")}
+        className={cn("relative flex flex-1 items-center px-3 py-2.5 text-[13px] text-ink", inset && "pl-8")}
       >
         <RippleLayer ref={rippleRef} pressed={pressed} variant="item" />
-        <span className="relative z-10 flex flex-1 items-center">{children}</span>
+        <span className="relative z-10 flex flex-1 items-center gap-2">{children}</span>
       </div>
     </DropdownMenuPrimitive.Item>
   );
