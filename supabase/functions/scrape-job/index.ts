@@ -1,6 +1,6 @@
 import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
 
-const FIRECRAWL_GATEWAY = "https://connector-gateway.lovable.dev/firecrawl/v2";
+const FIRECRAWL_API = "https://api.firecrawl.dev/v2";
 const AI_GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
 
 Deno.serve(async (req) => {
@@ -18,11 +18,10 @@ Deno.serve(async (req) => {
     if (!FIRECRAWL_API_KEY) return json({ error: "FIRECRAWL_API_KEY missing" }, 500);
 
     // 1. Scrape page content via Firecrawl gateway
-    const scrapeRes = await fetch(`${FIRECRAWL_GATEWAY}/scrape`, {
+    const scrapeRes = await fetch(`${FIRECRAWL_API}/scrape`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "X-Connection-Api-Key": FIRECRAWL_API_KEY,
+        Authorization: `Bearer ${FIRECRAWL_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ url, formats: ["markdown"], onlyMainContent: true }),
