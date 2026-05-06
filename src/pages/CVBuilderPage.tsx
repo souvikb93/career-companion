@@ -280,57 +280,83 @@ export default function CVBuilderPage() {
         </section>
 
         {/* Preview */}
-        <section className="bg-popover p-10 overflow-y-auto" style={{ maxHeight: "calc(100vh - 64px - 81px)" }}>
-          <article className="max-w-[640px] mx-auto">
-            <header className="text-center mb-8">
-              <h2 className="text-[28px] font-semibold text-ink">{cv.fullName || "Your name"}</h2>
-              <p className="text-[12px] text-ink-muted mt-2">
-                {[cv.email, cv.phone, cv.location].filter(Boolean).join(" · ")}
-              </p>
-            </header>
+        <section className="bg-popover p-10 overflow-auto" style={{ maxHeight: "calc(100vh - 64px - 81px)" }}>
+          <div style={{ transform: `scale(${zoom})`, transformOrigin: "top left", width: `${100 / zoom}%` }}>
+            <article className="max-w-[640px] mx-auto">
+              <header className="text-center mb-8">
+                <h2 className="text-[28px] font-semibold text-ink">{cv.fullName || "Your name"}</h2>
+                <p className="text-[12px] text-ink-muted mt-2">
+                  {[cv.email, cv.phone, cv.location].filter(Boolean).join(" · ")}
+                </p>
+              </header>
 
-            {cv.summary && (
-              <p className="italic text-[14px] text-ink-muted mb-8 leading-relaxed">{cv.summary}</p>
-            )}
+              {cv.summary && (
+                <p className="italic text-[14px] text-ink-muted mb-8 leading-relaxed whitespace-pre-line">{cv.summary}</p>
+              )}
 
-            {cv.experiences.length > 0 && (
-              <Section title="Experience">
-                {cv.experiences.map((e) => (
-                  <div key={e.id} className="mb-5">
-                    <div className="flex items-baseline justify-between gap-3">
-                      <p className="text-[15px] font-semibold text-ink">{e.title || "Role"}{e.company && ` · ${e.company}`}</p>
-                      <p className="text-[12px] text-ink-muted whitespace-nowrap">{[e.start, e.end].filter(Boolean).join(" – ")}</p>
+              {cv.experiences.length > 0 && (
+                <Section title="Experience">
+                  {cv.experiences.map((e) => (
+                    <div key={e.id} className="mb-5">
+                      <div className="flex items-baseline justify-between gap-3">
+                        <p className="text-[15px] font-semibold text-ink">{e.title || "Role"}{e.company && ` · ${e.company}`}</p>
+                        <p className="text-[12px] text-ink-muted whitespace-nowrap">{[e.start, e.end].filter(Boolean).join(" – ")}</p>
+                      </div>
+                      {e.description && <p className="text-[14px] text-ink-muted mt-1 leading-relaxed">{e.description}</p>}
                     </div>
-                    {e.description && <p className="text-[14px] text-ink-muted mt-1 leading-relaxed">{e.description}</p>}
-                  </div>
-                ))}
-              </Section>
-            )}
+                  ))}
+                </Section>
+              )}
 
-            {cv.education.length > 0 && (
-              <Section title="Education">
-                {cv.education.map((e) => (
-                  <div key={e.id} className="mb-3">
-                    <div className="flex items-baseline justify-between gap-3">
-                      <p className="text-[15px] font-semibold text-ink">{e.school || "School"}</p>
-                      <p className="text-[12px] text-ink-muted">{e.date}</p>
+              {cv.education.length > 0 && (
+                <Section title="Education">
+                  {cv.education.map((e) => (
+                    <div key={e.id} className="mb-3">
+                      <div className="flex items-baseline justify-between gap-3">
+                        <p className="text-[15px] font-semibold text-ink">{e.school || "School"}</p>
+                        <p className="text-[12px] text-ink-muted">{e.date}</p>
+                      </div>
+                      <p className="text-[14px] text-ink-muted">{[e.degree, e.field].filter(Boolean).join(", ")}</p>
                     </div>
-                    <p className="text-[14px] text-ink-muted">{[e.degree, e.field].filter(Boolean).join(", ")}</p>
-                  </div>
-                ))}
-              </Section>
-            )}
+                  ))}
+                </Section>
+              )}
 
-            {cv.skills.length > 0 && (
-              <Section title="Skills">
-                <p className="text-[14px] text-ink-muted">{cv.skills.join(" · ")}</p>
-              </Section>
-            )}
-          </article>
+              {cv.skills.length > 0 && (
+                <Section title="Skills">
+                  <p className="text-[14px] text-ink-muted">{cv.skills.join(" · ")}</p>
+                </Section>
+              )}
+            </article>
+          </div>
         </section>
       </div>
     </div>
   );
+}
+
+function renderCvAsText(cv: CV): string {
+  const parts: string[] = [];
+  parts.push([cv.email, cv.phone, cv.location].filter(Boolean).join(" · "));
+  if (cv.summary) parts.push("\n" + cv.summary);
+  if (cv.experiences.length) {
+    parts.push("\nEXPERIENCE");
+    cv.experiences.forEach((e) => {
+      parts.push(`\n${e.title}${e.company ? " · " + e.company : ""}  (${[e.start, e.end].filter(Boolean).join(" – ")})`);
+      if (e.description) parts.push(e.description);
+    });
+  }
+  if (cv.education.length) {
+    parts.push("\nEDUCATION");
+    cv.education.forEach((e) => {
+      parts.push(`${e.school} — ${[e.degree, e.field].filter(Boolean).join(", ")} (${e.date})`);
+    });
+  }
+  if (cv.skills.length) {
+    parts.push("\nSKILLS");
+    parts.push(cv.skills.join(" · "));
+  }
+  return parts.join("\n");
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
