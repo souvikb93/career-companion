@@ -70,9 +70,63 @@ export default function CVBuilderPage() {
   const [saveOpen, setSaveOpen] = useState(false);
   const [hoverPreview, setHoverPreview] = useState(false);
   const { getJob, targetJobId, setTargetJobId } = useJobs();
-  const { list: savedCVs, save: saveCV, remove: removeCV } = useSavedCVs<CV>("saved_cvs_v1", () => [
-    { id: "demo-cv-1", name: "Sample Resume — Product Designer", savedAt: new Date().toISOString(), data: initial },
-  ]);
+  const { list: savedCVs, save: saveCV, remove: removeCV } = useSavedCVs<CV>("saved_cvs_v2", () => {
+    const daysAgo = (n: number) => new Date(Date.now() - n * 86400000).toISOString();
+    const variant = (summary: string, skills: string[]): CV => ({ ...initial, summary, skills });
+    return [
+      {
+        id: "demo-cv-1",
+        name: "Resume — Zalando Senior Designer",
+        savedAt: daysAgo(3),
+        data: variant(
+          "Tailored for Zalando — Senior Product Designer. Six years shaping consumer commerce experiences, design systems, and cross-platform shopping flows.",
+          ["Design Systems", "Product Design", "Figma", "Prototyping", "User Research", "HTML / CSS"],
+        ),
+      },
+      {
+        id: "demo-cv-2",
+        name: "Resume — Delivery Hero Product Engineer",
+        savedAt: daysAgo(5),
+        data: variant(
+          "Tailored for Delivery Hero — hybrid designer/engineer with a track record of shipping marketplace and logistics surfaces end-to-end.",
+          ["HTML / CSS", "Prototyping", "Design Systems", "Figma", "Product Design", "User Research"],
+        ),
+      },
+      {
+        id: "demo-cv-3",
+        name: "Resume — N26 Product Designer",
+        savedAt: daysAgo(7),
+        data: variant(
+          "Tailored for N26 — fintech-focused product designer with experience reducing onboarding drop-off and clarifying complex money flows.",
+          ["Product Design", "User Research", "Prototyping", "Design Systems", "Figma", "HTML / CSS"],
+        ),
+      },
+      {
+        id: "demo-cv-4",
+        name: "Resume — FlixBus Brand Designer",
+        savedAt: daysAgo(8),
+        data: variant(
+          "Tailored for FlixBus — brand-leaning product designer who has launched campaigns and visual systems across web, mobile, and out-of-home.",
+          ["Figma", "Design Systems", "Product Design", "Prototyping", "HTML / CSS", "User Research"],
+        ),
+      },
+      {
+        id: "demo-cv-5",
+        name: "Resume — Bolt Frontend Engineer",
+        savedAt: daysAgo(10),
+        data: variant(
+          "Tailored for Bolt — designer-engineer comfortable owning frontend delivery, from component architecture to motion polish.",
+          ["HTML / CSS", "Figma", "Prototyping", "Design Systems", "Product Design", "User Research"],
+        ),
+      },
+      {
+        id: "demo-cv-6",
+        name: "Master Resume — General",
+        savedAt: daysAgo(12),
+        data: initial,
+      },
+    ];
+  });
   const { toast } = useToast();
   const targetJob = targetJobId ? getJob(targetJobId) : null;
 

@@ -1,41 +1,37 @@
-# Unify button hover states (2 tiers)
+# Seed CV & Cover Letter library with dummy data
 
-## Why two tiers, not one
-Action buttons commit something — a small lift + shadow gives tactile feedback. Dropdown and icon triggers just reveal a surface; they must stay anchored so the menu doesn't open from a moved position. This pattern matches Material, Apple HIG, and Carbon.
+Both libraries (Resume and Cover Letter pages) currently seed with **1 sample item**. I'll bump that to **6–7 realistic items each**, themed around the German companies already in the Jobs list (Zalando, Delivery Hero, FlixBus, N26, etc.) so the libraries feel populated and tell a coherent product story.
 
-## The two tiers
+## What changes
 
-**Tier 1 — Action buttons (lift + tint)**
-- Used for: Save, Add Job, Fetch Job, Cancel, Custom CV, Cover Letter, filter chips, "Add Job" CTA
-- Hover: `hover:bg-*` tint + `hover:-translate-y-0.5` + `hover:shadow-md`
-- Active: `active:translate-y-0 active:shadow-none`
-- Transition: `transition-all duration-200 ease-out`
+### 1. `src/pages/CVBuilderPage.tsx` — seed `saved_cvs_v1`
+Bump storage key to `saved_cvs_v2` (so existing single-item caches refresh) and seed with 6 CVs. Each is a tweaked copy of the base `initial` CV with:
+- A name like "Resume — Zalando Senior Designer"
+- A tailored `summary` line referencing the company/role
+- Reordered `skills` to highlight role-relevant ones
+- Realistic `savedAt` dates spread over the past 2 weeks
 
-**Tier 2 — Triggers & icon buttons (tint only)**
-- Used for: Export dropdown trigger, JD avatar, close X, ZoomControls +/−, sidebar nav items, dropdown menu items
-- Hover: `hover:bg-surface-2` (or `hover:bg-surface-hover` for nav)
-- No translate, no shadow
-- Transition: `transition-colors duration-200`
+Examples:
+- Resume — Zalando Senior Designer (3 days ago)
+- Resume — Delivery Hero Product Engineer (5 days ago)
+- Resume — N26 Product Designer (1 week ago)
+- Resume — FlixBus Brand Designer (1 week ago)
+- Resume — Bolt Frontend Engineer (10 days ago)
+- Master Resume — General (12 days ago)
 
-## Files to update
+### 2. `src/pages/CoverLetterPage.tsx` — seed `saved_letters_v1`
+Bump storage key to `saved_letters_v2`. Seed with 6 cover letters generated via the existing `letterFor(company, role, description)` helper, one per major job in the Jobs list:
+- Cover Letter — Zalando, Senior Product Designer
+- Cover Letter — Delivery Hero, Product Engineer
+- Cover Letter — N26, Product Designer
+- Cover Letter — FlixBus, Brand Designer
+- Cover Letter — Bolt, Frontend Engineer
+- Cover Letter — GetYourGuide, Senior Engineer
 
-1. **`src/index.css`** — add two utility classes so we don't repeat Tailwind chains:
-   - `.btn-action` → tier-1 hover (lift + shadow + tint)
-   - `.btn-trigger` → tier-2 hover (tint only)
-   - Update existing `.btn-primary` to compose `.btn-action` behavior
-2. **`src/components/ExportMenu.tsx`** — trigger button: remove any lift, keep `hover:bg-surface-2` only
-3. **`src/components/TopNav.tsx`** — JD avatar trigger: tint only (already close, just normalize)
-4. **`src/components/ZoomControls.tsx`** — +/− icon buttons: tint only
-5. **`src/pages/JobsPage.tsx`** — filter chips & Add Job FAB: tier-1 lift
-6. **`src/pages/CoverLetterPage.tsx`** & **`src/pages/CVBuilderPage.tsx`** — Save / Custom CV / Cover Letter buttons: tier-1 lift
-7. **`src/components/jobs/AddJobModal.tsx`** — Cancel + Fetch Job: tier-1 lift
-8. **`src/components/jobs/JobDetailPanel.tsx`** — close X (tier-2), Custom CV / Cover Letter (tier-1)
-9. **`src/components/SaveModal.tsx`** & **`src/components/SavedCVsPanel.tsx`** — same split
+Each gets a `jobLabel` and a realistic `savedAt` timestamp.
 
 ## Acceptance check
-- Open Export menu → trigger highlights but doesn't move; menu opens from same spot ✓
-- Open JD menu → same behavior ✓
-- Hover Save / Add Job → lifts 1px with soft shadow ✓
-- Hover dropdown menu items → bg tint, no movement ✓
-- Hover close (X) and zoom +/− → bg tint only ✓
-- All transitions feel like one design system, not multiple ✓
+- Open Resume page → "Library" panel shows 6 saved resumes with varied names and dates ✓
+- Open Cover Letter page → "Library" panel shows 6 saved cover letters ✓
+- Loading any saved item populates the editor correctly ✓
+- New saves still prepend to the list ✓
