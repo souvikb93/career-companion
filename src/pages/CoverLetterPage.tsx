@@ -61,7 +61,9 @@ export default function CoverLetterPage() {
   const [hoverPreview, setHoverPreview] = useState(false);
   const [savedOpen, setSavedOpen] = useState(false);
   const [saveOpen, setSaveOpen] = useState(false);
-  const { list: savedLetters, save: saveLetter, remove: removeLetter } = useSavedCVs<LetterDoc>();
+  const { list: savedLetters, save: saveLetter, remove: removeLetter } = useSavedCVs<LetterDoc>("saved_letters_v1", () => [
+    { id: "demo-letter-1", name: "Sample Cover Letter", savedAt: new Date().toISOString(), data: { letter: DEFAULT_LETTER } },
+  ]);
   const scrollRef = useRef<HTMLDivElement>(null);
   // Override storage key indirectly: not needed — saved-cvs is shared. We'll namespace via name prefix.
 
@@ -144,21 +146,13 @@ export default function CoverLetterPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => setSaveOpen(true)}
-            className="inline-flex items-center gap-2 h-11 px-5 rounded-full border border-ink-2 text-ink text-[12px] font-bold uppercase tracking-[0.08em] transition-colors duration-200 hover:bg-surface-2"
-          >
-            <Save className="h-4 w-4" /> Save Letter
+          <button type="button" onClick={() => setSaveOpen(true)} className="btn-ghost">
+            <Save className="h-4 w-4" /> Save
           </button>
-          <button
-            type="button"
-            onClick={() => setSavedOpen(true)}
-            className="inline-flex items-center gap-2 h-11 px-5 rounded-full border border-ink-2 text-ink text-[12px] font-bold uppercase tracking-[0.08em] transition-colors duration-200 hover:bg-surface-2"
-          >
+          <button type="button" onClick={() => setSavedOpen(true)} className="btn-ghost">
             <FolderOpen className="h-4 w-4" /> Library
             {savedLetters.length > 0 && (
-              <span className="ml-1 text-ink-muted">{savedLetters.length}</span>
+              <span className="ml-1 opacity-70">{savedLetters.length}</span>
             )}
           </button>
           <ExportMenu onExport={handleExport} />
@@ -281,7 +275,7 @@ export default function CoverLetterPage() {
           onMouseLeave={() => setHoverPreview(false)}
         >
           <section
-            className="bg-[hsl(var(--surface-2))] p-6 overflow-auto h-full"
+            className="bg-transparent px-6 pt-6 pb-24 overflow-auto h-full"
             style={{ maxHeight: "calc(100vh - 64px - 81px)" }}
           >
             <div
@@ -299,8 +293,8 @@ export default function CoverLetterPage() {
 
           <div
             className={
-              "absolute bottom-4 right-4 z-10 transition-opacity duration-200 " +
-              (hoverPreview ? "opacity-100" : "opacity-70")
+              "absolute bottom-8 right-6 z-10 transition-all duration-200 " +
+              (hoverPreview ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1 pointer-events-none")
             }
           >
             <ZoomControls zoom={zoom} onChange={setZoom} floating />

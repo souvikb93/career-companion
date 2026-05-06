@@ -7,8 +7,6 @@ export interface SavedCV<T = unknown> {
   data: T;
 }
 
-const KEY = "saved_cvs_v1";
-
 function read<T>(key: string): SavedCV<T>[] {
   try {
     const raw = localStorage.getItem(key);
@@ -20,11 +18,18 @@ function write<T>(key: string, list: SavedCV<T>[]) {
   try { localStorage.setItem(key, JSON.stringify(list)); } catch {/* noop */}
 }
 
-export function useSavedCVs<T>(key: string = "saved_cvs_v1") {
-  const [list, setList] = useState<SavedCV<T>[]>(() => read<T>(key));
+export function useSavedCVs<T>(key: string = "saved_cvs_v1", defaults?: () => SavedCV<T>[]) {
+  const [list, setList] = useState<SavedCV<T>[]>(() => {
+    const existing = read<T>(key);
+    if (existing.length === 0 && defaults) {
+      const seeded = defaults();
+      write(key, seeded);
+      return seeded;
+    }
+    return existing;
+  });
 
   useEffect(() => {
-    setList(read<T>(key));
     const onStorage = (e: StorageEvent) => {
       if (e.key === key) setList(read<T>(key));
     };
