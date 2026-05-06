@@ -1,7 +1,7 @@
 import { Job, JobStatus, STATUS_ORDER, STATUS_LABEL } from "@/lib/jobs-data";
 import { useJobs } from "@/lib/jobs-store";
 import { useNavigate } from "react-router-dom";
-import { X, ExternalLink, FileText, Mail } from "lucide-react";
+import { X, ExternalLink, FileText, Mail, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const STATUS_DOT: Record<JobStatus, string> = {
@@ -77,15 +77,18 @@ export function JobDetailPanel({ job, onClose, onUpdate }: Props) {
           <div className="space-y-5">
             <div>
               <label className="field-label">Status</label>
-              <select
-                value={job.status}
-                onChange={(e) => onUpdate({ ...job, status: e.target.value as JobStatus })}
-                className="input-base appearance-none cursor-pointer"
-              >
-                {STATUS_ORDER.map((s) => (
-                  <option key={s} value={s}>{STATUS_LABEL[s]}</option>
-                ))}
-              </select>
+              <div className="relative">
+                <select
+                  value={job.status}
+                  onChange={(e) => onUpdate({ ...job, status: e.target.value as JobStatus })}
+                  className="input-base appearance-none cursor-pointer pr-10"
+                >
+                  {STATUS_ORDER.map((s) => (
+                    <option key={s} value={s}>{STATUS_LABEL[s]}</option>
+                  ))}
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-muted" />
+              </div>
             </div>
 
             <div>
