@@ -132,21 +132,13 @@ export default function CVBuilderPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => setSaveOpen(true)}
-            className="inline-flex items-center gap-2 h-11 px-5 rounded-full border border-ink-2 text-ink text-[12px] font-bold uppercase tracking-[0.08em] transition-colors duration-200 hover:bg-surface-2"
-          >
+          <button type="button" onClick={() => setSaveOpen(true)} className="btn-ghost">
             <Save className="h-4 w-4" /> Save
           </button>
-          <button
-            type="button"
-            onClick={() => setSavedOpen(true)}
-            className="inline-flex items-center gap-2 h-11 px-5 rounded-full border border-ink-2 text-ink text-[12px] font-bold uppercase tracking-[0.08em] transition-colors duration-200 hover:bg-surface-2"
-          >
+          <button type="button" onClick={() => setSavedOpen(true)} className="btn-ghost">
             <FolderOpen className="h-4 w-4" /> Library
             {savedCVs.length > 0 && (
-              <span className="ml-1 text-ink-muted">{savedCVs.length}</span>
+              <span className="ml-1 opacity-70">{savedCVs.length}</span>
             )}
           </button>
           <ExportMenu onExport={handleExport} />
