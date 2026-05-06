@@ -1,0 +1,306 @@
+import { useState } from "react";
+import { Plus, X, Download } from "lucide-react";
+
+interface Experience { id: string; title: string; company: string; start: string; end: string; description: string }
+interface Education { id: string; school: string; degree: string; field: string; date: string }
+
+interface CV {
+  fullName: string;
+  email: string;
+  phone: string;
+  location: string;
+  summary: string;
+  experiences: Experience[];
+  education: Education[];
+  skills: string[];
+}
+
+const initial: CV = {
+  fullName: "Jordan Doe",
+  email: "jordan@example.com",
+  phone: "+1 555 0142",
+  location: "Brooklyn, NY",
+  summary:
+    "Product designer with 6+ years building consumer and B2B SaaS products. Focused on craft, systems thinking, and shipping work that feels effortless.",
+  experiences: [
+    {
+      id: "e1",
+      title: "Senior Product Designer",
+      company: "Northstar",
+      start: "2023",
+      end: "Present",
+      description:
+        "Led redesign of the core analytics surface, improving weekly active retention by 18%. Built the Northstar design system across web and mobile.",
+    },
+    {
+      id: "e2",
+      title: "Product Designer",
+      company: "Loop",
+      start: "2020",
+      end: "2023",
+      description:
+        "Shipped the original Loop onboarding flow and dashboard. Partnered with engineering on a component library used across 14 surfaces.",
+    },
+  ],
+  education: [
+    { id: "ed1", school: "Rhode Island School of Design", degree: "BFA", field: "Graphic Design", date: "2019" },
+  ],
+  skills: ["Product Design", "Design Systems", "Prototyping", "Figma", "User Research", "HTML / CSS"],
+};
+
+const uid = () => Math.random().toString(36).slice(2, 9);
+
+export default function CVBuilderPage() {
+  const [cv, setCv] = useState<CV>(initial);
+  const [skillDraft, setSkillDraft] = useState("");
+
+  const update = <K extends keyof CV>(k: K, v: CV[K]) => setCv((p) => ({ ...p, [k]: v }));
+
+  return (
+    <div className="w-full">
+      <div className="px-8 py-5 flex items-center justify-between border-b border-line bg-surface">
+        <div>
+          <h1 className="text-[24px] font-semibold text-ink">CV Builder</h1>
+          <p className="text-[13px] text-ink-muted mt-0.5">Edit on the left, preview on the right.</p>
+        </div>
+        <button
+          type="button"
+          className="inline-flex items-center gap-2 h-11 px-5 rounded-full border border-ink-2 text-ink text-[12px] font-bold uppercase tracking-[0.08em] transition-colors duration-180 hover:bg-surface-2"
+        >
+          <Download className="h-4 w-4" /> Export as PDF
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2" style={{ minHeight: "calc(100vh - 64px - 81px)" }}>
+        {/* Editor */}
+        <section className="bg-surface border-r border-line p-8 overflow-y-auto"
+          style={{ maxHeight: "calc(100vh - 64px - 81px)" }}
+        >
+          <h2 className="text-[20px] font-semibold text-ink mb-6">Edit your CV</h2>
+
+          <Card title="Personal information">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Field label="Full name">
+                <input className="input-base" value={cv.fullName} onChange={(e) => update("fullName", e.target.value)} />
+              </Field>
+              <Field label="Email">
+                <input className="input-base" value={cv.email} onChange={(e) => update("email", e.target.value)} />
+              </Field>
+              <Field label="Phone">
+                <input className="input-base" value={cv.phone} onChange={(e) => update("phone", e.target.value)} />
+              </Field>
+              <Field label="Location">
+                <input className="input-base" value={cv.location} onChange={(e) => update("location", e.target.value)} />
+              </Field>
+            </div>
+          </Card>
+
+          <Card title="Professional summary">
+            <textarea
+              className="textarea-base"
+              rows={4}
+              value={cv.summary}
+              onChange={(e) => update("summary", e.target.value)}
+              placeholder="Write a brief overview of your professional background..."
+            />
+          </Card>
+
+          <Card
+            title="Work experience"
+            action={
+              <AddBtn onClick={() =>
+                update("experiences", [
+                  ...cv.experiences,
+                  { id: uid(), title: "", company: "", start: "", end: "", description: "" },
+                ])
+              }>Add experience</AddBtn>
+            }
+          >
+            <div className="space-y-3">
+              {cv.experiences.map((exp) => (
+                <div key={exp.id} className="rounded-2xl border border-line p-4 relative">
+                  <RemoveBtn onClick={() => update("experiences", cv.experiences.filter((e) => e.id !== exp.id))} />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <input className="input-base" placeholder="Job title" value={exp.title}
+                      onChange={(e) => update("experiences", cv.experiences.map((x) => x.id === exp.id ? { ...x, title: e.target.value } : x))} />
+                    <input className="input-base" placeholder="Company" value={exp.company}
+                      onChange={(e) => update("experiences", cv.experiences.map((x) => x.id === exp.id ? { ...x, company: e.target.value } : x))} />
+                    <input className="input-base" placeholder="Start (e.g. 2022)" value={exp.start}
+                      onChange={(e) => update("experiences", cv.experiences.map((x) => x.id === exp.id ? { ...x, start: e.target.value } : x))} />
+                    <input className="input-base" placeholder="End (e.g. Present)" value={exp.end}
+                      onChange={(e) => update("experiences", cv.experiences.map((x) => x.id === exp.id ? { ...x, end: e.target.value } : x))} />
+                  </div>
+                  <textarea className="textarea-base mt-3" rows={3} placeholder="Describe your impact..." value={exp.description}
+                    onChange={(e) => update("experiences", cv.experiences.map((x) => x.id === exp.id ? { ...x, description: e.target.value } : x))} />
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          <Card
+            title="Education"
+            action={
+              <AddBtn onClick={() =>
+                update("education", [...cv.education, { id: uid(), school: "", degree: "", field: "", date: "" }])
+              }>Add education</AddBtn>
+            }
+          >
+            <div className="space-y-3">
+              {cv.education.map((ed) => (
+                <div key={ed.id} className="rounded-2xl border border-line p-4 relative">
+                  <RemoveBtn onClick={() => update("education", cv.education.filter((e) => e.id !== ed.id))} />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <input className="input-base" placeholder="School" value={ed.school}
+                      onChange={(e) => update("education", cv.education.map((x) => x.id === ed.id ? { ...x, school: e.target.value } : x))} />
+                    <input className="input-base" placeholder="Degree" value={ed.degree}
+                      onChange={(e) => update("education", cv.education.map((x) => x.id === ed.id ? { ...x, degree: e.target.value } : x))} />
+                    <input className="input-base" placeholder="Field of study" value={ed.field}
+                      onChange={(e) => update("education", cv.education.map((x) => x.id === ed.id ? { ...x, field: e.target.value } : x))} />
+                    <input className="input-base" placeholder="Graduation date" value={ed.date}
+                      onChange={(e) => update("education", cv.education.map((x) => x.id === ed.id ? { ...x, date: e.target.value } : x))} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          <Card title="Skills">
+            <div className="flex flex-wrap gap-2 mb-3">
+              {cv.skills.map((s) => (
+                <span key={s} className="inline-flex items-center gap-1.5 rounded-full bg-surface-2 border border-line px-3 py-1.5 text-[13px] text-ink">
+                  {s}
+                  <button
+                    type="button"
+                    onClick={() => update("skills", cv.skills.filter((x) => x !== s))}
+                    aria-label={`Remove ${s}`}
+                    className="text-ink-muted hover:text-ink transition-colors duration-180"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+            <input
+              value={skillDraft}
+              onChange={(e) => setSkillDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && skillDraft.trim()) {
+                  e.preventDefault();
+                  update("skills", [...cv.skills, skillDraft.trim()]);
+                  setSkillDraft("");
+                }
+              }}
+              placeholder="Type a skill and press Enter"
+              className="input-base"
+            />
+          </Card>
+        </section>
+
+        {/* Preview */}
+        <section className="bg-popover p-10 overflow-y-auto" style={{ maxHeight: "calc(100vh - 64px - 81px)" }}>
+          <article className="max-w-[640px] mx-auto">
+            <header className="text-center mb-8">
+              <h2 className="text-[28px] font-semibold text-ink">{cv.fullName || "Your name"}</h2>
+              <p className="text-[12px] text-ink-muted mt-2">
+                {[cv.email, cv.phone, cv.location].filter(Boolean).join(" · ")}
+              </p>
+            </header>
+
+            {cv.summary && (
+              <p className="italic text-[14px] text-ink-muted mb-8 leading-relaxed">{cv.summary}</p>
+            )}
+
+            {cv.experiences.length > 0 && (
+              <Section title="Experience">
+                {cv.experiences.map((e) => (
+                  <div key={e.id} className="mb-5">
+                    <div className="flex items-baseline justify-between gap-3">
+                      <p className="text-[15px] font-semibold text-ink">{e.title || "Role"}{e.company && ` · ${e.company}`}</p>
+                      <p className="text-[12px] text-ink-muted whitespace-nowrap">{[e.start, e.end].filter(Boolean).join(" – ")}</p>
+                    </div>
+                    {e.description && <p className="text-[14px] text-ink-muted mt-1 leading-relaxed">{e.description}</p>}
+                  </div>
+                ))}
+              </Section>
+            )}
+
+            {cv.education.length > 0 && (
+              <Section title="Education">
+                {cv.education.map((e) => (
+                  <div key={e.id} className="mb-3">
+                    <div className="flex items-baseline justify-between gap-3">
+                      <p className="text-[15px] font-semibold text-ink">{e.school || "School"}</p>
+                      <p className="text-[12px] text-ink-muted">{e.date}</p>
+                    </div>
+                    <p className="text-[14px] text-ink-muted">{[e.degree, e.field].filter(Boolean).join(", ")}</p>
+                  </div>
+                ))}
+              </Section>
+            )}
+
+            {cv.skills.length > 0 && (
+              <Section title="Skills">
+                <p className="text-[14px] text-ink-muted">{cv.skills.join(" · ")}</p>
+              </Section>
+            )}
+          </article>
+        </section>
+      </div>
+    </div>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="field-label">{label}</label>
+      {children}
+    </div>
+  );
+}
+
+function Card({ title, children, action }: { title: string; children: React.ReactNode; action?: React.ReactNode }) {
+  return (
+    <div className="card-surface p-5 mb-4 bg-popover">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-[15px] font-semibold text-ink">{title}</h3>
+        {action}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function AddBtn({ children, onClick }: { children: React.ReactNode; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="inline-flex items-center gap-1.5 h-9 px-4 rounded-full border border-brand text-brand text-[12px] font-bold uppercase tracking-[0.08em] transition-colors duration-180 hover:bg-brand/5"
+    >
+      <Plus className="h-3.5 w-3.5" /> {children}
+    </button>
+  );
+}
+
+function RemoveBtn({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label="Remove"
+      className="absolute top-3 right-3 h-7 w-7 rounded-full grid place-items-center text-ink-muted hover:text-ink hover:bg-surface-2 transition-colors duration-180"
+    >
+      <X className="h-3.5 w-3.5" />
+    </button>
+  );
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="mb-6">
+      <h3 className="text-[16px] font-semibold text-ink border-b border-line pb-1.5 mb-3">{title}</h3>
+      {children}
+    </section>
+  );
+}
