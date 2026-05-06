@@ -19,11 +19,19 @@ export function AddJobModal({ open, onClose }: AddJobModalProps) {
   if (!open) return null;
 
   const fetchJob = async () => {
-    if (!url.trim()) return;
+    const raw = url.trim();
+    if (!raw) return;
+    const normalized = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+    try {
+      new URL(normalized);
+    } catch {
+      toast({ title: "Invalid URL", description: "Please paste a valid job posting URL.", variant: "destructive" });
+      return;
+    }
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("scrape-job", {
-        body: { url: url.trim() },
+        body: { url: normalized },
       });
       if (error) throw error;
       if ((data as { error?: string })?.error) throw new Error((data as { error: string }).error);
