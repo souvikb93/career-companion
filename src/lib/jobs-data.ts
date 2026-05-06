@@ -1,4 +1,13 @@
-export type JobStatus = "saved" | "applied" | "interviewing" | "offer" | "rejected";
+export type JobStatus =
+  | "saved"
+  | "applied"
+  | "assignment"
+  | "interviewing"
+  | "assessment"
+  | "offer"
+  | "accepted";
+
+export type PipelineView = "all" | "saved" | "in-progress" | "completed";
 
 export interface Job {
   id: string;
@@ -13,14 +22,52 @@ export interface Job {
   dateAdded: string;
 }
 
-export const STATUS_ORDER: JobStatus[] = ["saved", "applied", "interviewing", "offer", "rejected"];
+export const STATUS_ORDER: JobStatus[] = [
+  "saved",
+  "applied",
+  "assignment",
+  "interviewing",
+  "assessment",
+  "offer",
+  "accepted",
+];
 
 export const STATUS_LABEL: Record<JobStatus, string> = {
   saved: "Saved",
   applied: "Applied",
+  assignment: "Assignment",
   interviewing: "Interviewing",
+  assessment: "Assessment",
   offer: "Offer",
-  rejected: "Rejected",
+  accepted: "Accepted",
+};
+
+// Tailwind tokens defined in index.css / tailwind.config.ts
+export const STATUS_DOT_CLASS: Record<JobStatus, string> = {
+  saved: "bg-status-saved",
+  applied: "bg-status-applied",
+  assignment: "bg-status-active",
+  interviewing: "bg-status-active",
+  assessment: "bg-status-assessment",
+  offer: "bg-status-offer",
+  accepted: "bg-status-offer",
+};
+
+export const PIPELINE_VIEWS: { id: PipelineView; label: string }[] = [
+  { id: "all", label: "All Jobs" },
+  { id: "saved", label: "Saved" },
+  { id: "in-progress", label: "In Progress" },
+  { id: "completed", label: "Completed" },
+];
+
+export const STATUS_VIEW: Record<JobStatus, Exclude<PipelineView, "all">> = {
+  saved: "saved",
+  applied: "in-progress",
+  assignment: "in-progress",
+  interviewing: "in-progress",
+  assessment: "completed",
+  offer: "completed",
+  accepted: "completed",
 };
 
 export const SAMPLE_JOBS: Job[] = [
@@ -81,9 +128,9 @@ export const SAMPLE_JOBS: Job[] = [
     role: "Frontend Engineer",
     location: "Dublin, IE",
     salary: "€85k – €110k",
-    status: "rejected",
+    status: "assignment",
     description: "Work on the merchant dashboard powering millions of businesses.",
-    notes: "Rejected after final round — try again in 6 months.",
+    notes: "Take-home assignment due Friday.",
     link: "https://stripe.com/jobs",
     dateAdded: "2026-03-30",
   },
@@ -111,5 +158,29 @@ export const SAMPLE_JOBS: Job[] = [
     notes: "",
     link: "https://arc.net/careers",
     dateAdded: "2026-05-04",
+  },
+  {
+    id: "8",
+    company: "Airbnb",
+    role: "Staff Product Designer",
+    location: "Remote",
+    salary: "$220k – $280k",
+    status: "assessment",
+    description: "Lead design for host experience across web and mobile.",
+    notes: "Final portfolio presentation booked.",
+    link: "https://airbnb.com/careers",
+    dateAdded: "2026-04-10",
+  },
+  {
+    id: "9",
+    company: "Loom",
+    role: "Senior Engineer",
+    location: "Remote",
+    salary: "$190k – $230k",
+    status: "accepted",
+    description: "Build async video tools for distributed teams.",
+    notes: "Signed offer — start June 1.",
+    link: "https://loom.com/careers",
+    dateAdded: "2026-03-20",
   },
 ];

@@ -63,6 +63,12 @@
     --success: 160 84% 39%;
     --chip-grey: 220 13% 84%;
     --chip-grey-fg: 220 19% 27%;
+    /* Job pipeline status colors */
+    --status-saved: 36 7% 63%;        /* #A7A39B */
+    --status-applied: 210 64% 57%;    /* #4A90D9 */
+    --status-active: 13 100% 59%;     /* brand orange — assignment & interviewing */
+    --status-assessment: 37 91% 55%;  /* #F5A623 */
+    --status-offer: 145 63% 49%;      /* #2ECC71 — offer & accepted */
 
     --sidebar-background: 45 10% 95%;
     --sidebar-foreground: 0 0% 8%;
