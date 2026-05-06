@@ -2,6 +2,7 @@ import { NavLink } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { User, Globe, Settings, LifeBuoy, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
+import logo from "@/assets/logo.svg";
 
 const NAV = [
   { to: "/", label: "Tracker", end: true },
@@ -33,12 +34,7 @@ export function TopNav() {
     <header className="sticky top-0 z-40 w-full bg-surface border-b border-line">
       <div className="h-16 px-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div
-            aria-label="Tracka logo"
-            className="h-10 w-10 rounded-xl bg-brand grid place-items-center"
-          >
-            <span className="text-primary-foreground font-bold text-lg leading-none">T</span>
-          </div>
+          <img src={logo} alt="Tracka logo" className="h-10 w-10" />
           <span className="hidden sm:inline text-[14px] font-semibold text-ink">Tracka</span>
         </div>
 
