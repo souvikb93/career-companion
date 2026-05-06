@@ -337,7 +337,7 @@ export default function CVBuilderPage() {
           onMouseLeave={() => setHoverPreview(false)}
         >
         <section
-          className="bg-[hsl(var(--surface-2))] p-6 overflow-auto h-full"
+          className="bg-transparent px-6 pt-6 pb-24 overflow-auto h-full"
           style={{ maxHeight: "calc(100vh - 64px - 81px)" }}
         >
           <div
