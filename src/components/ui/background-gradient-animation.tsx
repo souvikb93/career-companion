@@ -77,7 +77,7 @@ export function BackgroundGradientAnimation({
         @keyframes bga-3 { 0%,100% { transform: translate(0,0) } 50% { transform: translate(-15%, -10%) } }
         @keyframes bga-4 { 0%,100% { transform: translate(0,0) } 50% { transform: translate(20%, 15%) } }
         @keyframes bga-5 { 0%,100% { transform: translate(0,0) } 50% { transform: translate(-20%, 5%) } }
-        .bga-blob { position:absolute; width:var(--size); height:var(--size); border-radius:9999px; mix-blend-mode:var(--blending-value); filter: blur(60px); opacity:0.55; }
+        .bga-blob { position:absolute; width:var(--size); height:var(--size); border-radius:9999px; mix-blend-mode:var(--blending-value); filter: blur(80px); opacity:0.35; }
       `}</style>
       <div className={cn("absolute inset-0", className)}>
         <div className="bga-blob" style={{ background: `radial-gradient(circle, rgba(var(--first-color),0.45) 0%, rgba(var(--first-color),0) 60%)`, top: "-20%", left: "-10%", animation: "bga-1 22s ease-in-out infinite" }} />
