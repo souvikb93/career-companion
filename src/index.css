@@ -135,6 +135,14 @@
     content: "";
     @apply absolute left-0 right-0 -bottom-0.5 h-[2px] bg-brand rounded-full;
   }
+  /* Tier 1: Action buttons — lift + shadow + tint */
+  .btn-action {
+    @apply transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:shadow-none;
+  }
+  /* Tier 2: Triggers & icon buttons — tint only, no movement */
+  .btn-trigger {
+    @apply transition-colors duration-200 ease-out hover:bg-surface-2;
+  }
   .btn-ghost {
     @apply inline-flex items-center gap-2 h-11 px-5 rounded-full border border-ink-2 text-ink text-[12px] font-bold uppercase tracking-[0.08em] transition-all duration-200 ease-out hover:bg-ink hover:text-background hover:border-ink hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:shadow-none;
   }
