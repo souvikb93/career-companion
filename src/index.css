@@ -103,10 +103,10 @@
     letter-spacing: 0.08em;
   }
   .input-base {
-    @apply w-full bg-transparent border border-line rounded-2xl px-4 h-11 text-[14px] text-ink placeholder:text-ink-muted/60 transition-[border-color,background-color] duration-[180ms] ease-out outline-none focus:border-brand hover:bg-surface-hover;
+    @apply w-full bg-transparent border border-line rounded-2xl px-4 h-11 text-[14px] text-ink placeholder:text-ink-muted/60 transition-[border-color,background-color] duration-200 ease-out outline-none focus:border-brand hover:bg-surface-hover;
   }
   .textarea-base {
-    @apply w-full bg-transparent border border-line rounded-2xl px-4 py-3 text-[14px] text-ink placeholder:text-ink-muted/60 transition-[border-color,background-color] duration-[180ms] ease-out outline-none focus:border-brand hover:bg-surface-hover resize-y;
+    @apply w-full bg-transparent border border-line rounded-2xl px-4 py-3 text-[14px] text-ink placeholder:text-ink-muted/60 transition-[border-color,background-color] duration-200 ease-out outline-none focus:border-brand hover:bg-surface-hover resize-y;
   }
   .card-surface {
     @apply bg-surface border border-line rounded-2xl;
@@ -118,7 +118,7 @@
     @apply rounded-full;
   }
   .nav-item {
-    @apply uppercase text-[12px] font-semibold text-ink relative pb-1.5 transition-opacity duration-[180ms] ease-out hover:opacity-70;
+    @apply uppercase text-[12px] font-semibold text-ink relative pb-1.5 transition-opacity duration-200 ease-out hover:opacity-70;
     letter-spacing: 0.08em;
   }
   .nav-item-active::after {
