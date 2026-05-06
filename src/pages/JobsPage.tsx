@@ -143,7 +143,7 @@ export default function JobsPage() {
           <button
             type="button"
             onClick={() => setAddOpen(true)}
-            className="h-14 w-14 rounded-full bg-brand text-primary-foreground grid place-items-center shadow-lg"
+            className="h-14 w-14 rounded-full bg-ink text-white grid place-items-center shadow-lg transition-colors duration-200 ease-out hover:bg-brand active:bg-brand"
             aria-label="Add job"
           >
             <Plus className="h-6 w-6" />
@@ -174,7 +174,7 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
       <button
         type="button"
         onClick={onAdd}
-        className="mt-6 inline-flex items-center gap-2 h-12 px-6 rounded-full bg-brand text-primary-foreground text-[12px] font-bold uppercase tracking-[0.08em] transition-all duration-200 ease-out hover:opacity-95 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:shadow-none"
+        className="btn-primary mt-6 h-12 px-6"
       >
         <Plus className="h-4 w-4" /> Add Job
       </button>
