@@ -281,13 +281,16 @@ export default function CoverLetterPage() {
           onMouseLeave={() => setHoverPreview(false)}
         >
           <section
-            className="bg-[hsl(var(--surface-2))] p-10 overflow-auto h-full"
+            className="bg-[hsl(var(--surface-2))] p-6 overflow-auto h-full"
             style={{ maxHeight: "calc(100vh - 64px - 81px)" }}
           >
-            <div style={{ transform: `scale(${zoom})`, transformOrigin: "top center", width: `${100 / zoom}%` }}>
+            <div
+              className="mx-auto"
+              style={{ width: `${794 * zoom}px`, height: `${1123 * zoom}px` }}
+            >
               <article
-                className="mx-auto bg-white text-ink shadow-2xl"
-                style={{ width: "794px", minHeight: "1123px", padding: "64px" }}
+                className="bg-white text-ink shadow-2xl origin-top-left"
+                style={{ width: "794px", minHeight: "1123px", padding: "64px", transform: `scale(${zoom})` }}
               >
                 <pre className="whitespace-pre-wrap font-sans text-[14px] text-ink leading-relaxed">{letter}</pre>
               </article>
