@@ -79,8 +79,12 @@
   * {
     @apply border-border;
   }
-  html, body, #root {
+  html {
     @apply bg-background text-foreground;
+  }
+  body, #root {
+    @apply text-foreground;
+    background: transparent;
     font-family: "Satoshi", "Helvetica Neue", system-ui, sans-serif;
     font-feature-settings: "ss01", "ss02";
     line-height: 1.5;
