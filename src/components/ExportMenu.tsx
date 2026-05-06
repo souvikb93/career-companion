@@ -18,7 +18,7 @@ const OPTIONS: { f: ExportFormat; label: string; icon: typeof FileText }[] = [
 export function ExportMenu({ onExport }: Props) {
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="inline-flex items-center gap-2 h-11 px-5 rounded-full border border-ink-2 text-ink text-[12px] font-bold uppercase tracking-[0.08em] transition-colors duration-200 hover:bg-surface-2 outline-none">
+      <DropdownMenuTrigger className="btn-ghost outline-none">
         <Download className="h-4 w-4" /> Export <ChevronDown className="h-3.5 w-3.5" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
