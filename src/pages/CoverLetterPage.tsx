@@ -275,7 +275,7 @@ export default function CoverLetterPage() {
           onMouseLeave={() => setHoverPreview(false)}
         >
           <section
-            className="bg-[hsl(var(--surface-2))] p-6 overflow-auto h-full"
+            className="bg-transparent px-6 pt-6 pb-24 overflow-auto h-full"
             style={{ maxHeight: "calc(100vh - 64px - 81px)" }}
           >
             <div
@@ -293,8 +293,8 @@ export default function CoverLetterPage() {
 
           <div
             className={
-              "absolute bottom-4 right-4 z-10 transition-opacity duration-200 " +
-              (hoverPreview ? "opacity-100" : "opacity-70")
+              "absolute bottom-8 right-6 z-10 transition-all duration-200 " +
+              (hoverPreview ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1 pointer-events-none")
             }
           >
             <ZoomControls zoom={zoom} onChange={setZoom} floating />
