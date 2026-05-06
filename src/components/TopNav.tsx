@@ -58,14 +58,14 @@ export function TopNav() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               {MENU.slice(0, -1).map(({ icon: Icon, label }) => (
-                <DropdownMenuItem key={label} className="px-3 py-2.5 text-[13px] text-ink">
-                  <Icon className="h-4 w-4 text-ink-muted mr-3" />
+                <DropdownMenuItem key={label}>
+                  <Icon className="h-4 w-4 text-ink-muted mr-1" />
                   {label}
                 </DropdownMenuItem>
               ))}
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="px-3 py-2.5 text-[13px] text-ink">
-                <LogOut className="h-4 w-4 text-ink-muted mr-3" />
+              <DropdownMenuItem>
+                <LogOut className="h-4 w-4 text-ink-muted mr-1" />
                 Log out
               </DropdownMenuItem>
             </DropdownMenuContent>
