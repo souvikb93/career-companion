@@ -1,5 +1,11 @@
-import { useState } from "react";
-import { Plus, X, Download } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Plus, X, Loader2, Sparkles } from "lucide-react";
+import { useJobs } from "@/lib/jobs-store";
+import { ZoomControls } from "@/components/ZoomControls";
+import { ExportMenu } from "@/components/ExportMenu";
+import { exportAs, ExportFormat } from "@/lib/exporters";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface Experience { id: string; title: string; company: string; start: string; end: string; description: string }
 interface Education { id: string; school: string; degree: string; field: string; date: string }
@@ -53,22 +59,73 @@ const uid = () => Math.random().toString(36).slice(2, 9);
 export default function CVBuilderPage() {
   const [cv, setCv] = useState<CV>(initial);
   const [skillDraft, setSkillDraft] = useState("");
+  const [zoom, setZoom] = useState(1);
+  const [jdText, setJdText] = useState("");
+  const [jdUrl, setJdUrl] = useState("");
+  const [building, setBuilding] = useState(false);
+  const { getJob, targetJobId, setTargetJobId } = useJobs();
+  const { toast } = useToast();
+  const targetJob = targetJobId ? getJob(targetJobId) : null;
+
+  useEffect(() => {
+    if (targetJob) {
+      setJdText(`${targetJob.role} at ${targetJob.company}\n\n${targetJob.description}`);
+    }
+    if (targetJobId) setTargetJobId(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const update = <K extends keyof CV>(k: K, v: CV[K]) => setCv((p) => ({ ...p, [k]: v }));
 
+  const handleExport = (format: ExportFormat) => {
+    const body = renderCvAsText(cv);
+    const filename = targetJob ? `cv-${targetJob.company}` : `cv-${cv.fullName.replace(/\s+/g, "-")}`;
+    exportAs(format, cv.fullName || "CV", body, filename);
+  };
+
+  const buildFromJD = async () => {
+    let jd = jdText.trim();
+    if (!jd && !jdUrl.trim()) return;
+    setBuilding(true);
+    try {
+      if (!jd && jdUrl.trim()) {
+        const { data, error } = await supabase.functions.invoke("scrape-job", { body: { url: jdUrl.trim() } });
+        if (error) throw error;
+        if ((data as { error?: string })?.error) throw new Error((data as { error: string }).error);
+        jd = `${data.role} at ${data.company}\n\n${data.description}`;
+      }
+      // Tailor: tweak summary + reorder skills based on JD keywords (lightweight prototype)
+      const lower = jd.toLowerCase();
+      const tailored = {
+        ...cv,
+        summary: `Tailored for: ${jd.split("\n")[0]}.\n\n${cv.summary}`,
+        skills: [...cv.skills].sort((a, b) =>
+          (lower.includes(b.toLowerCase()) ? 1 : 0) - (lower.includes(a.toLowerCase()) ? 1 : 0),
+        ),
+      };
+      setCv(tailored);
+      toast({ title: "CV tailored", description: "Summary and skill order updated for this job." });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Failed";
+      toast({ title: "Couldn't build CV", description: msg, variant: "destructive" });
+    } finally {
+      setBuilding(false);
+    }
+  };
+
   return (
     <div className="w-full">
-      <div className="px-8 py-5 flex items-center justify-between border-b border-line bg-surface">
+      <div className="px-8 py-5 flex items-center justify-between border-b border-line bg-surface flex-wrap gap-3">
         <div>
           <h1 className="text-[24px] font-semibold text-ink">CV Builder</h1>
-          <p className="text-[13px] text-ink-muted mt-0.5">Edit on the left, preview on the right.</p>
+          <p className="text-[13px] text-ink-muted mt-0.5">
+            {targetJob ? `For: ${targetJob.company} — ${targetJob.role}` : "Edit on the left, preview on the right."}
+          </p>
         </div>
-        <button
-          type="button"
-          className="inline-flex items-center gap-2 h-11 px-5 rounded-full border border-ink-2 text-ink text-[12px] font-bold uppercase tracking-[0.08em] transition-colors duration-180 hover:bg-surface-2"
-        >
-          <Download className="h-4 w-4" /> Export as PDF
-        </button>
+        <div className="flex items-center gap-3">
+          <ZoomControls zoom={zoom} onChange={setZoom} />
+          <ExportMenu onExport={handleExport} />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2" style={{ minHeight: "calc(100vh - 64px - 81px)" }}>
@@ -76,7 +133,33 @@ export default function CVBuilderPage() {
         <section className="bg-surface border-r border-line p-8 overflow-y-auto"
           style={{ maxHeight: "calc(100vh - 64px - 81px)" }}
         >
-          <h2 className="text-[20px] font-semibold text-ink mb-6">Edit your CV</h2>
+          <Card title="Build from job description" action={
+            <button
+              type="button"
+              onClick={buildFromJD}
+              disabled={building || (!jdText.trim() && !jdUrl.trim())}
+              className="inline-flex items-center gap-1.5 h-9 px-4 rounded-full bg-brand text-primary-foreground text-[12px] font-bold uppercase tracking-[0.08em] transition-opacity duration-200 hover:opacity-90 disabled:opacity-60"
+            >
+              {building ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+              {building ? "Building…" : "Build CV"}
+            </button>
+          }>
+            <input
+              value={jdUrl}
+              onChange={(e) => setJdUrl(e.target.value)}
+              placeholder="Paste a job URL (optional)"
+              className="input-base mb-3"
+            />
+            <textarea
+              value={jdText}
+              onChange={(e) => setJdText(e.target.value)}
+              rows={4}
+              placeholder="...or paste the job description text here"
+              className="textarea-base"
+            />
+          </Card>
+
+          <h2 className="text-[20px] font-semibold text-ink mb-6 mt-6">Edit your CV</h2>
 
           <Card title="Personal information">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
