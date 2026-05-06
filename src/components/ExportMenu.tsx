@@ -1,4 +1,4 @@
-import { Download, ChevronDown } from "lucide-react";
+import { Download, ChevronDown, FileText, FileType, FileCode } from "lucide-react";
 import { ExportFormat } from "@/lib/exporters";
 import {
   DropdownMenu,
@@ -9,10 +9,10 @@ import {
 
 interface Props { onExport: (format: ExportFormat) => void }
 
-const OPTIONS: { f: ExportFormat; label: string }[] = [
-  { f: "pdf", label: "PDF (.pdf)" },
-  { f: "docx", label: "Word (.docx)" },
-  { f: "txt", label: "Plain text (.txt)" },
+const OPTIONS: { f: ExportFormat; label: string; icon: typeof FileText }[] = [
+  { f: "pdf", label: "PDF (.pdf)", icon: FileText },
+  { f: "docx", label: "Word (.docx)", icon: FileType },
+  { f: "txt", label: "Plain text (.txt)", icon: FileCode },
 ];
 
 export function ExportMenu({ onExport }: Props) {
