@@ -44,7 +44,7 @@ export function JobDetailPanel({ job, onClose, onUpdate }: Props) {
           </div>
 
           <div className="mb-6 inline-flex items-center gap-2 text-[13px] text-ink">
-            <span className={cn("h-2 w-2 rounded-full", STATUS_DOT[job.status])} />
+            <span className={cn("h-2 w-2 rounded-full", STATUS_DOT_CLASS[job.status])} />
             {STATUS_LABEL[job.status]}
           </div>
 
