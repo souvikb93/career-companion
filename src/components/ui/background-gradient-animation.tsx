@@ -88,11 +88,6 @@ export function BackgroundGradientAnimation({
         @media (prefers-reduced-motion: reduce) { .bga-blob { animation:none !important; } .bga-cursor { display:none; } }
       `}</style>
       <div className={cn("absolute inset-0", className)}>
-        <div className="bga-blob" style={{ background: `radial-gradient(circle, hsl(var(--first-color) / 0.22) 0%, hsl(var(--first-color) / 0) 62%)`, top: "-20%", left: "-10%", animation: "bga-1 18s ease-in-out infinite" }} />
-        <div className="bga-blob" style={{ background: `radial-gradient(circle, hsl(var(--second-color) / 0.18) 0%, hsl(var(--second-color) / 0) 62%)`, top: "30%", left: "60%", animation: "bga-2 22s ease-in-out infinite" }} />
-        <div className="bga-blob" style={{ background: `radial-gradient(circle, hsl(var(--third-color) / 0.2) 0%, hsl(var(--third-color) / 0) 62%)`, top: "60%", left: "-10%", animation: "bga-3 24s ease-in-out infinite" }} />
-        <div className="bga-blob" style={{ background: `radial-gradient(circle, hsl(var(--fourth-color) / 0.18) 0%, hsl(var(--fourth-color) / 0) 62%)`, top: "10%", left: "30%", animation: "bga-4 20s ease-in-out infinite" }} />
-        <div className="bga-blob" style={{ background: `radial-gradient(circle, hsl(var(--fifth-color) / 0.14) 0%, hsl(var(--fifth-color) / 0) 62%)`, top: "55%", left: "40%", animation: "bga-5 21s ease-in-out infinite" }} />
         {interactive && (
           <div ref={interactiveRef} className="bga-blob bga-cursor" style={{ background: `radial-gradient(circle, hsl(var(--first-color) / 0.26) 0%, hsl(var(--second-color) / 0.12) 34%, hsl(var(--first-color) / 0) 66%)` }} />
         )}
