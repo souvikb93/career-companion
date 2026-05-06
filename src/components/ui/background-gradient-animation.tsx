@@ -17,13 +17,13 @@ interface Props {
 }
 
 export function BackgroundGradientAnimation({
-  firstColor = "255, 90, 47",
+  firstColor = "255, 120, 80",
   secondColor = "255, 200, 130",
-  thirdColor = "180, 200, 255",
-  fourthColor = "240, 220, 255",
-  fifthColor = "255, 240, 200",
-  size = "80%",
-  blendingValue = "soft-light",
+  thirdColor = "150, 180, 255",
+  fourthColor = "230, 200, 255",
+  fifthColor = "255, 230, 180",
+  size = "70%",
+  blendingValue = "normal",
   className,
   containerClassName,
   interactive = false,
@@ -77,7 +77,7 @@ export function BackgroundGradientAnimation({
         @keyframes bga-3 { 0%,100% { transform: translate(0,0) } 50% { transform: translate(-15%, -10%) } }
         @keyframes bga-4 { 0%,100% { transform: translate(0,0) } 50% { transform: translate(20%, 15%) } }
         @keyframes bga-5 { 0%,100% { transform: translate(0,0) } 50% { transform: translate(-20%, 5%) } }
-        .bga-blob { position:absolute; width:var(--size); height:var(--size); border-radius:9999px; mix-blend-mode:var(--blending-value); filter: blur(80px); opacity:0.35; }
+        .bga-blob { position:absolute; width:var(--size); height:var(--size); border-radius:9999px; mix-blend-mode:var(--blending-value); filter: blur(60px); opacity:0.55; }
       `}</style>
       <div className={cn("absolute inset-0", className)}>
         <div className="bga-blob" style={{ background: `radial-gradient(circle, rgba(var(--first-color),0.45) 0%, rgba(var(--first-color),0) 60%)`, top: "-20%", left: "-10%", animation: "bga-1 22s ease-in-out infinite" }} />
