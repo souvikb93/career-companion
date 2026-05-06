@@ -4,13 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { X, ExternalLink, FileText, Mail, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const STATUS_DOT: Record<JobStatus, string> = {
-  saved: "bg-ink-muted",
-  applied: "bg-ink-2",
-  interviewing: "bg-brand",
-  offer: "bg-success",
-  rejected: "bg-chip-grey-fg",
-};
+import { STATUS_DOT_CLASS } from "@/lib/jobs-data";
 
 interface Props {
   job: Job | null;
