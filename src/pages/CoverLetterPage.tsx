@@ -54,7 +54,7 @@ export default function CoverLetterPage() {
   const [letter, setLetter] = useState(
     targetJob ? letterFor(targetJob.company, targetJob.role, targetJob.description) : DEFAULT_LETTER,
   );
-  const [zoom, setZoom] = useState(1);
+  const [zoom, setZoom] = useState(0.6);
   const [jobUrl, setJobUrl] = useState("");
   const [fetching, setFetching] = useState(false);
   const [showTailor, setShowTailor] = useState(true);

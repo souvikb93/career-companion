@@ -62,7 +62,7 @@ const uid = () => Math.random().toString(36).slice(2, 9);
 export default function CVBuilderPage() {
   const [cv, setCv] = useState<CV>(initial);
   const [skillDraft, setSkillDraft] = useState("");
-  const [zoom, setZoom] = useState(1);
+  const [zoom, setZoom] = useState(0.6);
   const [jdText, setJdText] = useState("");
   const [jdUrl, setJdUrl] = useState("");
   const [building, setBuilding] = useState(false);
