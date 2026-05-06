@@ -51,7 +51,7 @@ export function TopNav() {
         <div className="flex items-center gap-3">
           <DropdownMenu>
             <DropdownMenuTrigger
-              className="h-10 w-10 rounded-full bg-surface-2 border border-line text-ink text-[13px] font-semibold transition-opacity duration-180 hover:opacity-80 outline-none"
+              className="h-10 w-10 rounded-full bg-surface-2 border border-line text-ink text-[13px] font-semibold transition-colors duration-200 hover:bg-surface-hover outline-none"
               aria-label="User menu"
             >
               JD
