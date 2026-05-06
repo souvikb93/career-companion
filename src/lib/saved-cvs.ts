@@ -9,43 +9,44 @@ export interface SavedCV<T = unknown> {
 
 const KEY = "saved_cvs_v1";
 
-function read<T>(): SavedCV<T>[] {
+function read<T>(key: string): SavedCV<T>[] {
   try {
-    const raw = localStorage.getItem(KEY);
+    const raw = localStorage.getItem(key);
     return raw ? (JSON.parse(raw) as SavedCV<T>[]) : [];
   } catch { return []; }
 }
 
-function write<T>(list: SavedCV<T>[]) {
-  try { localStorage.setItem(KEY, JSON.stringify(list)); } catch {/* noop */}
+function write<T>(key: string, list: SavedCV<T>[]) {
+  try { localStorage.setItem(key, JSON.stringify(list)); } catch {/* noop */}
 }
 
-export function useSavedCVs<T>() {
-  const [list, setList] = useState<SavedCV<T>[]>(() => read<T>());
+export function useSavedCVs<T>(key: string = "saved_cvs_v1") {
+  const [list, setList] = useState<SavedCV<T>[]>(() => read<T>(key));
 
   useEffect(() => {
+    setList(read<T>(key));
     const onStorage = (e: StorageEvent) => {
-      if (e.key === KEY) setList(read<T>());
+      if (e.key === key) setList(read<T>(key));
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
-  }, []);
+  }, [key]);
 
   const save = (name: string, data: T) => {
     const item: SavedCV<T> = {
       id: crypto.randomUUID(),
-      name: name.trim() || "Untitled CV",
+      name: name.trim() || "Untitled",
       savedAt: new Date().toISOString(),
       data,
     };
     const next = [item, ...list];
-    setList(next); write(next);
+    setList(next); write(key, next);
     return item;
   };
 
   const remove = (id: string) => {
     const next = list.filter((c) => c.id !== id);
-    setList(next); write(next);
+    setList(next); write(key, next);
   };
 
   return { list, save, remove };
