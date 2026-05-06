@@ -70,7 +70,9 @@ export default function CVBuilderPage() {
   const [saveOpen, setSaveOpen] = useState(false);
   const [hoverPreview, setHoverPreview] = useState(false);
   const { getJob, targetJobId, setTargetJobId } = useJobs();
-  const { list: savedCVs, save: saveCV, remove: removeCV } = useSavedCVs<CV>();
+  const { list: savedCVs, save: saveCV, remove: removeCV } = useSavedCVs<CV>("saved_cvs_v1", () => [
+    { id: "demo-cv-1", name: "Sample Resume — Product Designer", savedAt: new Date().toISOString(), data: initial },
+  ]);
   const { toast } = useToast();
   const targetJob = targetJobId ? getJob(targetJobId) : null;
 
