@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Search, Plus, ChevronRight } from "lucide-react";
-import { Job, JobStatus, SAMPLE_JOBS, STATUS_ORDER, STATUS_LABEL } from "@/lib/jobs-data";
+import { Job, JobStatus, STATUS_ORDER, STATUS_LABEL } from "@/lib/jobs-data";
+import { useJobs } from "@/lib/jobs-store";
 import { JobDetailPanel } from "@/components/jobs/JobDetailPanel";
 import { AddJobModal } from "@/components/jobs/AddJobModal";
 import { cn } from "@/lib/utils";
@@ -30,7 +31,7 @@ function formatDate(iso: string) {
 type Filter = "all" | JobStatus;
 
 export default function JobsPage() {
-  const [jobs, setJobs] = useState<Job[]>(SAMPLE_JOBS);
+  const { jobs, updateJob } = useJobs();
   const [filter, setFilter] = useState<Filter>("all");
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -158,7 +159,7 @@ export default function JobsPage() {
       <JobDetailPanel
         job={selected}
         onClose={() => setSelectedId(null)}
-        onUpdate={(u) => setJobs((prev) => prev.map((j) => (j.id === u.id ? u : j)))}
+        onUpdate={updateJob}
       />
       <AddJobModal open={addOpen} onClose={() => setAddOpen(false)} />
     </div>
