@@ -54,7 +54,7 @@ export default function CoverLetterPage() {
   const [letter, setLetter] = useState(
     targetJob ? letterFor(targetJob.company, targetJob.role, targetJob.description) : DEFAULT_LETTER,
   );
-  const [zoom, setZoom] = useState(1);
+  const [zoom, setZoom] = useState(0.6);
   const [jobUrl, setJobUrl] = useState("");
   const [fetching, setFetching] = useState(false);
   const [showTailor, setShowTailor] = useState(true);
@@ -274,31 +274,38 @@ export default function CoverLetterPage() {
         </section>
 
         {/* Preview - canvas with A4 */}
-        <section
-          className="relative bg-[hsl(var(--surface-2))] p-10 overflow-auto"
+        <div
+          className="relative"
           style={{ maxHeight: "calc(100vh - 64px - 81px)" }}
           onMouseEnter={() => setHoverPreview(true)}
           onMouseLeave={() => setHoverPreview(false)}
         >
-          <div style={{ transform: `scale(${zoom})`, transformOrigin: "top center", width: `${100 / zoom}%` }}>
-            <article
-              className="mx-auto bg-white text-ink shadow-2xl"
-              style={{ width: "794px", minHeight: "1123px", padding: "64px" }}
+          <section
+            className="bg-[hsl(var(--surface-2))] p-6 overflow-auto h-full"
+            style={{ maxHeight: "calc(100vh - 64px - 81px)" }}
+          >
+            <div
+              className="mx-auto"
+              style={{ width: `${794 * zoom}px`, height: `${1123 * zoom}px` }}
             >
-              <pre className="whitespace-pre-wrap font-sans text-[14px] text-ink leading-relaxed">{letter}</pre>
-            </article>
-          </div>
+              <article
+                className="bg-white text-ink shadow-2xl origin-top-left"
+                style={{ width: "794px", minHeight: "1123px", padding: "64px", transform: `scale(${zoom})` }}
+              >
+                <pre className="whitespace-pre-wrap font-sans text-[14px] text-ink leading-relaxed">{letter}</pre>
+              </article>
+            </div>
+          </section>
 
           <div
             className={
-              "sticky bottom-4 ml-auto mt-4 w-fit transition-opacity duration-200 " +
-              (hoverPreview ? "opacity-100" : "opacity-60")
+              "absolute bottom-4 right-4 z-10 transition-opacity duration-200 " +
+              (hoverPreview ? "opacity-100" : "opacity-70")
             }
-            style={{ float: "right", position: "sticky" }}
           >
             <ZoomControls zoom={zoom} onChange={setZoom} floating />
           </div>
-        </section>
+        </div>
       </div>
     </div>
   );

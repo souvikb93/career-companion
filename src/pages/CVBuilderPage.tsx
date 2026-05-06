@@ -62,7 +62,7 @@ const uid = () => Math.random().toString(36).slice(2, 9);
 export default function CVBuilderPage() {
   const [cv, setCv] = useState<CV>(initial);
   const [skillDraft, setSkillDraft] = useState("");
-  const [zoom, setZoom] = useState(1);
+  const [zoom, setZoom] = useState(0.6);
   const [jdText, setJdText] = useState("");
   const [jdUrl, setJdUrl] = useState("");
   const [building, setBuilding] = useState(false);
@@ -328,16 +328,23 @@ export default function CVBuilderPage() {
         </section>
 
         {/* Preview - canvas with A4 page */}
-        <section
-          className="relative bg-[hsl(var(--surface-2))] p-10 overflow-auto"
+        <div
+          className="relative"
           style={{ maxHeight: "calc(100vh - 64px - 81px)" }}
           onMouseEnter={() => setHoverPreview(true)}
           onMouseLeave={() => setHoverPreview(false)}
         >
-          <div style={{ transform: `scale(${zoom})`, transformOrigin: "top center", width: `${100 / zoom}%` }}>
+        <section
+          className="bg-[hsl(var(--surface-2))] p-6 overflow-auto h-full"
+          style={{ maxHeight: "calc(100vh - 64px - 81px)" }}
+        >
+          <div
+            className="mx-auto"
+            style={{ width: `${794 * zoom}px`, height: `${1123 * zoom}px` }}
+          >
             <article
-              className="mx-auto bg-white text-ink shadow-2xl"
-              style={{ width: "794px", minHeight: "1123px", padding: "64px" }}
+              className="bg-white text-ink shadow-2xl origin-top-left"
+              style={{ width: "794px", minHeight: "1123px", padding: "64px", transform: `scale(${zoom})` }}
             >
               <header className="text-center mb-8">
                 <h2 className="text-[28px] font-semibold text-ink">{cv.fullName || "Your name"}</h2>
@@ -386,17 +393,18 @@ export default function CVBuilderPage() {
             </article>
           </div>
 
+        </section>
+
           {/* Floating zoom controls */}
           <div
             className={
-              "sticky bottom-4 ml-auto mt-4 w-fit transition-opacity duration-200 " +
-              (hoverPreview ? "opacity-100" : "opacity-60")
+              "absolute bottom-4 right-4 z-10 transition-opacity duration-200 " +
+              (hoverPreview ? "opacity-100" : "opacity-70")
             }
-            style={{ float: "right", position: "sticky" }}
           >
             <ZoomControls zoom={zoom} onChange={setZoom} floating />
           </div>
-        </section>
+        </div>
       </div>
     </div>
   );
