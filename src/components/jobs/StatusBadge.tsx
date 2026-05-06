@@ -1,20 +1,14 @@
-import { JobStatus } from "@/lib/jobs-data";
+import { JobStatus, STATUS_LABEL } from "@/lib/jobs-data";
 import { cn } from "@/lib/utils";
 
 const STYLES: Record<JobStatus, string> = {
-  applied: "bg-ink-2 text-primary-foreground",
-  interviewing: "bg-brand text-primary-foreground",
-  offer: "bg-success text-primary-foreground",
-  rejected: "bg-chip-grey text-chip-grey-fg",
   saved: "bg-transparent text-ink border border-line",
-};
-
-const LABEL: Record<JobStatus, string> = {
-  applied: "Applied",
-  interviewing: "Interviewing",
-  offer: "Offer",
-  rejected: "Rejected",
-  saved: "Saved",
+  applied: "bg-status-applied text-primary-foreground",
+  assignment: "bg-status-active text-primary-foreground",
+  interviewing: "bg-status-active text-primary-foreground",
+  assessment: "bg-status-assessment text-primary-foreground",
+  offer: "bg-status-offer text-primary-foreground",
+  accepted: "bg-status-offer text-primary-foreground",
 };
 
 export function StatusBadge({ status, className }: { status: JobStatus; className?: string }) {
@@ -26,7 +20,7 @@ export function StatusBadge({ status, className }: { status: JobStatus; classNam
         className,
       )}
     >
-      {LABEL[status]}
+      {STATUS_LABEL[status]}
     </span>
   );
 }
