@@ -1,15 +1,21 @@
-## Why the landing page still shows old jobs
+## Changes
 
-The `/` route renders `JobsPage`, which reads from `JobsProvider`. The provider hydrates from `localStorage["jobs_v4"]` first and only falls back to the new `SAMPLE_JOBS` (12 companies) if that key is empty. Your browser already has saved data under that key, so the new dataset never loads.
+**1. Remove hover lift + shadow on Add Job modal buttons** (`src/components/jobs/AddJobModal.tsx`)
+The four action buttons (Enter Manually, Fetch Job, Back, Add Job) currently use `hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:shadow-none`. Remove those classes so the buttons stay flat on hover (keep the color/opacity hover states).
 
-## Fix: one-time forced reseed
+**2. Unify the close (X) icon style across popups**
+Adopt the Add Job modal's X style as the standard:
+- Absolute top-right (`top-4 right-4`)
+- `h-9 w-9` round, no border, no background
+- `text-ink-muted hover:text-ink hover:bg-surface-2 transition-colors`
+- `X` icon at `h-4 w-4`
 
-Bump the storage key from `jobs_v4` → `jobs_v5` in `src/lib/jobs-store.tsx`. On next page load, the provider finds nothing under `jobs_v5`, falls back to `SAMPLE_JOBS`, and the landing-page table will show:
+Apply this to:
+- `src/components/SaveModal.tsx` (currently uses a bordered `bg-surface-2` circle inline in the header — replace with the absolute, borderless version)
+- `src/components/SavedCVsPanel.tsx` (Library panel close button — align to same style)
 
-Google · Zalando · Spotify · Amazon · N26 · Delivery Hero · SAP · Meta · Adidas · Booking.com · Miro · Siemens
+**3. Rename "Name" → "File name" in Save modal** (`src/components/SaveModal.tsx`)
+Change the label text and update the input placeholder accordingly. Affects both Save Resume and Save Cover Letter popups since they share this component.
 
-That's a single one-line change. No other files need to be touched — the landing page already shares the same store as the Tracker page.
-
-## Heads-up
-
-Any jobs you added manually in the browser will be cleared by the key bump (this is the same trade-off as the previous bump).
+## Out of scope
+No business-logic changes; purely presentation tweaks.
