@@ -41,13 +41,35 @@ export default function JobsPage() {
   };
 
   return (
-    <div className="flex w-full" style={{ minHeight: "calc(100vh - 64px)" }}>
-      {/* Sidebar */}
-      <aside className="hidden md:flex w-[240px] shrink-0 bg-surface border-r border-line flex-col p-5 sticky top-16 self-start"
-        style={{ height: "calc(100vh - 64px)" }}
-      >
-        <p className="eyebrow mt-2 mb-4">Filter by status</p>
-        <div className="space-y-2">
+    <div className="w-full" style={{ minHeight: "calc(100vh - 64px)" }}>
+      <main className="w-full min-w-0 p-8">
+        <div className="flex flex-wrap items-end justify-between gap-4 mb-6">
+          <div>
+            <h1 className="text-[32px] font-semibold text-ink leading-tight">{titleMap[filter]}</h1>
+            <p className="text-[14px] text-ink-muted mt-1">{filtered.length} jobs</p>
+          </div>
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <div className="relative flex-1 sm:w-[320px]">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-muted" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search by company or role"
+                className="input-base pl-10"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => setAddOpen(true)}
+              className="hidden sm:inline-flex h-12 px-5 rounded-full bg-brand text-primary-foreground text-[12px] font-bold uppercase tracking-[0.08em] items-center justify-center gap-2 transition-opacity duration-180 hover:opacity-90 whitespace-nowrap"
+            >
+              <Plus className="h-4 w-4" /> Add Job
+            </button>
+          </div>
+        </div>
+
+        {/* Horizontal filter tabs */}
+        <div className="flex flex-wrap items-center gap-2 mb-6 border-b border-line pb-3">
           {filters.map((f) => {
             const active = filter === f;
             return (
@@ -56,7 +78,7 @@ export default function JobsPage() {
                 type="button"
                 onClick={() => setFilter(f)}
                 className={cn(
-                  "w-full h-11 px-4 rounded-2xl border text-[13px] font-medium flex items-center justify-between transition-colors duration-180",
+                  "h-10 px-4 rounded-full border text-[13px] font-medium inline-flex items-center gap-2 transition-colors duration-180",
                   active
                     ? "border-brand text-brand bg-transparent"
                     : "border-line text-ink hover:bg-surface-hover",
@@ -69,35 +91,6 @@ export default function JobsPage() {
               </button>
             );
           })}
-        </div>
-
-        <div className="mt-auto pt-6">
-          <button
-            type="button"
-            onClick={() => setAddOpen(true)}
-            className="w-full h-12 rounded-full bg-brand text-primary-foreground text-[12px] font-bold uppercase tracking-[0.08em] inline-flex items-center justify-center gap-2 transition-opacity duration-180 hover:opacity-90"
-          >
-            <Plus className="h-4 w-4" /> Add Job
-          </button>
-        </div>
-      </aside>
-
-      {/* Main */}
-      <main className="flex-1 min-w-0 p-8">
-        <div className="flex flex-wrap items-end justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-[32px] font-semibold text-ink leading-tight">{titleMap[filter]}</h1>
-            <p className="text-[14px] text-ink-muted mt-1">{filtered.length} jobs</p>
-          </div>
-          <div className="relative w-full max-w-[320px]">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-muted" />
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search by company or role"
-              className="input-base pl-10"
-            />
-          </div>
         </div>
 
         <div className="card-surface overflow-hidden">
