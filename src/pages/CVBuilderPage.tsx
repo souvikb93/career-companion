@@ -127,10 +127,37 @@ export default function CVBuilderPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setSavedOpen(true)}
+            className="inline-flex items-center gap-2 h-11 px-5 rounded-full border border-ink-2 text-ink text-[12px] font-bold uppercase tracking-[0.08em] transition-colors duration-200 hover:bg-surface-2"
+          >
+            <FolderOpen className="h-4 w-4" /> Saved CVs
+            {savedCVs.length > 0 && (
+              <span className="ml-1 text-ink-muted">{savedCVs.length}</span>
+            )}
+          </button>
           <ZoomControls zoom={zoom} onChange={setZoom} />
           <ExportMenu onExport={handleExport} />
         </div>
       </div>
+
+      <SavedCVsPanel
+        open={savedOpen}
+        onClose={() => setSavedOpen(false)}
+        list={savedCVs}
+        onLoad={(item) => {
+          setCv(item.data);
+          setSavedOpen(false);
+          toast({ title: "CV loaded", description: item.name });
+        }}
+        onDelete={(id) => removeCV(id)}
+        onSaveCurrent={(name) => {
+          const item = saveCV(name || (targetJob ? `CV for ${targetJob.company}` : cv.fullName || "Untitled CV"), cv);
+          toast({ title: "CV saved", description: item.name });
+        }}
+        defaultName={targetJob ? `CV for ${targetJob.company} — ${targetJob.role}` : cv.fullName}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-2" style={{ minHeight: "calc(100vh - 64px - 81px)" }}>
         {/* Editor */}
