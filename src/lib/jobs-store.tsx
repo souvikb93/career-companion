@@ -12,20 +12,41 @@ interface Ctx {
 }
 
 const JobsContext = createContext<Ctx | null>(null);
-const STORAGE_KEY = "jobs_v5";
+const STORAGE_KEY = "jobs_v6";
+const DATA_VERSION_KEY = `${STORAGE_KEY}_data_version`;
+const CURRENT_DATA_VERSION = "shared-jobs-2026-05-06";
+
+const LEGACY_DEMO_COMPANIES = new Set(["Linear", "Vercel", "Notion", "Figma", "Stripe", "Anthropic", "Arc"]);
+
+function readInitialJobs() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    const version = localStorage.getItem(DATA_VERSION_KEY);
+
+    if (raw && version === CURRENT_DATA_VERSION) return JSON.parse(raw) as Job[];
+
+    if (raw) {
+      const parsed = JSON.parse(raw) as Job[];
+      const hasLegacyDemoRows = Array.isArray(parsed) && parsed.some((job) => LEGACY_DEMO_COMPANIES.has(job.company));
+      if (!hasLegacyDemoRows && version === CURRENT_DATA_VERSION) return parsed;
+    }
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(SAMPLE_JOBS));
+    localStorage.setItem(DATA_VERSION_KEY, CURRENT_DATA_VERSION);
+  } catch {/* noop */}
+
+  return SAMPLE_JOBS;
+}
 
 export function JobsProvider({ children }: { children: ReactNode }) {
-  const [jobs, setJobsState] = useState<Job[]>(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) return JSON.parse(raw);
-    } catch {/* noop */}
-    return SAMPLE_JOBS;
-  });
+  const [jobs, setJobsState] = useState<Job[]>(readInitialJobs);
   const [targetJobId, setTargetJobId] = useState<string | null>(null);
 
   useEffect(() => {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(jobs)); } catch {/* noop */}
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(jobs));
+      localStorage.setItem(DATA_VERSION_KEY, CURRENT_DATA_VERSION);
+    } catch {/* noop */}
   }, [jobs]);
 
   const setJobs = (j: Job[]) => setJobsState(j);
