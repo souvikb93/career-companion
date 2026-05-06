@@ -61,7 +61,9 @@ export default function CoverLetterPage() {
   const [hoverPreview, setHoverPreview] = useState(false);
   const [savedOpen, setSavedOpen] = useState(false);
   const [saveOpen, setSaveOpen] = useState(false);
-  const { list: savedLetters, save: saveLetter, remove: removeLetter } = useSavedCVs<LetterDoc>();
+  const { list: savedLetters, save: saveLetter, remove: removeLetter } = useSavedCVs<LetterDoc>("saved_letters_v1", () => [
+    { id: "demo-letter-1", name: "Sample Cover Letter", savedAt: new Date().toISOString(), data: { letter: DEFAULT_LETTER } },
+  ]);
   const scrollRef = useRef<HTMLDivElement>(null);
   // Override storage key indirectly: not needed — saved-cvs is shared. We'll namespace via name prefix.
 
