@@ -5,7 +5,8 @@ export type JobStatus =
   | "interviewing"
   | "assessment"
   | "offer"
-  | "accepted";
+  | "accepted"
+  | "rejected";
 
 export type PipelineView = "all" | "saved" | "in-progress" | "completed";
 
@@ -30,6 +31,7 @@ export const STATUS_ORDER: JobStatus[] = [
   "assessment",
   "offer",
   "accepted",
+  "rejected",
 ];
 
 export const STATUS_LABEL: Record<JobStatus, string> = {
@@ -40,6 +42,7 @@ export const STATUS_LABEL: Record<JobStatus, string> = {
   assessment: "Assessment",
   offer: "Offer",
   accepted: "Accepted",
+  rejected: "Rejected",
 };
 
 // Tailwind tokens defined in index.css / tailwind.config.ts
@@ -51,6 +54,7 @@ export const STATUS_DOT_CLASS: Record<JobStatus, string> = {
   assessment: "bg-status-assessment",
   offer: "bg-status-offer",
   accepted: "bg-status-offer",
+  rejected: "bg-ink-muted",
 };
 
 export const PIPELINE_VIEWS: { id: PipelineView; label: string }[] = [
@@ -68,6 +72,7 @@ export const STATUS_VIEW: Record<JobStatus, Exclude<PipelineView, "all">> = {
   assessment: "completed",
   offer: "completed",
   accepted: "completed",
+  rejected: "completed",
 };
 
 export const SAMPLE_JOBS: Job[] = [
