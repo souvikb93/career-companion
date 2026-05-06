@@ -180,7 +180,7 @@ export default function CVBuilderPage() {
               type="button"
               onClick={buildFromJD}
               disabled={building || (!jdText.trim() && !jdUrl.trim())}
-              className="inline-flex items-center gap-1.5 h-9 px-4 rounded-full bg-brand text-primary-foreground text-[12px] font-bold uppercase tracking-[0.08em] transition-opacity duration-200 hover:opacity-90 disabled:opacity-60"
+              className="inline-flex items-center gap-1.5 h-9 px-4 rounded-full bg-brand text-primary-foreground text-[12px] font-bold uppercase tracking-[0.08em] transition-all duration-200 ease-out hover:opacity-95 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:shadow-none disabled:opacity-60"
             >
               {building ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
               {building ? "Building…" : "Build CV"}

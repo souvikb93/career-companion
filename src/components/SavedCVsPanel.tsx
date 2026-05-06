@@ -53,7 +53,7 @@ export function SavedCVsPanel<T>({ open, onClose, title = "Library", list, onLoa
                       <button
                         type="button"
                         onClick={() => onLoad(item)}
-                        className="h-8 px-3 rounded-full bg-brand text-primary-foreground text-[11px] font-bold uppercase tracking-[0.08em] transition-opacity duration-200 hover:opacity-90"
+                        className="h-8 px-3 rounded-full bg-brand text-primary-foreground text-[11px] font-bold uppercase tracking-[0.08em] transition-all duration-200 ease-out hover:opacity-95 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:shadow-none"
                       >
                         Open
                       </button>
