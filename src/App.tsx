@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppLayout } from "@/components/AppLayout";
+import { JobsProvider } from "@/lib/jobs-store";
 import Index from "./pages/Index.tsx";
 import CVBuilderPage from "./pages/CVBuilderPage";
 import CoverLetterPage from "./pages/CoverLetterPage";
@@ -17,14 +18,16 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route element={<AppLayout />}>
-            <Route path="/" element={<Index />} />
-            <Route path="/cv" element={<CVBuilderPage />} />
-            <Route path="/cover-letter" element={<CoverLetterPage />} />
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <JobsProvider>
+          <Routes>
+            <Route element={<AppLayout />}>
+              <Route path="/" element={<Index />} />
+              <Route path="/cv" element={<CVBuilderPage />} />
+              <Route path="/cover-letter" element={<CoverLetterPage />} />
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </JobsProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
