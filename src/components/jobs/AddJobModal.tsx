@@ -180,7 +180,7 @@ export function AddJobModal({ open, onClose }: AddJobModalProps) {
               <button
                 type="button"
                 onClick={() => setMode("url")}
-                className="flex-1 h-12 rounded-full border border-ink-2 text-ink text-[12px] font-bold uppercase tracking-[0.08em] transition-all duration-200 ease-out hover:bg-surface-2 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:shadow-none"
+                className="flex-1 h-12 rounded-full border border-ink-2 text-ink text-[12px] font-bold uppercase tracking-[0.08em] transition-colors duration-200 ease-out hover:bg-surface-2"
               >
                 Back
               </button>
@@ -188,7 +188,7 @@ export function AddJobModal({ open, onClose }: AddJobModalProps) {
                 type="button"
                 onClick={saveManual}
                 disabled={!manual.company.trim() || !manual.role.trim()}
-                className="flex-1 h-12 rounded-full bg-brand text-primary-foreground text-[12px] font-bold uppercase tracking-[0.08em] transition-all duration-200 ease-out hover:opacity-95 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:shadow-none inline-flex items-center justify-center gap-2 disabled:opacity-60"
+                className="flex-1 h-12 rounded-full bg-brand text-primary-foreground text-[12px] font-bold uppercase tracking-[0.08em] transition-opacity duration-200 ease-out hover:opacity-95 inline-flex items-center justify-center gap-2 disabled:opacity-60"
               >
                 <Plus className="h-4 w-4" />
                 Add Job
