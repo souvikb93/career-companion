@@ -1,10 +1,31 @@
 import { useMemo, useState } from "react";
-import { Search, Plus, ExternalLink } from "lucide-react";
+import { Search, Plus, ChevronRight } from "lucide-react";
 import { Job, JobStatus, SAMPLE_JOBS, STATUS_ORDER, STATUS_LABEL } from "@/lib/jobs-data";
-import { StatusBadge } from "@/components/jobs/StatusBadge";
 import { JobDetailPanel } from "@/components/jobs/JobDetailPanel";
 import { AddJobModal } from "@/components/jobs/AddJobModal";
 import { cn } from "@/lib/utils";
+
+const STATUS_DOT: Record<JobStatus, string> = {
+  saved: "bg-ink-muted",
+  applied: "bg-ink-2",
+  interviewing: "bg-brand",
+  offer: "bg-success",
+  rejected: "bg-chip-grey-fg",
+};
+
+function StatusDot({ status }: { status: JobStatus }) {
+  return (
+    <span className="inline-flex items-center gap-2 text-[13px] text-ink whitespace-nowrap">
+      <span className={cn("h-2 w-2 rounded-full shrink-0", STATUS_DOT[status])} />
+      {STATUS_LABEL[status]}
+    </span>
+  );
+}
+
+function formatDate(iso: string) {
+  const d = new Date(iso);
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
 
 type Filter = "all" | JobStatus;
 
