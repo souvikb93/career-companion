@@ -1,52 +1,61 @@
-## Goal
+## Goals
 
-Redefine the button system so primary, secondary, and tertiary buttons have predictable, consistent states — no more lift/shadow on secondary actions. Apply the new secondary style to all three header buttons (Save, Library, Export) on the Resume and Letters pages.
+1. Make the new 12-job dataset actually appear on the Tracker page (currently masked by cached localStorage).
+2. Add a third button tier (tertiary, text-only link style) to the design system and use it for the "Open" actions in the Library panel.
+3. Replace the Save modal format pills with a real dropdown (default PDF), and align Save / Cancel / close buttons with the new primary & secondary styles.
 
-## 1. Primary button (`.btn-primary` in `src/index.css`)
+## Changes
 
-| State | Background | Text | Notes |
-|---|---|---|---|
-| Default | `--ink` (#151515) | white | rounded-full, bold uppercase |
-| Hover | `--brand` (#FD5D2E / current 13 100% 59%) | white | color swap only — no lift, no shadow |
-| Active | `--brand` | white | same as hover |
-| Disabled | `--ink` | white, opacity 50% | `disabled:opacity-50`, no hover swap |
+### 1. Force fresh job data on the Tracker
 
-Implementation: rewrite `.btn-primary` to use `bg-ink text-white hover:bg-brand active:bg-brand disabled:opacity-50 disabled:hover:bg-ink transition-colors`. Remove `hover:-translate-y-0.5`, `hover:shadow-lg`, `active:translate-y-0`, `active:shadow-none`.
+`src/lib/jobs-store.tsx`
+- Bump `STORAGE_KEY` from `"jobs_v3"` → `"jobs_v4"` so any browser still holding old cached jobs reloads `SAMPLE_JOBS` from `jobs-data.ts` (the 12 companies you provided).
 
-Note: today the brand orange token is #FF5A2F (13 100% 59%). The user spec says #FD5D2E. They render almost identically, so we keep the existing `--brand` token unless the user wants the exact hex updated.
+### 2. Add tertiary button to the design system
 
-## 2. Secondary button (`.btn-ghost` in `src/index.css`)
+`src/index.css` (under `@layer components`)
+- Add `.btn-tertiary`:
+  - inline-flex, no background, no border, no padding box
+  - text style: `text-[12px] font-bold uppercase tracking-[0.08em] text-ink`
+  - hover: `text-brand`
+  - active: `text-brand`
+  - disabled: `opacity-50` (no color change)
+  - `transition-colors duration-200 ease-out`
 
-Match the JD profile button in `TopNav.tsx`:
-`bg-surface-2 border border-line text-ink hover:bg-surface-hover transition-colors`
+This becomes the documented third tier alongside `.btn-primary` (black → orange) and `.btn-ghost` (secondary surface).
 
-| State | Background | Text | Border |
-|---|---|---|---|
-| Default | `--surface-2` | `--ink` | `--line` |
-| Hover | `--surface-hover` | `--ink` | `--line` |
-| Active | `--surface-hover` | `--ink` | `--line` |
-| Disabled | `--surface-2` | `--ink` 50% | `--line` |
+### 3. Use tertiary for "Open" in Library panel
 
-Remove `hover:-translate-y-0.5`, `hover:shadow-md`, `hover:bg-ink`, `hover:text-background`, `hover:border-ink`, `active:translate-y-0`, `active:shadow-none`. Keep rounded-full, h-11, uppercase styling.
+`src/components/SavedCVsPanel.tsx`
+- Replace the orange pill "Open" button with `<button className="btn-tertiary">Open</button>`.
+- Leave the trash icon button as-is (icon-only ghost behavior).
 
-## 3. Apply to Resume + Letters page header buttons
+### 4. Save modal — dropdown + new button styles
 
-The three header buttons on each page are:
+`src/components/SaveModal.tsx`
+- Replace the three format pill buttons with a single native-styled `<select>` using our `input-base` look:
+  - Options: PDF, DOC, TXT
+  - Default value: `pdf` (already the initial state)
+  - Add a subtle chevron via background SVG or a wrapping div with a `ChevronDown` icon to keep visual parity with our inputs.
+- Cancel button → `className="btn-ghost flex-1 justify-center"` (new secondary).
+- Save button → `className="btn-primary flex-1 justify-center"` (new primary: black → orange on hover).
+- Close (X) icon button: keep the circular icon control but switch to the secondary token set (`bg-surface-2 border-line text-ink hover:bg-surface-hover`) so it follows the secondary behavior (color-only, no movement).
 
-- **Resume** (`src/pages/CVBuilderPage.tsx`): Save, Library, Export
-- **Letters** (`src/pages/CoverLetterPage.tsx`): Save, Library, Export
+### 5. Sweep remaining stray buttons in Letters/CV pages
 
-Save and Library already use `.btn-ghost`, so they pick up the new style automatically.
+Same pattern already applied to the Tracker `+` and Library buttons — extend to the two spots still using the old `bg-brand … hover:-translate-y-0.5 hover:shadow-md` pattern so the design system is consistent everywhere:
 
-Export is rendered by `src/components/ExportMenu.tsx` with inline classes. Update its trigger className to use the same secondary style (extract to `.btn-ghost` or align the inline classes to match: `bg-surface-2 border border-line text-ink hover:bg-surface-hover`, no lift/shadow).
+`src/pages/CoverLetterPage.tsx`
+- "Tailor" button (URL fetch action) → `btn-primary` (keep loader/icon children).
+- Chat "Send" icon button → square 44×44 variant of primary: `bg-ink text-white hover:bg-brand active:bg-brand transition-colors` (no lift/shadow).
+- User chat bubble background stays brand (it's a message bubble, not a button).
 
-## 4. Out of scope
+`src/pages/CVBuilderPage.tsx` (mirror change if the same Send/Tailor patterns exist there).
 
-- Tier-1 action buttons elsewhere (Tailor, Build CV, Send) keep `.btn-primary` and will inherit the new color-swap behavior automatically.
-- The `.btn-action` / `.btn-trigger` utilities are unused on these pages after this change; leaving them in place for now (can clean up later if desired).
-- Tertiary/icon buttons (zoom, close, chip remove) are not mentioned in this request; leaving as-is.
+`src/pages/JobsPage.tsx`
+- Mobile floating `+` (sm:hidden) and EmptyState "Add Job" → `btn-primary` styling (black → orange, no lift).
 
-## Files to change
+## Notes for the user
 
-- `src/index.css` — rewrite `.btn-primary` and `.btn-ghost`
-- `src/components/ExportMenu.tsx` — align trigger className to new secondary style
+- Tertiary = text-only link styled like our uppercase button labels; it turns orange on hover. Use it for low-emphasis actions inside cards/lists (e.g. "Open" in the Library).
+- After this change the Tracker will reset to the 12 sample jobs once. Any jobs you added manually in the browser will be cleared because the storage key changes.
