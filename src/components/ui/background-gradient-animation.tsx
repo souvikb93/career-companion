@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { CSSProperties, ReactNode, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -13,7 +13,7 @@ interface Props {
   className?: string;
   containerClassName?: string;
   interactive?: boolean;
-  children?: React.ReactNode;
+  children?: ReactNode;
 }
 
 export function BackgroundGradientAnimation({
@@ -62,15 +62,15 @@ export function BackgroundGradientAnimation({
     };
   }, [interactive]);
 
-  const style: React.CSSProperties = {
-    ["--first-color" as any]: firstColor,
-    ["--second-color" as any]: secondColor,
-    ["--third-color" as any]: thirdColor,
-    ["--fourth-color" as any]: fourthColor,
-    ["--fifth-color" as any]: fifthColor,
-    ["--size" as any]: size,
-    ["--blending-value" as any]: blendingValue,
-  };
+  const style = {
+    "--first-color": firstColor,
+    "--second-color": secondColor,
+    "--third-color": thirdColor,
+    "--fourth-color": fourthColor,
+    "--fifth-color": fifthColor,
+    "--size": size,
+    "--blending-value": blendingValue,
+  } as CSSProperties & Record<`--${string}`, string>;
 
   return (
     <div
