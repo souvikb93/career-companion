@@ -187,7 +187,6 @@ const DropdownMenuContent = React.forwardRef<
 
   return (
     <DropdownMenuPrimitive.Portal>
-      <M3Styles />
       <DropdownMenuPrimitive.Content
         ref={ref}
         sideOffset={sideOffset}
@@ -198,6 +197,7 @@ const DropdownMenuContent = React.forwardRef<
         style={{ ["--m3-menu-radius" as any]: "16px", ...style }}
         {...props}
       >
+        <M3Styles />
         {staggered}
       </DropdownMenuPrimitive.Content>
     </DropdownMenuPrimitive.Portal>
