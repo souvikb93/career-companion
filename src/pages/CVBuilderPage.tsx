@@ -5,6 +5,7 @@ import { ZoomControls } from "@/components/ZoomControls";
 import { ExportMenu } from "@/components/ExportMenu";
 import { SavedCVsPanel } from "@/components/SavedCVsPanel";
 import { SaveModal } from "@/components/SaveModal";
+import { LayoutMenu, LayoutVariant, loadLayout } from "@/components/LayoutMenu";
 import { useSavedCVs } from "@/lib/saved-cvs";
 import { exportAs, ExportFormat } from "@/lib/exporters";
 import { supabase } from "@/integrations/supabase/client";
