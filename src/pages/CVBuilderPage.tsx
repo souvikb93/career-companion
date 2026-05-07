@@ -5,6 +5,7 @@ import { ZoomControls } from "@/components/ZoomControls";
 import { ExportMenu } from "@/components/ExportMenu";
 import { SavedCVsPanel } from "@/components/SavedCVsPanel";
 import { SaveModal } from "@/components/SaveModal";
+import { LayoutMenu, LayoutVariant, loadLayout } from "@/components/LayoutMenu";
 import { useSavedCVs } from "@/lib/saved-cvs";
 import { exportAs, ExportFormat } from "@/lib/exporters";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,8 +16,10 @@ interface Education { id: string; school: string; degree: string; field: string;
 
 interface CV {
   fullName: string;
+  title: string;
   email: string;
   phone: string;
+  linkedin: string;
   location: string;
   summary: string;
   experiences: Experience[];
@@ -24,37 +27,41 @@ interface CV {
   skills: string[];
 }
 
+const LOREM_LONG = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.";
+
 const initial: CV = {
-  fullName: "Jordan Doe",
-  email: "jordan@example.com",
-  phone: "+1 555 0142",
-  location: "Brooklyn, NY",
+  fullName: "[Your Name]",
+  title: "[Your Professional Title]",
+  email: "[Your Email Address]",
+  phone: "[Your Phone Number]",
+  linkedin: "[Your LinkedIn Profile]",
+  location: "[Your Address or City, Country]",
   summary:
-    "Product designer with 6+ years building consumer and B2B SaaS products. Focused on craft, systems thinking, and shipping work that feels effortless.",
+    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur vitae sapien id nulla ullamcorper convallis.",
   experiences: [
     {
       id: "e1",
-      title: "Senior Product Designer",
-      company: "Northstar",
-      start: "2023",
+      title: "Job Title 1",
+      company: "Company Name",
+      start: "[Month/Year]",
       end: "Present",
       description:
-        "Led redesign of the core analytics surface, improving weekly active retention by 18%. Built the Northstar design system across web and mobile.",
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit.\nSed do eiusmod tempor incididunt ut labore.",
     },
     {
       id: "e2",
-      title: "Product Designer",
-      company: "Loop",
-      start: "2020",
-      end: "2023",
+      title: "Job Title 2",
+      company: "Company Name",
+      start: "[Month/Year]",
+      end: "[Month/Year]",
       description:
-        "Shipped the original Loop onboarding flow and dashboard. Partnered with engineering on a component library used across 14 surfaces.",
+        "Ut enim ad minim veniam, quis nostrud exercitation.\nDuis aute irure dolor in reprehenderit.",
     },
   ],
   education: [
-    { id: "ed1", school: "Rhode Island School of Design", degree: "BFA", field: "Graphic Design", date: "2019" },
+    { id: "ed1", school: "University Name", degree: "Degree", field: LOREM_LONG, date: "[Year of Graduation]" },
   ],
-  skills: ["Product Design", "Design Systems", "Prototyping", "Figma", "User Research", "HTML / CSS"],
+  skills: ["Lorem ipsum", "Dolor sit amet", "Consectetur adipiscing"],
 };
 
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -69,6 +76,11 @@ export default function CVBuilderPage() {
   const [savedOpen, setSavedOpen] = useState(false);
   const [saveOpen, setSaveOpen] = useState(false);
   const [hoverPreview, setHoverPreview] = useState(false);
+  const [layout, setLayoutState] = useState<LayoutVariant>(() => loadLayout("cv_layout"));
+  const setLayout = (v: LayoutVariant) => {
+    setLayoutState(v);
+    try { window.localStorage.setItem("cv_layout", v); } catch { /* ignore */ }
+  };
   const { getJob, targetJobId, setTargetJobId } = useJobs();
   const { list: savedCVs, save: saveCV, remove: removeCV } = useSavedCVs<CV>("saved_cvs_v2", () => {
     const daysAgo = (n: number) => new Date(Date.now() - n * 86400000).toISOString();
@@ -183,6 +195,7 @@ export default function CVBuilderPage() {
           <h1 className="text-[24px] font-semibold text-ink">Resume Builder</h1>
         </div>
         <div className="flex items-center gap-3">
+          <LayoutMenu value={layout} onChange={setLayout} />
           <button type="button" onClick={() => setSaveOpen(true)} className="btn-ghost">
             <Save className="h-4 w-4" /> Save
           </button>
@@ -392,52 +405,14 @@ export default function CVBuilderPage() {
           >
             <article
               className="bg-white text-ink shadow-2xl origin-top-left"
-              style={{ width: "794px", minHeight: "1123px", padding: "64px", transform: `scale(${zoom})` }}
+              style={{
+                width: "794px",
+                minHeight: "1123px",
+                padding: layout === "compact" ? "40px" : "64px",
+                transform: `scale(${zoom})`,
+              }}
             >
-              <header className="text-center mb-8">
-                <h2 className="text-[28px] font-semibold text-ink">{cv.fullName || "Your name"}</h2>
-                <p className="text-[12px] text-ink-muted mt-2">
-                  {[cv.email, cv.phone, cv.location].filter(Boolean).join(" · ")}
-                </p>
-              </header>
-
-              {cv.summary && (
-                <p className="italic text-[14px] text-ink-muted mb-8 leading-relaxed whitespace-pre-line">{cv.summary}</p>
-              )}
-
-              {cv.experiences.length > 0 && (
-                <Section title="Experience">
-                  {cv.experiences.map((e) => (
-                    <div key={e.id} className="mb-5">
-                      <div className="flex items-baseline justify-between gap-3">
-                        <p className="text-[15px] font-semibold text-ink">{e.title || "Role"}{e.company && ` · ${e.company}`}</p>
-                        <p className="text-[12px] text-ink-muted whitespace-nowrap">{[e.start, e.end].filter(Boolean).join(" – ")}</p>
-                      </div>
-                      {e.description && <p className="text-[14px] text-ink-muted mt-1 leading-relaxed">{e.description}</p>}
-                    </div>
-                  ))}
-                </Section>
-              )}
-
-              {cv.education.length > 0 && (
-                <Section title="Education">
-                  {cv.education.map((e) => (
-                    <div key={e.id} className="mb-3">
-                      <div className="flex items-baseline justify-between gap-3">
-                        <p className="text-[15px] font-semibold text-ink">{e.school || "School"}</p>
-                        <p className="text-[12px] text-ink-muted">{e.date}</p>
-                      </div>
-                      <p className="text-[14px] text-ink-muted">{[e.degree, e.field].filter(Boolean).join(", ")}</p>
-                    </div>
-                  ))}
-                </Section>
-              )}
-
-              {cv.skills.length > 0 && (
-                <Section title="Skills">
-                  <p className="text-[14px] text-ink-muted">{cv.skills.join(" · ")}</p>
-                </Section>
-              )}
+              <CvPreview cv={cv} layout={layout} />
             </article>
           </div>
 
@@ -534,5 +509,119 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       <h3 className="text-[16px] font-semibold text-ink border-b border-line pb-1.5 mb-3">{title}</h3>
       {children}
     </section>
+  );
+}
+
+function CvPreview({ cv, layout }: { cv: CV; layout: LayoutVariant }) {
+  const contactLine = [cv.email, cv.phone, cv.linkedin, cv.location].filter(Boolean).join(" · ");
+
+  if (layout === "modern") {
+    return (
+      <div className="grid grid-cols-3 gap-8">
+        <aside className="col-span-1 border-r border-line pr-6 space-y-6">
+          <div>
+            <h2 className="text-[22px] font-semibold text-ink leading-tight">{cv.fullName}</h2>
+            {cv.title && <p className="text-[13px] text-ink-muted mt-1">{cv.title}</p>}
+          </div>
+          <div className="space-y-1 text-[12px] text-ink-muted">
+            {cv.email && <div>{cv.email}</div>}
+            {cv.phone && <div>{cv.phone}</div>}
+            {cv.linkedin && <div>{cv.linkedin}</div>}
+            {cv.location && <div>{cv.location}</div>}
+          </div>
+          {cv.skills.length > 0 && (
+            <div>
+              <h3 className="text-[13px] font-semibold text-ink uppercase tracking-wide mb-2">Skills</h3>
+              <ul className="space-y-1 text-[13px] text-ink-muted">
+                {cv.skills.map((s) => <li key={s}>{s}</li>)}
+              </ul>
+            </div>
+          )}
+        </aside>
+        <div className="col-span-2 space-y-6">
+          {cv.summary && (
+            <Section title="Professional Summary">
+              <p className="text-[14px] text-ink-muted leading-relaxed whitespace-pre-line">{cv.summary}</p>
+            </Section>
+          )}
+          {cv.experiences.length > 0 && (
+            <Section title="Professional Experience">
+              {cv.experiences.map((e) => <ExpItem key={e.id} e={e} />)}
+            </Section>
+          )}
+          {cv.education.length > 0 && (
+            <Section title="Education">
+              {cv.education.map((e) => <EduItem key={e.id} e={e} />)}
+            </Section>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // classic & compact: same structure, compact gets tighter typography
+  const compact = layout === "compact";
+  return (
+    <div className={compact ? "text-[13px] leading-snug" : ""}>
+      <header className="text-center mb-6">
+        <h2 className={compact ? "text-[22px] font-semibold text-ink" : "text-[28px] font-semibold text-ink"}>
+          {cv.fullName}
+        </h2>
+        {cv.title && <p className="text-[13px] text-ink-muted mt-1">{cv.title}</p>}
+        <p className="text-[12px] text-ink-muted mt-2">{contactLine}</p>
+      </header>
+
+      {cv.summary && (
+        <Section title="Professional Summary">
+          <p className="text-[14px] text-ink-muted leading-relaxed whitespace-pre-line">{cv.summary}</p>
+        </Section>
+      )}
+
+      {cv.experiences.length > 0 && (
+        <Section title="Professional Experience">
+          {cv.experiences.map((e) => <ExpItem key={e.id} e={e} />)}
+        </Section>
+      )}
+
+      {cv.education.length > 0 && (
+        <Section title="Education">
+          {cv.education.map((e) => <EduItem key={e.id} e={e} />)}
+        </Section>
+      )}
+
+      {cv.skills.length > 0 && (
+        <Section title="Skills">
+          <p className="text-[14px] text-ink-muted">{cv.skills.join(" · ")}</p>
+        </Section>
+      )}
+    </div>
+  );
+}
+
+function ExpItem({ e }: { e: Experience }) {
+  return (
+    <div className="mb-4">
+      <div className="flex items-baseline justify-between gap-3">
+        <p className="text-[15px] font-semibold text-ink">{e.title}{e.company && ` – ${e.company}`}</p>
+        <p className="text-[12px] text-ink-muted whitespace-nowrap">{[e.start, e.end].filter(Boolean).join(" – ")}</p>
+      </div>
+      {e.description && (
+        <ul className="mt-1 list-disc pl-5 space-y-0.5 text-[14px] text-ink-muted leading-relaxed">
+          {e.description.split("\n").filter(Boolean).map((line, i) => <li key={i}>{line}</li>)}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function EduItem({ e }: { e: Education }) {
+  return (
+    <div className="mb-3">
+      <div className="flex items-baseline justify-between gap-3">
+        <p className="text-[15px] font-semibold text-ink">{e.degree}{e.school && ` – ${e.school}`}</p>
+        <p className="text-[12px] text-ink-muted">{e.date}</p>
+      </div>
+      {e.field && <p className="text-[14px] text-ink-muted">{e.field}</p>}
+    </div>
   );
 }

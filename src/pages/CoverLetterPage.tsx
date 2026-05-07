@@ -5,6 +5,7 @@ import { ZoomControls } from "@/components/ZoomControls";
 import { ExportMenu } from "@/components/ExportMenu";
 import { SavedCVsPanel } from "@/components/SavedCVsPanel";
 import { SaveModal } from "@/components/SaveModal";
+import { LayoutMenu, LayoutVariant, loadLayout } from "@/components/LayoutMenu";
 import { useSavedCVs } from "@/lib/saved-cvs";
 import { exportAs, ExportFormat } from "@/lib/exporters";
 import { supabase } from "@/integrations/supabase/client";
@@ -58,6 +59,11 @@ export default function CoverLetterPage() {
   const [hoverPreview, setHoverPreview] = useState(false);
   const [savedOpen, setSavedOpen] = useState(false);
   const [saveOpen, setSaveOpen] = useState(false);
+  const [layout, setLayoutState] = useState<LayoutVariant>(() => loadLayout("letter_layout"));
+  const setLayout = (v: LayoutVariant) => {
+    setLayoutState(v);
+    try { window.localStorage.setItem("letter_layout", v); } catch { /* ignore */ }
+  };
   const { list: savedLetters, save: saveLetter, remove: removeLetter } = useSavedCVs<LetterDoc>("saved_letters_v2", () => {
     const daysAgo = (n: number) => new Date(Date.now() - n * 86400000).toISOString();
     const seeds: Array<{ company: string; role: string; desc: string; days: number }> = [
@@ -157,6 +163,7 @@ export default function CoverLetterPage() {
           )}
         </div>
         <div className="flex items-center gap-3">
+          <LayoutMenu value={layout} onChange={setLayout} />
           <button type="button" onClick={() => setSaveOpen(true)} className="btn-ghost">
             <Save className="h-4 w-4" /> Save
           </button>
@@ -291,11 +298,20 @@ export default function CoverLetterPage() {
               style={{ width: `${794 * zoom}px`, height: `${1123 * zoom}px` }}
             >
               <article
-                className="bg-white text-ink shadow-2xl origin-top-left"
-                style={{ width: "794px", minHeight: "1123px", padding: "64px", transform: `scale(${zoom})` }}
+                className="bg-white text-ink shadow-2xl origin-top-left relative overflow-hidden"
+                style={{
+                  width: "794px",
+                  minHeight: "1123px",
+                  padding: layout === "compact" ? "40px" : "64px",
+                  paddingLeft: layout === "modern" ? "96px" : undefined,
+                  transform: `scale(${zoom})`,
+                }}
               >
+                {layout === "modern" && (
+                  <div className="absolute left-0 top-0 bottom-0 w-3 bg-brand" />
+                )}
                 {letter === DEFAULT_LETTER ? (
-                  <div className="font-sans text-[14px] text-ink leading-relaxed space-y-6">
+                  <div className={"font-sans text-ink space-y-6 " + (layout === "compact" ? "text-[13px] leading-snug space-y-4" : "text-[14px] leading-relaxed")}>
                     <div className="grid grid-cols-2 gap-8">
                       <div className="space-y-1 text-ink-muted">
                         <div>[Company Name]</div>
@@ -321,7 +337,7 @@ export default function CoverLetterPage() {
                     </div>
                   </div>
                 ) : (
-                  <pre className="whitespace-pre-wrap font-sans text-[14px] text-ink leading-relaxed">{letter}</pre>
+                  <pre className={"whitespace-pre-wrap font-sans text-ink " + (layout === "compact" ? "text-[13px] leading-snug" : "text-[14px] leading-relaxed")}>{letter}</pre>
                 )}
               </article>
             </div>
