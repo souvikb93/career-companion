@@ -178,7 +178,7 @@ export default function CVBuilderPage() {
   const update = <K extends keyof CV>(k: K, v: CV[K]) => setCv((p) => ({ ...p, [k]: v }));
 
   const handleExport = (format: ExportFormat) => {
-    const body = renderCvAsText(cv);
+    const body = renderCvAsText(cv, t);
     const filename = targetJob ? `cv-${targetJob.company}` : `cv-${cv.fullName.replace(/\s+/g, "-")}`;
     exportAs(format, cv.fullName || "CV", body, filename);
   };
