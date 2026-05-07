@@ -163,10 +163,10 @@ export default function CoverLetterPage() {
           )}
         </div>
         <div className="flex items-center gap-3">
-          <LayoutMenu value={layout} onChange={setLayout} />
           <button type="button" onClick={() => setSaveOpen(true)} className="btn-ghost">
             <Save className="h-4 w-4" /> Save
           </button>
+          <LayoutMenu value={layout} onChange={setLayout} />
           <button type="button" onClick={() => setSavedOpen(true)} className="btn-ghost">
             <FolderOpen className="h-4 w-4" /> Library
           </button>
