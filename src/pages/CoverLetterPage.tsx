@@ -10,6 +10,7 @@ import { useSavedCVs } from "@/lib/saved-cvs";
 import { exportAs, ExportFormat } from "@/lib/exporters";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useT } from "@/lib/i18n";
 
 interface Message { role: "user" | "assistant" | "step"; content: string; done?: boolean }
 
@@ -45,6 +46,7 @@ const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 export default function CoverLetterPage() {
   const { getJob, targetJobId, setTargetJobId } = useJobs();
   const { toast } = useToast();
+  const { t } = useT();
   const targetJob = targetJobId ? getJob(targetJobId) : null;
 
   const [messages, setMessages] = useState<Message[]>([]);
@@ -82,14 +84,12 @@ export default function CoverLetterPage() {
     }));
   });
   const scrollRef = useRef<HTMLDivElement>(null);
-  // Override storage key indirectly: not needed — saved-cvs is shared. We'll namespace via name prefix.
 
   useEffect(() => { void KEY; }, []);
 
-  // Clear target after consuming
   useEffect(() => {
     if (targetJob) {
-      setMessages([{ role: "assistant", content: `I drafted a cover letter for ${targetJob.company} — ${targetJob.role} on the right. Want me to refine it?` }]);
+      setMessages([{ role: "assistant", content: t("letter.draftedFor", { company: targetJob.company, role: targetJob.role }) }]);
       setShowTailor(false);
     }
     if (targetJobId) setTargetJobId(null);
@@ -118,11 +118,11 @@ export default function CoverLetterPage() {
     setShowTailor(false);
     setMessages((m) => [...m, { role: "user", content: text }]);
 
-    await pushStep("Analyzing your request…");
-    await pushStep("Matching your experience…");
-    await pushStep("Generating content…");
+    await pushStep(t("letter.analyzing"));
+    await pushStep(t("letter.matching"));
+    await pushStep(t("letter.generating"));
 
-    setMessages((m) => [...m, { role: "assistant", content: `Updated the letter with: "${text}". Take a look on the right.` }]);
+    setMessages((m) => [...m, { role: "assistant", content: t("letter.updatedWith", { text }) }]);
     setLetter((prev) => prev + `\n\n[Edit reflecting: ${text}]`);
   };
 
@@ -130,23 +130,23 @@ export default function CoverLetterPage() {
     if (!jobUrl.trim()) return;
     setFetching(true);
     setShowTailor(false);
-    setMessages((m) => [...m, { role: "user", content: `Tailor to: ${jobUrl.trim()}` }]);
+    setMessages((m) => [...m, { role: "user", content: t("letter.tailorTo", { url: jobUrl.trim() }) }]);
     try {
-      await pushStep("Connecting to job link…");
-      await pushStep("Extracting job details…");
+      await pushStep(t("letter.connecting"));
+      await pushStep(t("letter.extracting"));
       const { data, error } = await supabase.functions.invoke("scrape-job", { body: { url: jobUrl.trim() } });
       if (error) throw error;
       if ((data as { error?: string })?.error) throw new Error((data as { error: string }).error);
-      await pushStep("Matching skills…");
-      await pushStep("Generating draft…");
+      await pushStep(t("letter.matchingSkills"));
+      await pushStep(t("letter.generatingDraft"));
       setLetter(letterFor(data.company || "the company", data.role || "this role", data.description || ""));
-      setMessages((m) => [...m, { role: "assistant", content: `Drafted a letter for ${data.company} — ${data.role}.` }]);
+      setMessages((m) => [...m, { role: "assistant", content: t("letter.draftedShort", { company: data.company, role: data.role }) }]);
       setJobUrl("");
-      toast({ title: "Letter drafted", description: `Tailored for ${data.company}` });
+      toast({ title: t("letter.drafted"), description: t("letter.tailoredFor", { company: data.company }) });
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Failed";
-      setMessages((m) => [...m, { role: "assistant", content: `Couldn't fetch that job: ${msg}` }]);
-      toast({ title: "Couldn't fetch job", description: msg, variant: "destructive" });
+      setMessages((m) => [...m, { role: "assistant", content: t("letter.cantFetchMsg", { msg }) }]);
+      toast({ title: t("letter.cantFetch"), description: msg, variant: "destructive" });
       setShowTailor(true);
     } finally {
       setFetching(false);
@@ -157,18 +157,18 @@ export default function CoverLetterPage() {
     <div className="w-full">
       <div className="px-8 py-5 flex items-center justify-between border-b border-line bg-surface flex-wrap gap-3">
         <div>
-          <h1 className="text-[24px] font-semibold text-ink">Letter Builder</h1>
+          <h1 className="text-[24px] font-semibold text-ink">{t("letter.pageTitle")}</h1>
           {targetJob && (
-            <p className="text-[13px] text-ink-muted mt-0.5">For: {targetJob.company} — {targetJob.role}</p>
+            <p className="text-[13px] text-ink-muted mt-0.5">{t("letter.forJob", { label: `${targetJob.company} — ${targetJob.role}` })}</p>
           )}
         </div>
         <div className="flex items-center gap-3">
           <button type="button" onClick={() => setSaveOpen(true)} className="btn-ghost">
-            <Save className="h-4 w-4" /> Save
+            <Save className="h-4 w-4" /> {t("common.save")}
           </button>
           <LayoutMenu value={layout} onChange={setLayout} />
           <button type="button" onClick={() => setSavedOpen(true)} className="btn-ghost">
-            <FolderOpen className="h-4 w-4" /> Library
+            <FolderOpen className="h-4 w-4" /> {t("common.library")}
           </button>
           <ExportMenu onExport={handleExport} />
         </div>
@@ -177,12 +177,12 @@ export default function CoverLetterPage() {
       <SavedCVsPanel
         open={savedOpen}
         onClose={() => setSavedOpen(false)}
-        title="Letter Library"
+        title={t("letter.libraryTitle")}
         list={savedLetters}
         onLoad={(item) => {
           setLetter(item.data.letter);
           setSavedOpen(false);
-          toast({ title: "Letter loaded", description: item.name });
+          toast({ title: t("letter.loaded"), description: item.name });
         }}
         onDelete={(id) => removeLetter(id)}
       />
@@ -190,34 +190,33 @@ export default function CoverLetterPage() {
       <SaveModal
         open={saveOpen}
         onClose={() => setSaveOpen(false)}
-        title="Save Letter"
-        defaultName={targetJob ? `Letter — ${targetJob.company}` : "Cover Letter"}
+        title={t("letter.saveTitle")}
+        defaultName={targetJob ? `${t("letter.defaultSaveName")} — ${targetJob.company}` : t("letter.defaultSaveName")}
         onSave={(name, format) => {
           const item = saveLetter(name, { letter, jobLabel: targetJob?.company });
           handleExport(format);
-          toast({ title: "Letter saved", description: `${item.name} · ${format.toUpperCase()}` });
+          toast({ title: t("letter.saved"), description: `${item.name} · ${format.toUpperCase()}` });
         }}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-2" style={{ minHeight: "calc(100vh - 64px - 81px)" }}>
         {/* Chat */}
         <section className="bg-surface border-r border-line p-8 flex flex-col" style={{ maxHeight: "calc(100vh - 64px - 81px)" }}>
-          {/* Greeting */}
           <div className="mb-6">
             <h2 className="text-[22px] font-semibold text-ink leading-snug">
-              Hi, I'm your personal cover letter builder.
+              {t("letter.greetingTitle")}
             </h2>
-            <p className="text-[15px] text-ink-muted mt-1">How can I help you create a custom cover letter?</p>
+            <p className="text-[15px] text-ink-muted mt-1">{t("letter.greetingBody")}</p>
           </div>
 
           {showTailor && (
             <div className="mb-4 card-surface p-4">
-              <p className="eyebrow mb-2">Tailor to a job</p>
+              <p className="eyebrow mb-2">{t("letter.tailorToJob")}</p>
               <div className="flex gap-2">
                 <input
                   value={jobUrl}
                   onChange={(e) => setJobUrl(e.target.value)}
-                  placeholder="Paste a job posting URL"
+                  placeholder={t("letter.pasteUrl")}
                   className="input-base flex-1"
                   disabled={fetching}
                 />
@@ -228,7 +227,7 @@ export default function CoverLetterPage() {
                   className="btn-primary"
                 >
                   {fetching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                  {fetching ? "…" : "Tailor"}
+                  {fetching ? "…" : t("letter.tailor")}
                 </button>
               </div>
             </div>
@@ -266,23 +265,22 @@ export default function CoverLetterPage() {
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter") send(); }}
-                placeholder="Ask for a change..."
+                placeholder={t("letter.askChange")}
                 className="input-base flex-1"
               />
               <button
                 type="button"
                 onClick={send}
-                aria-label="Send"
+                aria-label={t("common.send")}
                 className="h-11 w-11 rounded-full bg-ink text-white grid place-items-center transition-colors duration-200 ease-out hover:bg-brand active:bg-brand"
               >
                 <Send className="h-4 w-4" />
               </button>
             </div>
-            
           </div>
         </section>
 
-        {/* Preview - canvas with A4 */}
+        {/* Preview */}
         <div
           className="relative"
           style={{ maxHeight: "calc(100vh - 64px - 81px)" }}
@@ -313,26 +311,26 @@ export default function CoverLetterPage() {
                   <div className={"font-sans text-ink " + (layout === "compact" ? "text-[13px] leading-snug space-y-4" : "text-[14px] leading-relaxed space-y-6")}>
                     <div className="flex justify-between gap-8">
                       <div className="space-y-1 text-ink-muted">
-                        <div>[Company Name]</div>
-                        <div>[Company Street]</div>
-                        <div>[Company City, Postal Code]</div>
+                        <div>{t("letter.ph_companyName")}</div>
+                        <div>{t("letter.ph_companyStreet")}</div>
+                        <div>{t("letter.ph_companyCity")}</div>
                       </div>
                       <div className="space-y-1 text-right text-ink-muted">
-                        <div>[Your Name]</div>
-                        <div>[Your Street]</div>
-                        <div>[Your City, Postal Code]</div>
-                        <div>[Your Email]</div>
-                        <div>[Your Phone Number]</div>
+                        <div>{t("letter.ph_yourName")}</div>
+                        <div>{t("letter.ph_yourStreet")}</div>
+                        <div>{t("letter.ph_yourCity")}</div>
+                        <div>{t("letter.ph_yourEmail")}</div>
+                        <div>{t("letter.ph_yourPhone")}</div>
                       </div>
                     </div>
-                    <div className="text-ink-muted">Date: [Date Placeholder]</div>
-                    <div className="text-ink-muted">Subject: [Subject Placeholder]</div>
-                    <div>Dear [Hiring Manager's Name],</div>
+                    <div className="text-ink-muted">{t("letter.ph_date")}</div>
+                    <div className="text-ink-muted">{t("letter.ph_subject")}</div>
+                    <div>{t("letter.ph_dear")}</div>
                     <p>{LOREM}</p>
                     <p>{LOREM}</p>
                     <div>
-                      <div>Sincerely,</div>
-                      <div className="text-ink-muted">[Your Name]</div>
+                      <div>{t("letter.ph_sincerely")}</div>
+                      <div className="text-ink-muted">{t("letter.ph_yourName")}</div>
                     </div>
                   </div>
                 ) : (
