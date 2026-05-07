@@ -77,7 +77,62 @@ function makeInitial(t: TFn): CV {
 const uid = () => Math.random().toString(36).slice(2, 9);
 
 export default function CVBuilderPage() {
-  const [cv, setCv] = useState<CV>(initial);
+  const { toast } = useToast();
+  const { t, lang } = useT();
+  const initial = makeInitial(t);
+  const [cv, setCv] = useState<CV>(() => makeInitial(t));
+  const prevDefaultRef = useRef<CV>(initial);
+
+  // When language changes, replace any fields that still match the previous-language default.
+  useEffect(() => {
+    const prev = prevDefaultRef.current;
+    const next = makeInitial(t);
+    setCv((cur) => {
+      const swap = (k: keyof CV) =>
+        (cur as Record<string, unknown>)[k] === (prev as Record<string, unknown>)[k]
+          ? (next as Record<string, unknown>)[k]
+          : (cur as Record<string, unknown>)[k];
+      return {
+        fullName: swap("fullName") as string,
+        title: swap("title") as string,
+        email: swap("email") as string,
+        phone: swap("phone") as string,
+        linkedin: swap("linkedin") as string,
+        location: swap("location") as string,
+        summary: swap("summary") as string,
+        experiences: cur.experiences.map((e, i) => {
+          const p = prev.experiences[i]; const n = next.experiences[i];
+          if (!p || !n) return e;
+          return {
+            id: e.id,
+            title: e.title === p.title ? n.title : e.title,
+            company: e.company === p.company ? n.company : e.company,
+            start: e.start === p.start ? n.start : e.start,
+            end: e.end === p.end ? n.end : e.end,
+            description: e.description === p.description ? n.description : e.description,
+          };
+        }),
+        education: cur.education.map((ed, i) => {
+          const p = prev.education[i]; const n = next.education[i];
+          if (!p || !n) return ed;
+          return {
+            id: ed.id,
+            school: ed.school === p.school ? n.school : ed.school,
+            degree: ed.degree === p.degree ? n.degree : ed.degree,
+            field: ed.field === p.field ? n.field : ed.field,
+            date: ed.date === p.date ? n.date : ed.date,
+          };
+        }),
+        skills: cur.skills.map((s) => {
+          const idx = prev.skills.indexOf(s);
+          return idx >= 0 && next.skills[idx] ? next.skills[idx] : s;
+        }),
+      };
+    });
+    prevDefaultRef.current = next;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lang]);
+
   const [skillDraft, setSkillDraft] = useState("");
   const [zoom, setZoom] = useState(0.6);
   const [jdText, setJdText] = useState("");
@@ -95,62 +150,21 @@ export default function CVBuilderPage() {
   const { list: savedCVs, save: saveCV, remove: removeCV } = useSavedCVs<CV>("saved_cvs_v2", () => {
     const daysAgo = (n: number) => new Date(Date.now() - n * 86400000).toISOString();
     const variant = (summary: string, skills: string[]): CV => ({ ...initial, summary, skills });
+    const lbl = t("resume.defaultSaveName");
     return [
-      {
-        id: "demo-cv-1",
-        name: "Resume — Zalando Senior Designer",
-        savedAt: daysAgo(3),
-        data: variant(
-          "Tailored for Zalando — Senior Product Designer. Six years shaping consumer commerce experiences, design systems, and cross-platform shopping flows.",
-          ["Design Systems", "Product Design", "Figma", "Prototyping", "User Research", "HTML / CSS"],
-        ),
-      },
-      {
-        id: "demo-cv-2",
-        name: "Resume — Delivery Hero Product Engineer",
-        savedAt: daysAgo(5),
-        data: variant(
-          "Tailored for Delivery Hero — hybrid designer/engineer with a track record of shipping marketplace and logistics surfaces end-to-end.",
-          ["HTML / CSS", "Prototyping", "Design Systems", "Figma", "Product Design", "User Research"],
-        ),
-      },
-      {
-        id: "demo-cv-3",
-        name: "Resume — N26 Product Designer",
-        savedAt: daysAgo(7),
-        data: variant(
-          "Tailored for N26 — fintech-focused product designer with experience reducing onboarding drop-off and clarifying complex money flows.",
-          ["Product Design", "User Research", "Prototyping", "Design Systems", "Figma", "HTML / CSS"],
-        ),
-      },
-      {
-        id: "demo-cv-4",
-        name: "Resume — FlixBus Brand Designer",
-        savedAt: daysAgo(8),
-        data: variant(
-          "Tailored for FlixBus — brand-leaning product designer who has launched campaigns and visual systems across web, mobile, and out-of-home.",
-          ["Figma", "Design Systems", "Product Design", "Prototyping", "HTML / CSS", "User Research"],
-        ),
-      },
-      {
-        id: "demo-cv-5",
-        name: "Resume — Bolt Frontend Engineer",
-        savedAt: daysAgo(10),
-        data: variant(
-          "Tailored for Bolt — designer-engineer comfortable owning frontend delivery, from component architecture to motion polish.",
-          ["HTML / CSS", "Figma", "Prototyping", "Design Systems", "Product Design", "User Research"],
-        ),
-      },
-      {
-        id: "demo-cv-6",
-        name: "Master Resume — General",
-        savedAt: daysAgo(12),
-        data: initial,
-      },
+      { id: "demo-cv-1", name: `${lbl} — Zalando Senior Designer`, savedAt: daysAgo(3),
+        data: variant("Tailored for Zalando — Senior Product Designer.", ["Design Systems", "Product Design", "Figma", "Prototyping", "User Research", "HTML / CSS"]) },
+      { id: "demo-cv-2", name: `${lbl} — Delivery Hero Product Engineer`, savedAt: daysAgo(5),
+        data: variant("Tailored for Delivery Hero — hybrid designer/engineer.", ["HTML / CSS", "Prototyping", "Design Systems", "Figma", "Product Design", "User Research"]) },
+      { id: "demo-cv-3", name: `${lbl} — N26 Product Designer`, savedAt: daysAgo(7),
+        data: variant("Tailored for N26 — fintech-focused product designer.", ["Product Design", "User Research", "Prototyping", "Design Systems", "Figma", "HTML / CSS"]) },
+      { id: "demo-cv-4", name: `${lbl} — FlixBus Brand Designer`, savedAt: daysAgo(8),
+        data: variant("Tailored for FlixBus — brand-leaning product designer.", ["Figma", "Design Systems", "Product Design", "Prototyping", "HTML / CSS", "User Research"]) },
+      { id: "demo-cv-5", name: `${lbl} — Bolt Frontend Engineer`, savedAt: daysAgo(10),
+        data: variant("Tailored for Bolt — designer-engineer.", ["HTML / CSS", "Figma", "Prototyping", "Design Systems", "Product Design", "User Research"]) },
+      { id: "demo-cv-6", name: `${lbl} — General`, savedAt: daysAgo(12), data: initial },
     ];
   });
-  const { toast } = useToast();
-  const { t } = useT();
   const targetJob = targetJobId ? getJob(targetJobId) : null;
 
   useEffect(() => {
