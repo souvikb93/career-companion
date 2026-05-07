@@ -195,6 +195,7 @@ export default function CVBuilderPage() {
           <h1 className="text-[24px] font-semibold text-ink">Resume Builder</h1>
         </div>
         <div className="flex items-center gap-3">
+          <LayoutMenu value={layout} onChange={setLayout} />
           <button type="button" onClick={() => setSaveOpen(true)} className="btn-ghost">
             <Save className="h-4 w-4" /> Save
           </button>
