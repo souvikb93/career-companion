@@ -1,23 +1,61 @@
-## Issue
+## Goal
 
-In the Letter preview, the left column ([Company Name] block) appears to bleed toward/past the page edge while the right column has proper margin — the two header columns don't share the same horizontal padding as the body text.
+Add a DE/EN language toggle in the top nav (left of the JD avatar), default to **German**, and translate all visible UI strings.
 
-Likely causes to investigate and fix in `src/pages/CoverLetterPage.tsx`:
+## Approach
 
-1. **Two-column header `grid grid-cols-2`** stretches edge-to-edge inside the article padding, so the left column starts at the page's left padding and the right column ends at the right padding — visually that's correct, but with `gap-8` and unequal text lengths the left side looks flush left while the right looks balanced. Fix by giving each column equal max-width and consistent alignment, or by tightening the grid so it sits within the same content rhythm as the body paragraphs.
+Use a lightweight, dependency-free translation context (no i18next) — small, fast, and fits this app's scale.
 
-2. **Page centering in the preview pane**: the scaled `<article>` (transform: scale + origin-top-left) sits inside a wrapper sized to `794 * zoom`. Verify `mx-auto` actually centers it; if not, ensure the wrapper width matches the rendered scaled width and the parent section uses `flex justify-center` so the page is horizontally centered regardless of zoom.
+### 1. Translation infrastructure
 
-3. **Padding symmetry**: confirm the `padding` shorthand (64px classic / 40px compact) applies equally on both sides, and that `paddingLeft` isn't being unintentionally overridden by the modern-layout rule.
+- New `src/lib/i18n.tsx` exporting:
+  - `LanguageProvider` (wraps `App.tsx`)
+  - `useT()` hook returning `{ t, lang, setLang }`
+  - `t("key.path")` reads from a nested dictionary; falls back to the key if missing
+  - Persists choice in `localStorage` (`app_lang`); default `"de"` when nothing stored
+- New `src/lib/translations.ts` — flat-ish object of `de` and `en` strings, organized by area:
+  - `nav.*` — Tracker, Resume, Letters
+  - `menu.*` — Profile, AI Model, Settings, Support, Log out
+  - `common.*` — Save, Library, Export, Cancel, Delete, Loading…, Layout, Classic/Modern/Compact, etc.
+  - `tracker.*` — JobsPage strings, status badges, AddJobModal, JobDetailPanel
+  - `resume.*` — CVBuilderPage labels, placeholders, section titles, buttons
+  - `letter.*` — CoverLetterPage greetings, chat placeholders, default template placeholders
+  - `auth.*` and other small surfaces
 
-## Plan
+### 2. Toggle component
 
-- Take a fresh screenshot of `/cover-letter` at the user's viewport to confirm the exact misalignment.
-- In `CoverLetterPage.tsx` preview block:
-  - Wrap the scaled page in a `flex justify-center` container so the A4 sheet is always centered in the preview pane.
-  - Keep the article padding symmetric (`padding: 64px` for classic/modern body, `40px` for compact); apply the modern accent bar via inner offset, not by changing `paddingLeft`, so left/right padding stay equal.
-  - For the placeholder header, replace the `grid grid-cols-2 gap-8` with a `flex justify-between` so the left block hugs the left content edge and the right block hugs the right content edge — same rhythm as the body paragraphs below.
-- Re-screenshot and visually verify both columns align with the body text's left/right edges.
+- New `src/components/LanguageToggle.tsx` — a small segmented pill with `DE | EN` (active = filled brand, inactive = muted), placed in `TopNav.tsx` immediately before the JD avatar.
+
+### 3. Wire-up
+
+- Wrap the app in `LanguageProvider` inside `App.tsx`.
+- Replace hard-coded user-facing strings in:
+  - `TopNav.tsx`, `AppLayout.tsx`
+  - `pages/JobsPage.tsx`, `pages/CVBuilderPage.tsx`, `pages/CoverLetterPage.tsx`, `pages/Index.tsx`, `pages/NotFound.tsx`
+  - `components/SaveModal.tsx`, `SavedCVsPanel.tsx`, `ExportMenu.tsx`, `ZoomControls.tsx`, `LayoutMenu.tsx`
+  - `components/jobs/AddJobModal.tsx`, `JobDetailPanel.tsx`, `StatusBadge.tsx`
+- Toast titles/descriptions also translated.
+
+### 4. Default content (Resume / Letter placeholders)
+
+The seeded resume + letter use bracketed placeholders like `[Your Name]`. These will also swap with language (e.g. `[Ihr Name]`, `[Firmenname]`, `Sehr geehrte/r [Name der einstellenden Person]`, …). Lorem ipsum stays as-is (it's pseudo-Latin, language-neutral).
+
+### Translation quality
+
+Yes — I will translate all visible strings into natural, professional German (Sie-form, standard hiring/HR vocabulary). Examples:
+
+- Resume → **Lebenslauf** (page title: **Lebenslauf-Editor**)
+- Cover Letter → **Anschreiben** (page title: **Anschreiben-Editor**)
+- Tracker → **Bewerbungen**
+- Save → **Speichern**, Library → **Bibliothek**, Export → **Exportieren**, Layout → **Layout**
+- Add Experience → **Erfahrung hinzufügen**, Add Education → **Ausbildung hinzufügen**
+- "Edit on the left, preview on the right" → **"Links bearbeiten, rechts ansehen"**
+- Status badges: Saved/Applied/Interviewing/Offer/Rejected → Gespeichert/Beworben/Im Gespräch/Angebot/Abgelehnt
+
+If a phrase is ambiguous in context, I'll pick the standard German hiring-domain term and we can refine after a first pass.
 
 ## Out of scope
-- No changes to letter content, chat, save/export, or layout selector behavior.
+
+- Backend/email content, scraped job-description text (stays in source language).
+- AI-generated chat output stays in whatever the model returns (separate concern; can be added later by passing `lang` to the prompt).
+- No URL-based locale routing; toggle is global state only.
