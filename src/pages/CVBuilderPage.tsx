@@ -28,42 +28,51 @@ interface CV {
   skills: string[];
 }
 
-const LOREM_LONG = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.";
+type TFn = (path: string, vars?: Record<string, string | number>) => string;
 
-const initial: CV = {
-  fullName: "[Your Name]",
-  title: "[Your Professional Title]",
-  email: "[Your Email Address]",
-  phone: "[Your Phone Number]",
-  linkedin: "[Your LinkedIn Profile]",
-  location: "[Your Address or City, Country]",
-  summary:
-    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur vitae sapien id nulla ullamcorper convallis.",
-  experiences: [
-    {
-      id: "e1",
-      title: "Job Title 1",
-      company: "Company Name",
-      start: "[Month/Year]",
-      end: "Present",
-      description:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit.\nSed do eiusmod tempor incididunt ut labore.",
-    },
-    {
-      id: "e2",
-      title: "Job Title 2",
-      company: "Company Name",
-      start: "[Month/Year]",
-      end: "[Month/Year]",
-      description:
-        "Ut enim ad minim veniam, quis nostrud exercitation.\nDuis aute irure dolor in reprehenderit.",
-    },
-  ],
-  education: [
-    { id: "ed1", school: "University Name", degree: "Degree", field: LOREM_LONG, date: "[Year of Graduation]" },
-  ],
-  skills: ["Lorem ipsum", "Dolor sit amet", "Consectetur adipiscing"],
-};
+function makeInitial(t: TFn): CV {
+  return {
+    fullName: t("resume.sample.yourName"),
+    title: t("resume.sample.professionalTitle"),
+    email: t("resume.sample.email"),
+    phone: t("resume.sample.phone"),
+    linkedin: t("resume.sample.linkedin"),
+    location: t("resume.sample.address"),
+    summary: t("resume.sample.summary"),
+    experiences: [
+      {
+        id: "e1",
+        title: t("resume.sample.jobTitle1"),
+        company: t("resume.sample.companyName"),
+        start: t("resume.sample.dateRange"),
+        end: t("resume.sample.present"),
+        description: t("resume.sample.expDescription"),
+      },
+      {
+        id: "e2",
+        title: t("resume.sample.jobTitle2"),
+        company: t("resume.sample.companyName"),
+        start: t("resume.sample.dateRange"),
+        end: t("resume.sample.dateRange"),
+        description: t("resume.sample.expDescription"),
+      },
+    ],
+    education: [
+      {
+        id: "ed1",
+        school: t("resume.sample.university"),
+        degree: t("resume.sample.degree"),
+        field: t("resume.sample.field"),
+        date: t("resume.sample.gradYear"),
+      },
+    ],
+    skills: [
+      t("resume.sample.skill1"),
+      t("resume.sample.skill2"),
+      t("resume.sample.skill3"),
+    ],
+  };
+}
 
 const uid = () => Math.random().toString(36).slice(2, 9);
 
