@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Plus, X, Loader2, Sparkles, FolderOpen, Save } from "lucide-react";
 import { useJobs } from "@/lib/jobs-store";
 import { ZoomControls } from "@/components/ZoomControls";
@@ -88,14 +88,18 @@ export default function CVBuilderPage() {
     const prev = prevDefaultRef.current;
     const next = makeInitial(t);
     setCv((cur) => {
-      const swap = (k: keyof CV) =>
-        (cur as Record<string, unknown>)[k] === (prev as Record<string, unknown>)[k]
-          ? (next as Record<string, unknown>)[k]
-          : (cur as Record<string, unknown>)[k];
+      const c = cur as unknown as Record<string, unknown>;
+      const p = prev as unknown as Record<string, unknown>;
+      const n = next as unknown as Record<string, unknown>;
+      const swap = (k: string) => (c[k] === p[k] ? n[k] : c[k]);
       return {
         fullName: swap("fullName") as string,
         title: swap("title") as string,
         email: swap("email") as string,
+        phone: swap("phone") as string,
+        linkedin: swap("linkedin") as string,
+        location: swap("location") as string,
+        summary: swap("summary") as string,
         phone: swap("phone") as string,
         linkedin: swap("linkedin") as string,
         location: swap("location") as string,
