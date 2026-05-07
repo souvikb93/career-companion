@@ -274,7 +274,7 @@ export default function CoverLetterPage() {
                 <Send className="h-4 w-4" />
               </button>
             </div>
-            <p className="text-[12px] text-ink-muted mt-2">Try: "Make it more formal" or "Add more about leadership"</p>
+            
           </div>
         </section>
 
