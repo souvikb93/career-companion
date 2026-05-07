@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppLayout } from "@/components/AppLayout";
 import { JobsProvider } from "@/lib/jobs-store";
+import { LanguageProvider } from "@/lib/i18n";
 import Index from "./pages/Index.tsx";
 import CVBuilderPage from "./pages/CVBuilderPage";
 import CoverLetterPage from "./pages/CoverLetterPage";
@@ -18,6 +19,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <LanguageProvider>
         <JobsProvider>
           <Routes>
             <Route element={<AppLayout />}>
@@ -28,6 +30,7 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         </JobsProvider>
+        </LanguageProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
