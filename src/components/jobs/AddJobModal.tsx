@@ -188,7 +188,7 @@ export function AddJobModal({ open, onClose }: AddJobModalProps) {
                 type="button"
                 onClick={saveManual}
                 disabled={!manual.company.trim() || !manual.role.trim()}
-                className="flex-1 h-12 rounded-full bg-brand text-primary-foreground text-[12px] font-bold uppercase tracking-[0.08em] transition-opacity duration-200 ease-out hover:opacity-95 inline-flex items-center justify-center gap-2 disabled:opacity-60"
+                className="flex-1 h-12 rounded-full bg-ink text-white text-[12px] font-bold uppercase tracking-[0.08em] transition-colors duration-200 ease-out hover:bg-brand active:bg-brand inline-flex items-center justify-center gap-2 disabled:opacity-60 disabled:hover:bg-ink"
               >
                 <Plus className="h-4 w-4" />
                 {t("addJob.addJob")}
