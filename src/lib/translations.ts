@@ -108,8 +108,8 @@ export const TRANSLATIONS = {
       salaryPlaceholder: "e.g. €80k – €100k",
       notes: "Notes",
       notesPlaceholder: "Add notes about this role...",
-      customCv: "Custom CV",
-      coverLetter: "Cover Letter",
+      customCv: "Resume",
+      coverLetter: "Letter",
     },
     resume: {
       pageTitle: "Resume Builder",

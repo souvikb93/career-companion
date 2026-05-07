@@ -113,14 +113,14 @@ export function JobDetailPanel({ job, onClose, onUpdate }: Props) {
             <button
               type="button"
               onClick={() => goTo("/cv")}
-              className="flex-1 h-12 rounded-full border border-ink-2 text-ink text-[12px] font-bold uppercase tracking-[0.08em] transition-all duration-200 ease-out hover:bg-surface-2 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:shadow-none inline-flex items-center justify-center gap-2"
+              className="flex-1 h-12 rounded-full bg-surface-2 border border-line text-ink text-[12px] font-bold uppercase tracking-[0.08em] transition-colors duration-200 ease-out hover:bg-surface-hover inline-flex items-center justify-center gap-2"
             >
               <FileText className="h-4 w-4" /> {t("jobDetail.customCv")}
             </button>
             <button
               type="button"
               onClick={() => goTo("/cover-letter")}
-              className="flex-1 h-12 rounded-full bg-brand text-primary-foreground text-[12px] font-bold uppercase tracking-[0.08em] transition-all duration-200 ease-out hover:opacity-95 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:shadow-none inline-flex items-center justify-center gap-2"
+              className="flex-1 h-12 rounded-full bg-ink text-white text-[12px] font-bold uppercase tracking-[0.08em] transition-colors duration-200 ease-out hover:bg-brand active:bg-brand inline-flex items-center justify-center gap-2"
             >
               <Mail className="h-4 w-4" /> {t("jobDetail.coverLetter")}
             </button>
