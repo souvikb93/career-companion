@@ -290,11 +290,10 @@ export default function CoverLetterPage() {
           onMouseLeave={() => setHoverPreview(false)}
         >
           <section
-            className="bg-transparent px-6 pt-6 pb-24 overflow-auto h-full"
+            className="bg-transparent px-6 pt-6 pb-24 overflow-auto h-full flex justify-center"
             style={{ maxHeight: "calc(100vh - 64px - 81px)" }}
           >
             <div
-              className="mx-auto"
               style={{ width: `${794 * zoom}px`, height: `${1123 * zoom}px` }}
             >
               <article
@@ -303,16 +302,16 @@ export default function CoverLetterPage() {
                   width: "794px",
                   minHeight: "1123px",
                   padding: layout === "compact" ? "40px" : "64px",
-                  paddingLeft: layout === "modern" ? "96px" : undefined,
                   transform: `scale(${zoom})`,
                 }}
               >
                 {layout === "modern" && (
                   <div className="absolute left-0 top-0 bottom-0 w-3 bg-brand" />
                 )}
+                <div style={{ paddingLeft: layout === "modern" ? "32px" : undefined }}>
                 {letter === DEFAULT_LETTER ? (
-                  <div className={"font-sans text-ink space-y-6 " + (layout === "compact" ? "text-[13px] leading-snug space-y-4" : "text-[14px] leading-relaxed")}>
-                    <div className="grid grid-cols-2 gap-8">
+                  <div className={"font-sans text-ink " + (layout === "compact" ? "text-[13px] leading-snug space-y-4" : "text-[14px] leading-relaxed space-y-6")}>
+                    <div className="flex justify-between gap-8">
                       <div className="space-y-1 text-ink-muted">
                         <div>[Company Name]</div>
                         <div>[Company Street]</div>
@@ -339,6 +338,7 @@ export default function CoverLetterPage() {
                 ) : (
                   <pre className={"whitespace-pre-wrap font-sans text-ink " + (layout === "compact" ? "text-[13px] leading-snug" : "text-[14px] leading-relaxed")}>{letter}</pre>
                 )}
+                </div>
               </article>
             </div>
           </section>
