@@ -1,4 +1,5 @@
-import { JobStatus, STATUS_LABEL } from "@/lib/jobs-data";
+import { JobStatus } from "@/lib/jobs-data";
+import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 const STYLES: Record<JobStatus, string> = {
@@ -13,6 +14,7 @@ const STYLES: Record<JobStatus, string> = {
 };
 
 export function StatusBadge({ status, className }: { status: JobStatus; className?: string }) {
+  const { t } = useT();
   return (
     <span
       className={cn(
@@ -21,7 +23,7 @@ export function StatusBadge({ status, className }: { status: JobStatus; classNam
         className,
       )}
     >
-      {STATUS_LABEL[status]}
+      {t(`status.${status}`)}
     </span>
   );
 }

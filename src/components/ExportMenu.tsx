@@ -1,5 +1,6 @@
 import { Download, ChevronDown, FileText, FileType, FileCode } from "lucide-react";
 import { ExportFormat } from "@/lib/exporters";
+import { useT } from "@/lib/i18n";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -9,17 +10,17 @@ import {
 
 interface Props { onExport: (format: ExportFormat) => void }
 
-const OPTIONS: { f: ExportFormat; label: string; icon: typeof FileText }[] = [
-  { f: "pdf", label: "PDF (.pdf)", icon: FileText },
-  { f: "docx", label: "Word (.docx)", icon: FileType },
-  { f: "txt", label: "Plain text (.txt)", icon: FileCode },
-];
-
 export function ExportMenu({ onExport }: Props) {
+  const { t } = useT();
+  const OPTIONS: { f: ExportFormat; label: string; icon: typeof FileText }[] = [
+    { f: "pdf", label: t("formats.pdf"), icon: FileText },
+    { f: "docx", label: t("formats.docx"), icon: FileType },
+    { f: "txt", label: t("formats.txt"), icon: FileCode },
+  ];
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="btn-ghost outline-none">
-        <Download className="h-4 w-4" /> Export <ChevronDown className="h-3.5 w-3.5" />
+        <Download className="h-4 w-4" /> {t("common.export")} <ChevronDown className="h-3.5 w-3.5" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         {OPTIONS.map((o) => {
