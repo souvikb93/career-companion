@@ -22,23 +22,25 @@ const DEFAULT_LETTER = `__DEFAULT_TEMPLATE__`;
 
 const LOREM = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.";
 
-function letterFor(jobCompany: string, jobRole: string, jobDesc: string) {
-  const today = new Date().toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
+type TFn = (path: string, vars?: Record<string, string | number>) => string;
+
+function letterFor(t: TFn, lang: "de" | "en", jobCompany: string, jobRole: string, jobDesc: string) {
+  const today = new Date().toLocaleDateString(lang === "de" ? "de-DE" : "en-US", { year: "numeric", month: "long", day: "numeric" });
+  const firstSentence = jobDesc ? jobDesc.split(".")[0] + "." : "";
   return `${today}
 
-Hiring Team
+${t("letter.tmpl_hiringTeam")}
 ${jobCompany}
 
-Dear Hiring Team,
+${t("letter.tmpl_dear")}
 
-I'm writing to express my interest in the ${jobRole} role at ${jobCompany}. ${jobDesc ? jobDesc.split(".")[0] + "." : ""} I'd love to contribute to your next chapter.
+${t("letter.tmpl_intro", { role: jobRole, company: jobCompany, firstSentence })}
 
-Over the past six years I've shipped consumer and B2B products end-to-end — from research and prototyping to design systems and launch.
+${t("letter.tmpl_body")}
 
-I'd welcome the chance to talk about how I can help.
+${t("letter.tmpl_close")}
 
-Sincerely,
-Jordan Doe`;
+${t("letter.tmpl_signature")}`;
 }
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
