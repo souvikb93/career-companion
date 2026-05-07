@@ -1,4 +1,5 @@
 import { LayoutTemplate, Check } from "lucide-react";
+import { useT } from "@/lib/i18n";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,12 +9,6 @@ import {
 
 export type LayoutVariant = "classic" | "modern" | "compact";
 
-const OPTIONS: { value: LayoutVariant; label: string; description: string }[] = [
-  { value: "classic", label: "Classic", description: "Centered, single column" },
-  { value: "modern", label: "Modern", description: "Two-column with sidebar" },
-  { value: "compact", label: "Compact", description: "Denser, more on a page" },
-];
-
 export function LayoutMenu({
   value,
   onChange,
@@ -21,11 +16,17 @@ export function LayoutMenu({
   value: LayoutVariant;
   onChange: (v: LayoutVariant) => void;
 }) {
+  const { t } = useT();
+  const OPTIONS: { value: LayoutVariant; label: string; description: string }[] = [
+    { value: "classic", label: t("layouts.classic"), description: t("layouts.classicDesc") },
+    { value: "modern", label: t("layouts.modern"), description: t("layouts.modernDesc") },
+    { value: "compact", label: t("layouts.compact"), description: t("layouts.compactDesc") },
+  ];
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button type="button" className="btn-ghost">
-          <LayoutTemplate className="h-4 w-4" /> Layout
+          <LayoutTemplate className="h-4 w-4" /> {t("common.layout")}
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">

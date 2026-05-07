@@ -2,22 +2,23 @@ import { useMemo, useState } from "react";
 import { Search, Plus, ChevronRight } from "lucide-react";
 import {
   JobStatus,
-  STATUS_LABEL,
   STATUS_DOT_CLASS,
   STATUS_VIEW,
   PIPELINE_VIEWS,
   PipelineView,
 } from "@/lib/jobs-data";
 import { useJobs } from "@/lib/jobs-store";
+import { useT } from "@/lib/i18n";
 import { JobDetailPanel } from "@/components/jobs/JobDetailPanel";
 import { AddJobModal } from "@/components/jobs/AddJobModal";
 import { cn } from "@/lib/utils";
 
 function StatusDot({ status }: { status: JobStatus }) {
+  const { t } = useT();
   return (
     <span className="inline-flex items-center gap-2 text-[13px] text-ink whitespace-nowrap">
       <span className={cn("h-2 w-2 rounded-full shrink-0", STATUS_DOT_CLASS[status])} />
-      {STATUS_LABEL[status]}
+      {t(`status.${status}`)}
     </span>
   );
 }
@@ -30,6 +31,7 @@ function formatDate(iso: string) {
 
 export default function JobsPage() {
   const { jobs, updateJob } = useJobs();
+  const { t } = useT();
   const [view, setView] = useState<PipelineView>("all");
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -79,7 +81,7 @@ export default function JobsPage() {
                       : "border-line text-ink hover:bg-surface-hover",
                   )}
                 >
-                  <span>{v.label}</span>
+                  <span>{t(`pipeline.${v.id}`)}</span>
                   <span className={cn("text-[12px]", active ? "text-brand" : "text-ink-muted")}>
                     {counts[v.id]}
                   </span>
@@ -92,14 +94,14 @@ export default function JobsPage() {
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search company or role"
+              placeholder={t("tracker.searchPlaceholder")}
               className="input-base pl-10"
             />
           </div>
           <button
             type="button"
             onClick={() => setAddOpen(true)}
-            aria-label="Add job"
+            aria-label={t("tracker.addJob")}
             className="hidden sm:grid place-items-center h-12 w-12 rounded-full bg-ink text-white transition-colors duration-200 ease-out hover:bg-brand active:bg-brand"
           >
             <Plus className="h-5 w-5" />
@@ -108,7 +110,7 @@ export default function JobsPage() {
 
         <div className="card-surface overflow-hidden">
           <div className="hidden lg:grid grid-cols-[1.4fr_1.6fr_1.2fr_1fr_140px_110px_24px] gap-4 px-5 py-3 bg-surface border-b border-line">
-            {["Company", "Role", "Location", "Salary", "Status", "Date added", ""].map((h, i) => (
+            {[t("tracker.colCompany"), t("tracker.colRole"), t("tracker.colLocation"), t("tracker.colSalary"), t("tracker.colStatus"), t("tracker.colDate"), ""].map((h, i) => (
               <p key={i} className="eyebrow">{h}</p>
             ))}
           </div>
@@ -145,7 +147,7 @@ export default function JobsPage() {
             type="button"
             onClick={() => setAddOpen(true)}
             className="h-14 w-14 rounded-full bg-ink text-white grid place-items-center shadow-lg transition-colors duration-200 ease-out hover:bg-brand active:bg-brand"
-            aria-label="Add job"
+            aria-label={t("tracker.addJob")}
           >
             <Plus className="h-6 w-6" />
           </button>
@@ -163,21 +165,16 @@ export default function JobsPage() {
 }
 
 function EmptyState({ onAdd }: { onAdd: () => void }) {
+  const { t } = useT();
   return (
     <div className="py-20 px-6 text-center">
       <div className="mx-auto h-14 w-14 rounded-2xl bg-surface-2 border border-line grid place-items-center mb-5">
         <Plus className="h-6 w-6 text-ink-muted" />
       </div>
-      <h2 className="text-[28px] font-semibold text-ink">No jobs here</h2>
-      <p className="text-[15px] text-ink-muted mt-2">
-        Add a job to start tracking your applications.
-      </p>
-      <button
-        type="button"
-        onClick={onAdd}
-        className="btn-primary mt-6 h-12 px-6"
-      >
-        <Plus className="h-4 w-4" /> Add Job
+      <h2 className="text-[28px] font-semibold text-ink">{t("tracker.emptyTitle")}</h2>
+      <p className="text-[15px] text-ink-muted mt-2">{t("tracker.emptyBody")}</p>
+      <button type="button" onClick={onAdd} className="btn-primary mt-6 h-12 px-6">
+        <Plus className="h-4 w-4" /> {t("tracker.emptyCta")}
       </button>
     </div>
   );

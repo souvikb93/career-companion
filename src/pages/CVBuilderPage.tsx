@@ -10,6 +10,7 @@ import { useSavedCVs } from "@/lib/saved-cvs";
 import { exportAs, ExportFormat } from "@/lib/exporters";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useT } from "@/lib/i18n";
 
 interface Experience { id: string; title: string; company: string; start: string; end: string; description: string }
 interface Education { id: string; school: string; degree: string; field: string; date: string }
@@ -140,6 +141,7 @@ export default function CVBuilderPage() {
     ];
   });
   const { toast } = useToast();
+  const { t } = useT();
   const targetJob = targetJobId ? getJob(targetJobId) : null;
 
   useEffect(() => {
@@ -179,10 +181,10 @@ export default function CVBuilderPage() {
         ),
       };
       setCv(tailored);
-      toast({ title: "CV tailored", description: "Summary and skill order updated for this job." });
+      toast({ title: t("resume.tailored"), description: t("resume.tailoredDesc") });
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Failed";
-      toast({ title: "Couldn't build CV", description: msg, variant: "destructive" });
+      toast({ title: t("resume.cantBuild"), description: msg, variant: "destructive" });
     } finally {
       setBuilding(false);
     }
@@ -192,15 +194,15 @@ export default function CVBuilderPage() {
     <div className="w-full">
       <div className="px-8 py-5 flex items-center justify-between border-b border-line bg-surface flex-wrap gap-3">
         <div>
-          <h1 className="text-[24px] font-semibold text-ink">Resume Builder</h1>
+          <h1 className="text-[24px] font-semibold text-ink">{t("resume.pageTitle")}</h1>
         </div>
         <div className="flex items-center gap-3">
           <button type="button" onClick={() => setSaveOpen(true)} className="btn-ghost">
-            <Save className="h-4 w-4" /> Save
+            <Save className="h-4 w-4" /> {t("common.save")}
           </button>
           <LayoutMenu value={layout} onChange={setLayout} />
           <button type="button" onClick={() => setSavedOpen(true)} className="btn-ghost">
-            <FolderOpen className="h-4 w-4" /> Library
+            <FolderOpen className="h-4 w-4" /> {t("common.library")}
           </button>
           <ExportMenu onExport={handleExport} />
         </div>
@@ -209,12 +211,12 @@ export default function CVBuilderPage() {
       <SavedCVsPanel
         open={savedOpen}
         onClose={() => setSavedOpen(false)}
-        title="Resume Library"
+        title={t("resume.libraryTitle")}
         list={savedCVs}
         onLoad={(item) => {
           setCv(item.data);
           setSavedOpen(false);
-          toast({ title: "Resume loaded", description: item.name });
+          toast({ title: t("resume.loaded"), description: item.name });
         }}
         onDelete={(id) => removeCV(id)}
       />
@@ -222,12 +224,12 @@ export default function CVBuilderPage() {
       <SaveModal
         open={saveOpen}
         onClose={() => setSaveOpen(false)}
-        title="Save Resume"
+        title={t("resume.saveTitle")}
         defaultName={targetJob ? `Resume — ${targetJob.company}` : cv.fullName}
         onSave={(name, format) => {
           const item = saveCV(name, cv);
           handleExport(format);
-          toast({ title: "Resume saved", description: `${item.name} · ${format.toUpperCase()}` });
+          toast({ title: t("resume.saved"), description: `${item.name} · ${format.toUpperCase()}` });
         }}
       />
 
@@ -236,7 +238,7 @@ export default function CVBuilderPage() {
         <section className="bg-surface border-r border-line p-8 overflow-y-auto"
           style={{ maxHeight: "calc(100vh - 64px - 81px)" }}
         >
-          <Card title="Build from job description" action={
+          <Card title={t("resume.buildFromJd")} action={
             <button
               type="button"
               onClick={buildFromJD}
@@ -244,82 +246,82 @@ export default function CVBuilderPage() {
               className="btn-primary h-9 px-4"
             >
               {building ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
-              {building ? "Building…" : "Build CV"}
+              {building ? t("resume.building") : t("resume.build")}
             </button>
           }>
             <input
               value={jdUrl}
               onChange={(e) => setJdUrl(e.target.value)}
-              placeholder="Paste a job URL (optional)"
+              placeholder={t("resume.jdUrlPlaceholder")}
               className="input-base mb-3"
             />
             <textarea
               value={jdText}
               onChange={(e) => setJdText(e.target.value)}
               rows={4}
-              placeholder="...or paste the job description text here"
+              placeholder={t("resume.jdTextPlaceholder")}
               className="textarea-base"
             />
           </Card>
 
-          <h2 className="text-[20px] font-semibold text-ink mb-6 mt-6">Edit your Resume</h2>
+          <h2 className="text-[20px] font-semibold text-ink mb-6 mt-6">{t("resume.editYour")}</h2>
 
-          <Card title="Personal information">
+          <Card title={t("resume.personal")}>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Field label="Full name">
+              <Field label={t("resume.fullName")}>
                 <input className="input-base" value={cv.fullName} onChange={(e) => update("fullName", e.target.value)} />
               </Field>
-              <Field label="Email">
+              <Field label={t("resume.email")}>
                 <input className="input-base" value={cv.email} onChange={(e) => update("email", e.target.value)} />
               </Field>
-              <Field label="Phone">
+              <Field label={t("resume.phone")}>
                 <input className="input-base" value={cv.phone} onChange={(e) => update("phone", e.target.value)} />
               </Field>
-              <Field label="Location">
+              <Field label={t("resume.location")}>
                 <input className="input-base" value={cv.location} onChange={(e) => update("location", e.target.value)} />
               </Field>
             </div>
           </Card>
 
-          <Card title="Professional summary">
+          <Card title={t("resume.summary")}>
             <textarea
               className="textarea-base"
               rows={4}
               value={cv.summary}
               onChange={(e) => update("summary", e.target.value)}
-              placeholder="Write a brief overview of your professional background..."
+              placeholder={t("resume.summaryPlaceholder")}
             />
           </Card>
 
           <Card
-            title="Work experience"
+            title={t("resume.experience")}
             action={
               <AddBtn onClick={() =>
                 update("experiences", [
                   ...cv.experiences,
                   { id: uid(), title: "", company: "", start: "", end: "", description: "" },
                 ])
-              }>Add experience</AddBtn>
+              }>{t("resume.addExperience")}</AddBtn>
             }
           >
             <div className="space-y-3">
               {cv.experiences.map((exp, idx) => (
                 <div key={exp.id} className="rounded-2xl border border-line p-4">
                   <div className="flex items-center justify-between mb-3">
-                    <h4 className="text-[14px] font-semibold text-ink">Experience {idx + 1}</h4>
+                    <h4 className="text-[14px] font-semibold text-ink">{t("resume.experienceN", { n: idx + 1 })}</h4>
                     <RemoveBtn onClick={() => update("experiences", cv.experiences.filter((e) => e.id !== exp.id))} />
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <input className="input-base" placeholder="Job title" value={exp.title}
+                    <input className="input-base" placeholder={t("resume.jobTitle")} value={exp.title}
                       onChange={(e) => update("experiences", cv.experiences.map((x) => x.id === exp.id ? { ...x, title: e.target.value } : x))} />
-                    <input className="input-base" placeholder="Company" value={exp.company}
+                    <input className="input-base" placeholder={t("resume.company")} value={exp.company}
                       onChange={(e) => update("experiences", cv.experiences.map((x) => x.id === exp.id ? { ...x, company: e.target.value } : x))} />
-                    <input className="input-base" placeholder="Start (e.g. 2022)" value={exp.start}
+                    <input className="input-base" placeholder={t("resume.startPlaceholder")} value={exp.start}
                       onChange={(e) => update("experiences", cv.experiences.map((x) => x.id === exp.id ? { ...x, start: e.target.value } : x))} />
-                    <input className="input-base" placeholder="End (e.g. Present)" value={exp.end}
+                    <input className="input-base" placeholder={t("resume.endPlaceholder")} value={exp.end}
                       onChange={(e) => update("experiences", cv.experiences.map((x) => x.id === exp.id ? { ...x, end: e.target.value } : x))} />
                   </div>
-                  <textarea className="textarea-base mt-3" rows={3} placeholder="Describe your impact..." value={exp.description}
+                  <textarea className="textarea-base mt-3" rows={3} placeholder={t("resume.descPlaceholder")} value={exp.description}
                     onChange={(e) => update("experiences", cv.experiences.map((x) => x.id === exp.id ? { ...x, description: e.target.value } : x))} />
                 </div>
               ))}
@@ -327,28 +329,28 @@ export default function CVBuilderPage() {
           </Card>
 
           <Card
-            title="Education"
+            title={t("resume.education")}
             action={
               <AddBtn onClick={() =>
                 update("education", [...cv.education, { id: uid(), school: "", degree: "", field: "", date: "" }])
-              }>Add education</AddBtn>
+              }>{t("resume.addEducation")}</AddBtn>
             }
           >
             <div className="space-y-3">
               {cv.education.map((ed, idx) => (
                 <div key={ed.id} className="rounded-2xl border border-line p-4">
                   <div className="flex items-center justify-between mb-3">
-                    <h4 className="text-[14px] font-semibold text-ink">Education {idx + 1}</h4>
+                    <h4 className="text-[14px] font-semibold text-ink">{t("resume.educationN", { n: idx + 1 })}</h4>
                     <RemoveBtn onClick={() => update("education", cv.education.filter((e) => e.id !== ed.id))} />
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <input className="input-base" placeholder="School" value={ed.school}
+                    <input className="input-base" placeholder={t("resume.school")} value={ed.school}
                       onChange={(e) => update("education", cv.education.map((x) => x.id === ed.id ? { ...x, school: e.target.value } : x))} />
-                    <input className="input-base" placeholder="Degree" value={ed.degree}
+                    <input className="input-base" placeholder={t("resume.degree")} value={ed.degree}
                       onChange={(e) => update("education", cv.education.map((x) => x.id === ed.id ? { ...x, degree: e.target.value } : x))} />
-                    <input className="input-base" placeholder="Field of study" value={ed.field}
+                    <input className="input-base" placeholder={t("resume.field")} value={ed.field}
                       onChange={(e) => update("education", cv.education.map((x) => x.id === ed.id ? { ...x, field: e.target.value } : x))} />
-                    <input className="input-base" placeholder="Graduation date" value={ed.date}
+                    <input className="input-base" placeholder={t("resume.gradDate")} value={ed.date}
                       onChange={(e) => update("education", cv.education.map((x) => x.id === ed.id ? { ...x, date: e.target.value } : x))} />
                   </div>
                 </div>
@@ -356,7 +358,7 @@ export default function CVBuilderPage() {
             </div>
           </Card>
 
-          <Card title="Skills">
+          <Card title={t("resume.skills")}>
             <div className="flex flex-wrap gap-2 mb-3">
               {cv.skills.map((s) => (
                 <span key={s} className="inline-flex items-center gap-1.5 rounded-full bg-surface-2 border border-line px-3 py-1.5 text-[13px] text-ink">
@@ -364,7 +366,7 @@ export default function CVBuilderPage() {
                   <button
                     type="button"
                     onClick={() => update("skills", cv.skills.filter((x) => x !== s))}
-                    aria-label={`Remove ${s}`}
+                    aria-label={t("resume.removeSkill", { s })}
                     className="text-ink-muted hover:text-ink transition-colors duration-180"
                   >
                     <X className="h-3 w-3" />
@@ -382,7 +384,7 @@ export default function CVBuilderPage() {
                   setSkillDraft("");
                 }
               }}
-              placeholder="Type a skill and press Enter"
+              placeholder={t("resume.skillPlaceholder")}
               className="input-base"
             />
           </Card>
@@ -513,6 +515,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 function CvPreview({ cv, layout }: { cv: CV; layout: LayoutVariant }) {
+  const { t } = useT();
   const contactLine = [cv.email, cv.phone, cv.linkedin, cv.location].filter(Boolean).join(" · ");
 
   if (layout === "modern") {
@@ -531,7 +534,7 @@ function CvPreview({ cv, layout }: { cv: CV; layout: LayoutVariant }) {
           </div>
           {cv.skills.length > 0 && (
             <div>
-              <h3 className="text-[13px] font-semibold text-ink uppercase tracking-wide mb-2">Skills</h3>
+              <h3 className="text-[13px] font-semibold text-ink uppercase tracking-wide mb-2">{t("resume.sectionSkills")}</h3>
               <ul className="space-y-1 text-[13px] text-ink-muted">
                 {cv.skills.map((s) => <li key={s}>{s}</li>)}
               </ul>
@@ -540,17 +543,17 @@ function CvPreview({ cv, layout }: { cv: CV; layout: LayoutVariant }) {
         </aside>
         <div className="col-span-2 space-y-6">
           {cv.summary && (
-            <Section title="Professional Summary">
+            <Section title={t("resume.sectionSummary")}>
               <p className="text-[14px] text-ink-muted leading-relaxed whitespace-pre-line">{cv.summary}</p>
             </Section>
           )}
           {cv.experiences.length > 0 && (
-            <Section title="Professional Experience">
+            <Section title={t("resume.sectionExperience")}>
               {cv.experiences.map((e) => <ExpItem key={e.id} e={e} />)}
             </Section>
           )}
           {cv.education.length > 0 && (
-            <Section title="Education">
+            <Section title={t("resume.sectionEducation")}>
               {cv.education.map((e) => <EduItem key={e.id} e={e} />)}
             </Section>
           )}
@@ -559,7 +562,6 @@ function CvPreview({ cv, layout }: { cv: CV; layout: LayoutVariant }) {
     );
   }
 
-  // classic & compact: same structure, compact gets tighter typography
   const compact = layout === "compact";
   return (
     <div className={compact ? "text-[13px] leading-snug" : ""}>
@@ -572,25 +574,25 @@ function CvPreview({ cv, layout }: { cv: CV; layout: LayoutVariant }) {
       </header>
 
       {cv.summary && (
-        <Section title="Professional Summary">
+        <Section title={t("resume.sectionSummary")}>
           <p className="text-[14px] text-ink-muted leading-relaxed whitespace-pre-line">{cv.summary}</p>
         </Section>
       )}
 
       {cv.experiences.length > 0 && (
-        <Section title="Professional Experience">
+        <Section title={t("resume.sectionExperience")}>
           {cv.experiences.map((e) => <ExpItem key={e.id} e={e} />)}
         </Section>
       )}
 
       {cv.education.length > 0 && (
-        <Section title="Education">
+        <Section title={t("resume.sectionEducation")}>
           {cv.education.map((e) => <EduItem key={e.id} e={e} />)}
         </Section>
       )}
 
       {cv.skills.length > 0 && (
-        <Section title="Skills">
+        <Section title={t("resume.sectionSkills")}>
           <p className="text-[14px] text-ink-muted">{cv.skills.join(" · ")}</p>
         </Section>
       )}
