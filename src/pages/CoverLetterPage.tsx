@@ -48,13 +48,13 @@ const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 export default function CoverLetterPage() {
   const { getJob, targetJobId, setTargetJobId } = useJobs();
   const { toast } = useToast();
-  const { t } = useT();
+  const { t, lang } = useT();
   const targetJob = targetJobId ? getJob(targetJobId) : null;
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [draft, setDraft] = useState("");
   const [letter, setLetter] = useState(
-    targetJob ? letterFor(targetJob.company, targetJob.role, targetJob.description) : DEFAULT_LETTER,
+    targetJob ? letterFor(t, lang, targetJob.company, targetJob.role, targetJob.description) : DEFAULT_LETTER,
   );
   const [zoom, setZoom] = useState(0.6);
   const [jobUrl, setJobUrl] = useState("");
@@ -70,6 +70,7 @@ export default function CoverLetterPage() {
   };
   const { list: savedLetters, save: saveLetter, remove: removeLetter } = useSavedCVs<LetterDoc>("saved_letters_v2", () => {
     const daysAgo = (n: number) => new Date(Date.now() - n * 86400000).toISOString();
+    const lbl = t("letter.defaultSaveName");
     const seeds: Array<{ company: string; role: string; desc: string; days: number }> = [
       { company: "Zalando", role: "Senior Product Designer", desc: "Shape the future of European fashion commerce across web and mobile", days: 2 },
       { company: "Delivery Hero", role: "Product Engineer", desc: "Build delightful ordering experiences for millions of customers", days: 4 },
@@ -80,9 +81,9 @@ export default function CoverLetterPage() {
     ];
     return seeds.map((s, i) => ({
       id: `demo-letter-${i + 1}`,
-      name: `Cover Letter — ${s.company}, ${s.role}`,
+      name: `${lbl} — ${s.company}, ${s.role}`,
       savedAt: daysAgo(s.days),
-      data: { letter: letterFor(s.company, s.role, s.desc), jobLabel: `${s.company} — ${s.role}` },
+      data: { letter: letterFor(t, lang, s.company, s.role, s.desc), jobLabel: `${s.company} — ${s.role}` },
     }));
   });
   const scrollRef = useRef<HTMLDivElement>(null);
