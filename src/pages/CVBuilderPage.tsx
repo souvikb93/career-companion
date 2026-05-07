@@ -100,31 +100,27 @@ export default function CVBuilderPage() {
         linkedin: swap("linkedin") as string,
         location: swap("location") as string,
         summary: swap("summary") as string,
-        phone: swap("phone") as string,
-        linkedin: swap("linkedin") as string,
-        location: swap("location") as string,
-        summary: swap("summary") as string,
         experiences: cur.experiences.map((e, i) => {
-          const p = prev.experiences[i]; const n = next.experiences[i];
-          if (!p || !n) return e;
+          const pe = prev.experiences[i]; const ne = next.experiences[i];
+          if (!pe || !ne) return e;
           return {
             id: e.id,
-            title: e.title === p.title ? n.title : e.title,
-            company: e.company === p.company ? n.company : e.company,
-            start: e.start === p.start ? n.start : e.start,
-            end: e.end === p.end ? n.end : e.end,
-            description: e.description === p.description ? n.description : e.description,
+            title: e.title === pe.title ? ne.title : e.title,
+            company: e.company === pe.company ? ne.company : e.company,
+            start: e.start === pe.start ? ne.start : e.start,
+            end: e.end === pe.end ? ne.end : e.end,
+            description: e.description === pe.description ? ne.description : e.description,
           };
         }),
         education: cur.education.map((ed, i) => {
-          const p = prev.education[i]; const n = next.education[i];
-          if (!p || !n) return ed;
+          const pe = prev.education[i]; const ne = next.education[i];
+          if (!pe || !ne) return ed;
           return {
             id: ed.id,
-            school: ed.school === p.school ? n.school : ed.school,
-            degree: ed.degree === p.degree ? n.degree : ed.degree,
-            field: ed.field === p.field ? n.field : ed.field,
-            date: ed.date === p.date ? n.date : ed.date,
+            school: ed.school === pe.school ? ne.school : ed.school,
+            degree: ed.degree === pe.degree ? ne.degree : ed.degree,
+            field: ed.field === pe.field ? ne.field : ed.field,
+            date: ed.date === pe.date ? ne.date : ed.date,
           };
         }),
         skills: cur.skills.map((s) => {
