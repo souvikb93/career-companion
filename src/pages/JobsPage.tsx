@@ -112,7 +112,7 @@ export default function JobsPage() {
         <div className="card-surface overflow-hidden">
           <div className="hidden lg:grid grid-cols-[1.4fr_1.6fr_1.2fr_1fr_140px_110px_24px] gap-4 px-5 py-3 bg-surface border-b border-line">
             {[t("tracker.colCompany"), t("tracker.colRole"), t("tracker.colLocation"), t("tracker.colSalary"), t("tracker.colStatus"), t("tracker.colDate"), ""].map((h, i) => (
-              <p key={i} className="eyebrow">{h}</p>
+              <p key={i} className="eyebrow whitespace-nowrap">{h}</p>
             ))}
           </div>
 
