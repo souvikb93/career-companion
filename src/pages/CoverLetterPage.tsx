@@ -154,10 +154,10 @@ export default function CoverLetterPage() {
     <div className="w-full">
       <div className="px-8 py-5 flex items-center justify-between border-b border-line bg-surface flex-wrap gap-3">
         <div>
-          <h1 className="text-[24px] font-semibold text-ink">Letters</h1>
-          <p className="text-[13px] text-ink-muted mt-0.5">
-            {targetJob ? `For: ${targetJob.company} — ${targetJob.role}` : "Chat with AI to generate a customized cover letter."}
-          </p>
+          <h1 className="text-[24px] font-semibold text-ink">Letter Builder</h1>
+          {targetJob && (
+            <p className="text-[13px] text-ink-muted mt-0.5">For: {targetJob.company} — {targetJob.role}</p>
+          )}
         </div>
         <div className="flex items-center gap-3">
           <button type="button" onClick={() => setSaveOpen(true)} className="btn-ghost">
