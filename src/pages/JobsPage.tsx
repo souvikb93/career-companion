@@ -133,7 +133,7 @@ export default function JobsPage() {
                     {job.salary || <span className="opacity-60">—</span>}
                   </div>
                   <div><StatusDot status={job.status} /></div>
-                  <div className="text-[13px] text-ink-muted truncate">{formatDate(job.dateAdded)}</div>
+                  <div className="text-[13px] text-ink-muted truncate">{formatDate(job.dateAdded, dateLocale)}</div>
                   <div className="hidden lg:flex justify-end text-ink-muted opacity-0 group-hover:opacity-100 transition-opacity duration-180">
                     <ChevronRight className="h-4 w-4" />
                   </div>
