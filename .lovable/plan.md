@@ -1,23 +1,22 @@
-## Changes to Resume Builder page (`src/pages/CVBuilderPage.tsx`)
+## Update default cover letter template (`src/pages/CoverLetterPage.tsx`)
 
-**1. Header**
+Replace the current `DEFAULT_LETTER` constant with a structured dummy template that renders when the user lands on the Letters page (no target job selected).
 
-- Change `<h1>Resume</h1>` → `Resume Builder`.
-- Always dont show subtitle "Edit on the left, preview on the right." r.
-- Keep alignment as-is (title , left-aligned in the existing header bar).
+**Layout in the A4 preview:**
+- Top row: two columns
+  - Left: company placeholders (`[Company Name]`, `[Company Street]`, `[Company City, Postal Code]`)
+  - Right: applicant placeholders (`[Your Name]`, `[Your Street]`, `[Your City, Postal Code]`, `[Your Email]`, `[Your Phone Number]`)
+- Below: `Date: [Date Placeholder]`
+- Then: `Subject: [Subject Placeholder]`
+- Then: `Dear [Hiring Manager's Name],`
+- Body: two Lorem ipsum paragraphs (as provided)
+- Sign-off: `Sincerely,` + `[Your Name]`
 
-**2. "Add Experience" / "Add Education" buttons (`AddBtn` component)**
+**Implementation approach:**
+- The preview currently renders `letter` (string) inside a `<pre>`. To support the two-column header (company left / applicant right), switch the preview article from a single `<pre>` to a structured JSX block when the letter is the default template, OR always render structured JSX with editable placeholders.
+- Simplest non-invasive approach: keep `letter` as a string for the chat/AI flow, but render the default landing state as structured JSX (two-column header grid + body) inside the preview article. When a real letter is generated (via tailor/chat), fall back to the existing `<pre>` rendering.
+- Detect "default state" by tracking whether the letter has been customized (e.g., compare against `DEFAULT_LETTER` or add an `isDefault` flag set to false when chat/tailor updates the letter).
 
-- Convert from the current pill-outline (border-brand, rounded-full, uppercase) to a tertiary text-link style: no border, no background, brand color text, small `Plus` icon, hover underline.
-- Applies to both "Add experience" and "Add education" since they share `AddBtn`.
-
-**3. Experience & Education cards — add in-card header**
-
-- Each card gets a header row: left side shows `Experience 1`, `Experience 2`, … (or `Education 1`, `Education 2`, …) — numbered by index in the array, incrementing automatically.
-- Right side: the close (X) button, properly aligned in the header row (flex justify-between) instead of absolutely positioned over the inputs (which currently overlaps the Company input — see screenshot).
-- Remove the `absolute top-3 right-3` positioning on `RemoveBtn` for these cards; the header row provides natural alignment with padding so it no longer collides with the input fields.
-- Inputs grid stays unchanged below the header.
-
-## Out of scope
-
-No business-logic, data, or routing changes. Pure presentation tweaks to the Resume Builder page.
+**Out of scope:**
+- No changes to chat, save/load, export, or job-tailoring logic.
+- Placeholders are visual only — not interactive form fields.

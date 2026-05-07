@@ -16,12 +16,9 @@ interface LetterDoc { letter: string; jobLabel?: string }
 
 const KEY = "saved_letters_v1";
 
-const DEFAULT_LETTER = `Dear Hiring Team,
+const DEFAULT_LETTER = `__DEFAULT_TEMPLATE__`;
 
-I'm writing to express my interest in the role at your company. I'd welcome the chance to talk about how I can contribute.
-
-Sincerely,
-Jordan Doe`;
+const LOREM = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.";
 
 function letterFor(jobCompany: string, jobRole: string, jobDesc: string) {
   const today = new Date().toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
