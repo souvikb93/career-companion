@@ -76,6 +76,11 @@ export default function CVBuilderPage() {
   const [savedOpen, setSavedOpen] = useState(false);
   const [saveOpen, setSaveOpen] = useState(false);
   const [hoverPreview, setHoverPreview] = useState(false);
+  const [layout, setLayoutState] = useState<LayoutVariant>(() => loadLayout("cv_layout"));
+  const setLayout = (v: LayoutVariant) => {
+    setLayoutState(v);
+    try { window.localStorage.setItem("cv_layout", v); } catch { /* ignore */ }
+  };
   const { getJob, targetJobId, setTargetJobId } = useJobs();
   const { list: savedCVs, save: saveCV, remove: removeCV } = useSavedCVs<CV>("saved_cvs_v2", () => {
     const daysAgo = (n: number) => new Date(Date.now() - n * 86400000).toISOString();
