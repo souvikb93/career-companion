@@ -51,7 +51,8 @@ export function LayoutMenu({
   );
 }
 
-export function useLayoutVariant(storageKey: string, initial: LayoutVariant = "classic") {
-  if (typeof window === "undefined") return [initial, () => {}] as const;
-  return null as never;
+export function loadLayout(key: string, fallback: LayoutVariant = "classic"): LayoutVariant {
+  if (typeof window === "undefined") return fallback;
+  const v = window.localStorage.getItem(key);
+  return v === "classic" || v === "modern" || v === "compact" ? v : fallback;
 }
