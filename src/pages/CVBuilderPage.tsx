@@ -405,52 +405,14 @@ export default function CVBuilderPage() {
           >
             <article
               className="bg-white text-ink shadow-2xl origin-top-left"
-              style={{ width: "794px", minHeight: "1123px", padding: "64px", transform: `scale(${zoom})` }}
+              style={{
+                width: "794px",
+                minHeight: "1123px",
+                padding: layout === "compact" ? "40px" : "64px",
+                transform: `scale(${zoom})`,
+              }}
             >
-              <header className="text-center mb-8">
-                <h2 className="text-[28px] font-semibold text-ink">{cv.fullName || "Your name"}</h2>
-                <p className="text-[12px] text-ink-muted mt-2">
-                  {[cv.email, cv.phone, cv.location].filter(Boolean).join(" · ")}
-                </p>
-              </header>
-
-              {cv.summary && (
-                <p className="italic text-[14px] text-ink-muted mb-8 leading-relaxed whitespace-pre-line">{cv.summary}</p>
-              )}
-
-              {cv.experiences.length > 0 && (
-                <Section title="Experience">
-                  {cv.experiences.map((e) => (
-                    <div key={e.id} className="mb-5">
-                      <div className="flex items-baseline justify-between gap-3">
-                        <p className="text-[15px] font-semibold text-ink">{e.title || "Role"}{e.company && ` · ${e.company}`}</p>
-                        <p className="text-[12px] text-ink-muted whitespace-nowrap">{[e.start, e.end].filter(Boolean).join(" – ")}</p>
-                      </div>
-                      {e.description && <p className="text-[14px] text-ink-muted mt-1 leading-relaxed">{e.description}</p>}
-                    </div>
-                  ))}
-                </Section>
-              )}
-
-              {cv.education.length > 0 && (
-                <Section title="Education">
-                  {cv.education.map((e) => (
-                    <div key={e.id} className="mb-3">
-                      <div className="flex items-baseline justify-between gap-3">
-                        <p className="text-[15px] font-semibold text-ink">{e.school || "School"}</p>
-                        <p className="text-[12px] text-ink-muted">{e.date}</p>
-                      </div>
-                      <p className="text-[14px] text-ink-muted">{[e.degree, e.field].filter(Boolean).join(", ")}</p>
-                    </div>
-                  ))}
-                </Section>
-              )}
-
-              {cv.skills.length > 0 && (
-                <Section title="Skills">
-                  <p className="text-[14px] text-ink-muted">{cv.skills.join(" · ")}</p>
-                </Section>
-              )}
+              <CvPreview cv={cv} layout={layout} />
             </article>
           </div>
 
