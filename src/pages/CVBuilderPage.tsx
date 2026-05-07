@@ -248,7 +248,7 @@ export default function CVBuilderPage() {
         open={saveOpen}
         onClose={() => setSaveOpen(false)}
         title={t("resume.saveTitle")}
-        defaultName={targetJob ? `Resume — ${targetJob.company}` : cv.fullName}
+        defaultName={targetJob ? `${t("resume.defaultSaveName")} — ${targetJob.company}` : t("resume.defaultSaveName")}
         onSave={(name, format) => {
           const item = saveCV(name, cv);
           handleExport(format);
