@@ -1,5 +1,6 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { Job, SAMPLE_JOBS } from "./jobs-data";
+import { createContext, useContext, useEffect, useMemo, useState, ReactNode } from "react";
+import { Job, buildSampleJobs, localizeJob } from "./jobs-data";
+import { useT } from "./i18n";
 
 interface Ctx {
   jobs: Job[];
@@ -12,35 +13,31 @@ interface Ctx {
 }
 
 const JobsContext = createContext<Ctx | null>(null);
-const STORAGE_KEY = "jobs_v6";
+const STORAGE_KEY = "jobs_v7";
 const DATA_VERSION_KEY = `${STORAGE_KEY}_data_version`;
-const CURRENT_DATA_VERSION = "shared-jobs-2026-05-06";
+const CURRENT_DATA_VERSION = "shared-jobs-2026-05-07";
 
-const LEGACY_DEMO_COMPANIES = new Set(["Linear", "Vercel", "Notion", "Figma", "Stripe", "Anthropic", "Arc"]);
-
-function readInitialJobs() {
+function readInitialJobs(): Job[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     const version = localStorage.getItem(DATA_VERSION_KEY);
-
     if (raw && version === CURRENT_DATA_VERSION) return JSON.parse(raw) as Job[];
-
-    if (raw) {
-      const parsed = JSON.parse(raw) as Job[];
-      const hasLegacyDemoRows = Array.isArray(parsed) && parsed.some((job) => LEGACY_DEMO_COMPANIES.has(job.company));
-      if (!hasLegacyDemoRows && version === CURRENT_DATA_VERSION) return parsed;
-    }
-
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(SAMPLE_JOBS));
+    const seed = buildSampleJobs("de");
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(seed));
     localStorage.setItem(DATA_VERSION_KEY, CURRENT_DATA_VERSION);
-  } catch {/* noop */}
-
-  return SAMPLE_JOBS;
+    return seed;
+  } catch {
+    return buildSampleJobs("de");
+  }
 }
 
 export function JobsProvider({ children }: { children: ReactNode }) {
+  const { lang } = useT();
   const [jobs, setJobsState] = useState<Job[]>(readInitialJobs);
   const [targetJobId, setTargetJobId] = useState<string | null>(null);
+
+  // Re-localize seeded jobs whenever language changes.
+  const localized = useMemo(() => jobs.map((j) => localizeJob(j, lang)), [jobs, lang]);
 
   useEffect(() => {
     try {
@@ -52,11 +49,11 @@ export function JobsProvider({ children }: { children: ReactNode }) {
   const setJobs = (j: Job[]) => setJobsState(j);
   const addJob = (j: Job) => setJobsState((prev) => [j, ...prev]);
   const updateJob = (j: Job) =>
-    setJobsState((prev) => prev.map((x) => (x.id === j.id ? j : x)));
-  const getJob = (id: string) => jobs.find((j) => j.id === id);
+    setJobsState((prev) => prev.map((x) => (x.id === j.id ? { ...j, locationI18n: x.locationI18n, descriptionI18n: x.descriptionI18n } : x)));
+  const getJob = (id: string) => localized.find((j) => j.id === id);
 
   return (
-    <JobsContext.Provider value={{ jobs, setJobs, addJob, updateJob, getJob, targetJobId, setTargetJobId }}>
+    <JobsContext.Provider value={{ jobs: localized, setJobs, addJob, updateJob, getJob, targetJobId, setTargetJobId }}>
       {children}
     </JobsContext.Provider>
   );
