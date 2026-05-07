@@ -298,11 +298,20 @@ export default function CoverLetterPage() {
               style={{ width: `${794 * zoom}px`, height: `${1123 * zoom}px` }}
             >
               <article
-                className="bg-white text-ink shadow-2xl origin-top-left"
-                style={{ width: "794px", minHeight: "1123px", padding: "64px", transform: `scale(${zoom})` }}
+                className="bg-white text-ink shadow-2xl origin-top-left relative overflow-hidden"
+                style={{
+                  width: "794px",
+                  minHeight: "1123px",
+                  padding: layout === "compact" ? "40px" : "64px",
+                  paddingLeft: layout === "modern" ? "96px" : undefined,
+                  transform: `scale(${zoom})`,
+                }}
               >
+                {layout === "modern" && (
+                  <div className="absolute left-0 top-0 bottom-0 w-3 bg-brand" />
+                )}
                 {letter === DEFAULT_LETTER ? (
-                  <div className="font-sans text-[14px] text-ink leading-relaxed space-y-6">
+                  <div className={"font-sans text-ink space-y-6 " + (layout === "compact" ? "text-[13px] leading-snug space-y-4" : "text-[14px] leading-relaxed")}>
                     <div className="grid grid-cols-2 gap-8">
                       <div className="space-y-1 text-ink-muted">
                         <div>[Company Name]</div>
@@ -328,7 +337,7 @@ export default function CoverLetterPage() {
                     </div>
                   </div>
                 ) : (
-                  <pre className="whitespace-pre-wrap font-sans text-[14px] text-ink leading-relaxed">{letter}</pre>
+                  <pre className={"whitespace-pre-wrap font-sans text-ink " + (layout === "compact" ? "text-[13px] leading-snug" : "text-[14px] leading-relaxed")}>{letter}</pre>
                 )}
               </article>
             </div>
