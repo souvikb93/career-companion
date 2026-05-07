@@ -294,7 +294,35 @@ export default function CoverLetterPage() {
                 className="bg-white text-ink shadow-2xl origin-top-left"
                 style={{ width: "794px", minHeight: "1123px", padding: "64px", transform: `scale(${zoom})` }}
               >
-                <pre className="whitespace-pre-wrap font-sans text-[14px] text-ink leading-relaxed">{letter}</pre>
+                {letter === DEFAULT_LETTER ? (
+                  <div className="font-sans text-[14px] text-ink leading-relaxed space-y-6">
+                    <div className="grid grid-cols-2 gap-8">
+                      <div className="space-y-1 text-ink-muted">
+                        <div>[Company Name]</div>
+                        <div>[Company Street]</div>
+                        <div>[Company City, Postal Code]</div>
+                      </div>
+                      <div className="space-y-1 text-right text-ink-muted">
+                        <div>[Your Name]</div>
+                        <div>[Your Street]</div>
+                        <div>[Your City, Postal Code]</div>
+                        <div>[Your Email]</div>
+                        <div>[Your Phone Number]</div>
+                      </div>
+                    </div>
+                    <div className="text-ink-muted">Date: [Date Placeholder]</div>
+                    <div className="text-ink-muted">Subject: [Subject Placeholder]</div>
+                    <div>Dear [Hiring Manager's Name],</div>
+                    <p>{LOREM}</p>
+                    <p>{LOREM}</p>
+                    <div>
+                      <div>Sincerely,</div>
+                      <div className="text-ink-muted">[Your Name]</div>
+                    </div>
+                  </div>
+                ) : (
+                  <pre className="whitespace-pre-wrap font-sans text-[14px] text-ink leading-relaxed">{letter}</pre>
+                )}
               </article>
             </div>
           </section>
