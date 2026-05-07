@@ -1,38 +1,23 @@
-## 1. Default Resume placeholder template
+## Issue
 
-On `src/pages/CVBuilderPage.tsx`, replace the current `initial` CV data with placeholder content matching the requested template. The preview will render the same fields it already does (name, contact line, summary, experience, education, skills) — only the seed values change.
+In the Letter preview, the left column ([Company Name] block) appears to bleed toward/past the page edge while the right column has proper margin — the two header columns don't share the same horizontal padding as the body text.
 
-New seed values:
-- **fullName:** `[Your Name]`
-- **professional title:** `[Your Professional Title]` (new field, shown under name in preview)
-- **phone / email / linkedIn / location:** `[Your Phone Number]`, `[Your Email Address]`, `[Your LinkedIn Profile]`, `[Your Address or City, Country]`
-- **summary:** "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur vitae sapien id nulla ullamcorper convallis."
-- **experiences:** two entries — `Job Title 1 / Company Name / [Month/Year] – Present` and `Job Title 2 / Company Name / [Month/Year] – [Month/Year]`, each with two short Lorem ipsum bullet lines in the description.
-- **education:** one entry — `Degree / University Name / [Year of Graduation]` with a Lorem ipsum line.
-- **skills:** `Lorem ipsum`, `Dolor sit amet`, `Consectetur adipiscing`.
+Likely causes to investigate and fix in `src/pages/CoverLetterPage.tsx`:
 
-Small preview tweak: render the optional professional title beneath the name (single line, muted) so the placeholder reads naturally.
+1. **Two-column header `grid grid-cols-2`** stretches edge-to-edge inside the article padding, so the left column starts at the page's left padding and the right column ends at the right padding — visually that's correct, but with `gap-8` and unequal text lengths the left side looks flush left while the right looks balanced. Fix by giving each column equal max-width and consistent alignment, or by tightening the grid so it sits within the same content rhythm as the body paragraphs.
 
-No editor structure, save/load, export, or tailoring logic changes.
+2. **Page centering in the preview pane**: the scaled `<article>` (transform: scale + origin-top-left) sits inside a wrapper sized to `794 * zoom`. Verify `mx-auto` actually centers it; if not, ensure the wrapper width matches the rendered scaled width and the parent section uses `flex justify-center` so the page is horizontally centered regardless of zoom.
 
-## 2. Layout selector (Resume + Letter)
+3. **Padding symmetry**: confirm the `padding` shorthand (64px classic / 40px compact) applies equally on both sides, and that `paddingLeft` isn't being unintentionally overridden by the modern-layout rule.
 
-Placement: **top toolbar**, on both pages, immediately to the left of the Save button — a small button labeled "Layout" with a layout icon, opening a dropdown menu with three options:
+## Plan
 
-- **Classic** — current centered single-column look (default)
-- **Modern** — two-column with a left sidebar for contact + skills, main column for summary/experience/education
-- **Compact** — single column with tighter spacing, smaller headings, denser line-height to fit more on one page
-
-Behavior:
-- Selection is stored in component state (and persisted to `localStorage` per page: `cv_layout`, `letter_layout`) so it survives reloads.
-- The preview area renders one of three layout variants based on the current selection. Same data, different presentation.
-- A subtle check mark indicates the active option in the dropdown.
-
-Files touched:
-- `src/pages/CVBuilderPage.tsx` — toolbar button + 3 preview layout variants
-- `src/pages/CoverLetterPage.tsx` — toolbar button + 3 letter layout variants (Classic = current two-column header; Modern = left accent bar with sender block; Compact = tighter margins/typography)
-- New small component `src/components/LayoutMenu.tsx` — shared dropdown using existing shadcn `dropdown-menu` primitives, to keep both pages consistent.
+- Take a fresh screenshot of `/cover-letter` at the user's viewport to confirm the exact misalignment.
+- In `CoverLetterPage.tsx` preview block:
+  - Wrap the scaled page in a `flex justify-center` container so the A4 sheet is always centered in the preview pane.
+  - Keep the article padding symmetric (`padding: 64px` for classic/modern body, `40px` for compact); apply the modern accent bar via inner offset, not by changing `paddingLeft`, so left/right padding stay equal.
+  - For the placeholder header, replace the `grid grid-cols-2 gap-8` with a `flex justify-between` so the left block hugs the left content edge and the right block hugs the right content edge — same rhythm as the body paragraphs below.
+- Re-screenshot and visually verify both columns align with the body text's left/right edges.
 
 ## Out of scope
-- No backend changes, no schema changes.
-- Layouts are visual-only; export still uses the existing text renderer.
+- No changes to letter content, chat, save/export, or layout selector behavior.
