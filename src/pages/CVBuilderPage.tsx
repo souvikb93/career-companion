@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Plus, X, Loader2, Sparkles, FolderOpen, Save } from "lucide-react";
 import { useJobs } from "@/lib/jobs-store";
 import { ZoomControls } from "@/components/ZoomControls";
@@ -28,47 +28,111 @@ interface CV {
   skills: string[];
 }
 
-const LOREM_LONG = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.";
+type TFn = (path: string, vars?: Record<string, string | number>) => string;
 
-const initial: CV = {
-  fullName: "[Your Name]",
-  title: "[Your Professional Title]",
-  email: "[Your Email Address]",
-  phone: "[Your Phone Number]",
-  linkedin: "[Your LinkedIn Profile]",
-  location: "[Your Address or City, Country]",
-  summary:
-    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur vitae sapien id nulla ullamcorper convallis.",
-  experiences: [
-    {
-      id: "e1",
-      title: "Job Title 1",
-      company: "Company Name",
-      start: "[Month/Year]",
-      end: "Present",
-      description:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit.\nSed do eiusmod tempor incididunt ut labore.",
-    },
-    {
-      id: "e2",
-      title: "Job Title 2",
-      company: "Company Name",
-      start: "[Month/Year]",
-      end: "[Month/Year]",
-      description:
-        "Ut enim ad minim veniam, quis nostrud exercitation.\nDuis aute irure dolor in reprehenderit.",
-    },
-  ],
-  education: [
-    { id: "ed1", school: "University Name", degree: "Degree", field: LOREM_LONG, date: "[Year of Graduation]" },
-  ],
-  skills: ["Lorem ipsum", "Dolor sit amet", "Consectetur adipiscing"],
-};
+function makeInitial(t: TFn): CV {
+  return {
+    fullName: t("resume.sample.yourName"),
+    title: t("resume.sample.professionalTitle"),
+    email: t("resume.sample.email"),
+    phone: t("resume.sample.phone"),
+    linkedin: t("resume.sample.linkedin"),
+    location: t("resume.sample.address"),
+    summary: t("resume.sample.summary"),
+    experiences: [
+      {
+        id: "e1",
+        title: t("resume.sample.jobTitle1"),
+        company: t("resume.sample.companyName"),
+        start: t("resume.sample.dateRange"),
+        end: t("resume.sample.present"),
+        description: t("resume.sample.expDescription"),
+      },
+      {
+        id: "e2",
+        title: t("resume.sample.jobTitle2"),
+        company: t("resume.sample.companyName"),
+        start: t("resume.sample.dateRange"),
+        end: t("resume.sample.dateRange"),
+        description: t("resume.sample.expDescription"),
+      },
+    ],
+    education: [
+      {
+        id: "ed1",
+        school: t("resume.sample.university"),
+        degree: t("resume.sample.degree"),
+        field: t("resume.sample.field"),
+        date: t("resume.sample.gradYear"),
+      },
+    ],
+    skills: [
+      t("resume.sample.skill1"),
+      t("resume.sample.skill2"),
+      t("resume.sample.skill3"),
+    ],
+  };
+}
 
 const uid = () => Math.random().toString(36).slice(2, 9);
 
 export default function CVBuilderPage() {
-  const [cv, setCv] = useState<CV>(initial);
+  const { toast } = useToast();
+  const { t, lang } = useT();
+  const initial = makeInitial(t);
+  const [cv, setCv] = useState<CV>(() => makeInitial(t));
+  const prevDefaultRef = useRef<CV>(initial);
+
+  // When language changes, replace any fields that still match the previous-language default.
+  useEffect(() => {
+    const prev = prevDefaultRef.current;
+    const next = makeInitial(t);
+    setCv((cur) => {
+      const c = cur as unknown as Record<string, unknown>;
+      const p = prev as unknown as Record<string, unknown>;
+      const n = next as unknown as Record<string, unknown>;
+      const swap = (k: string) => (c[k] === p[k] ? n[k] : c[k]);
+      return {
+        fullName: swap("fullName") as string,
+        title: swap("title") as string,
+        email: swap("email") as string,
+        phone: swap("phone") as string,
+        linkedin: swap("linkedin") as string,
+        location: swap("location") as string,
+        summary: swap("summary") as string,
+        experiences: cur.experiences.map((e, i) => {
+          const pe = prev.experiences[i]; const ne = next.experiences[i];
+          if (!pe || !ne) return e;
+          return {
+            id: e.id,
+            title: e.title === pe.title ? ne.title : e.title,
+            company: e.company === pe.company ? ne.company : e.company,
+            start: e.start === pe.start ? ne.start : e.start,
+            end: e.end === pe.end ? ne.end : e.end,
+            description: e.description === pe.description ? ne.description : e.description,
+          };
+        }),
+        education: cur.education.map((ed, i) => {
+          const pe = prev.education[i]; const ne = next.education[i];
+          if (!pe || !ne) return ed;
+          return {
+            id: ed.id,
+            school: ed.school === pe.school ? ne.school : ed.school,
+            degree: ed.degree === pe.degree ? ne.degree : ed.degree,
+            field: ed.field === pe.field ? ne.field : ed.field,
+            date: ed.date === pe.date ? ne.date : ed.date,
+          };
+        }),
+        skills: cur.skills.map((s) => {
+          const idx = prev.skills.indexOf(s);
+          return idx >= 0 && next.skills[idx] ? next.skills[idx] : s;
+        }),
+      };
+    });
+    prevDefaultRef.current = next;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lang]);
+
   const [skillDraft, setSkillDraft] = useState("");
   const [zoom, setZoom] = useState(0.6);
   const [jdText, setJdText] = useState("");
@@ -86,62 +150,21 @@ export default function CVBuilderPage() {
   const { list: savedCVs, save: saveCV, remove: removeCV } = useSavedCVs<CV>("saved_cvs_v2", () => {
     const daysAgo = (n: number) => new Date(Date.now() - n * 86400000).toISOString();
     const variant = (summary: string, skills: string[]): CV => ({ ...initial, summary, skills });
+    const lbl = t("resume.defaultSaveName");
     return [
-      {
-        id: "demo-cv-1",
-        name: "Resume — Zalando Senior Designer",
-        savedAt: daysAgo(3),
-        data: variant(
-          "Tailored for Zalando — Senior Product Designer. Six years shaping consumer commerce experiences, design systems, and cross-platform shopping flows.",
-          ["Design Systems", "Product Design", "Figma", "Prototyping", "User Research", "HTML / CSS"],
-        ),
-      },
-      {
-        id: "demo-cv-2",
-        name: "Resume — Delivery Hero Product Engineer",
-        savedAt: daysAgo(5),
-        data: variant(
-          "Tailored for Delivery Hero — hybrid designer/engineer with a track record of shipping marketplace and logistics surfaces end-to-end.",
-          ["HTML / CSS", "Prototyping", "Design Systems", "Figma", "Product Design", "User Research"],
-        ),
-      },
-      {
-        id: "demo-cv-3",
-        name: "Resume — N26 Product Designer",
-        savedAt: daysAgo(7),
-        data: variant(
-          "Tailored for N26 — fintech-focused product designer with experience reducing onboarding drop-off and clarifying complex money flows.",
-          ["Product Design", "User Research", "Prototyping", "Design Systems", "Figma", "HTML / CSS"],
-        ),
-      },
-      {
-        id: "demo-cv-4",
-        name: "Resume — FlixBus Brand Designer",
-        savedAt: daysAgo(8),
-        data: variant(
-          "Tailored for FlixBus — brand-leaning product designer who has launched campaigns and visual systems across web, mobile, and out-of-home.",
-          ["Figma", "Design Systems", "Product Design", "Prototyping", "HTML / CSS", "User Research"],
-        ),
-      },
-      {
-        id: "demo-cv-5",
-        name: "Resume — Bolt Frontend Engineer",
-        savedAt: daysAgo(10),
-        data: variant(
-          "Tailored for Bolt — designer-engineer comfortable owning frontend delivery, from component architecture to motion polish.",
-          ["HTML / CSS", "Figma", "Prototyping", "Design Systems", "Product Design", "User Research"],
-        ),
-      },
-      {
-        id: "demo-cv-6",
-        name: "Master Resume — General",
-        savedAt: daysAgo(12),
-        data: initial,
-      },
+      { id: "demo-cv-1", name: `${lbl} — Zalando Senior Designer`, savedAt: daysAgo(3),
+        data: variant("Tailored for Zalando — Senior Product Designer.", ["Design Systems", "Product Design", "Figma", "Prototyping", "User Research", "HTML / CSS"]) },
+      { id: "demo-cv-2", name: `${lbl} — Delivery Hero Product Engineer`, savedAt: daysAgo(5),
+        data: variant("Tailored for Delivery Hero — hybrid designer/engineer.", ["HTML / CSS", "Prototyping", "Design Systems", "Figma", "Product Design", "User Research"]) },
+      { id: "demo-cv-3", name: `${lbl} — N26 Product Designer`, savedAt: daysAgo(7),
+        data: variant("Tailored for N26 — fintech-focused product designer.", ["Product Design", "User Research", "Prototyping", "Design Systems", "Figma", "HTML / CSS"]) },
+      { id: "demo-cv-4", name: `${lbl} — FlixBus Brand Designer`, savedAt: daysAgo(8),
+        data: variant("Tailored for FlixBus — brand-leaning product designer.", ["Figma", "Design Systems", "Product Design", "Prototyping", "HTML / CSS", "User Research"]) },
+      { id: "demo-cv-5", name: `${lbl} — Bolt Frontend Engineer`, savedAt: daysAgo(10),
+        data: variant("Tailored for Bolt — designer-engineer.", ["HTML / CSS", "Figma", "Prototyping", "Design Systems", "Product Design", "User Research"]) },
+      { id: "demo-cv-6", name: `${lbl} — General`, savedAt: daysAgo(12), data: initial },
     ];
   });
-  const { toast } = useToast();
-  const { t } = useT();
   const targetJob = targetJobId ? getJob(targetJobId) : null;
 
   useEffect(() => {
@@ -155,7 +178,7 @@ export default function CVBuilderPage() {
   const update = <K extends keyof CV>(k: K, v: CV[K]) => setCv((p) => ({ ...p, [k]: v }));
 
   const handleExport = (format: ExportFormat) => {
-    const body = renderCvAsText(cv);
+    const body = renderCvAsText(cv, t);
     const filename = targetJob ? `cv-${targetJob.company}` : `cv-${cv.fullName.replace(/\s+/g, "-")}`;
     exportAs(format, cv.fullName || "CV", body, filename);
   };
@@ -225,7 +248,7 @@ export default function CVBuilderPage() {
         open={saveOpen}
         onClose={() => setSaveOpen(false)}
         title={t("resume.saveTitle")}
-        defaultName={targetJob ? `Resume — ${targetJob.company}` : cv.fullName}
+        defaultName={targetJob ? `${t("resume.defaultSaveName")} — ${targetJob.company}` : t("resume.defaultSaveName")}
         onSave={(name, format) => {
           const item = saveCV(name, cv);
           handleExport(format);
@@ -435,25 +458,25 @@ export default function CVBuilderPage() {
   );
 }
 
-function renderCvAsText(cv: CV): string {
+function renderCvAsText(cv: CV, t: TFn): string {
   const parts: string[] = [];
   parts.push([cv.email, cv.phone, cv.location].filter(Boolean).join(" · "));
   if (cv.summary) parts.push("\n" + cv.summary);
   if (cv.experiences.length) {
-    parts.push("\nEXPERIENCE");
+    parts.push("\n" + t("resume.sectionExperience").toUpperCase());
     cv.experiences.forEach((e) => {
       parts.push(`\n${e.title}${e.company ? " · " + e.company : ""}  (${[e.start, e.end].filter(Boolean).join(" – ")})`);
       if (e.description) parts.push(e.description);
     });
   }
   if (cv.education.length) {
-    parts.push("\nEDUCATION");
+    parts.push("\n" + t("resume.sectionEducation").toUpperCase());
     cv.education.forEach((e) => {
       parts.push(`${e.school} — ${[e.degree, e.field].filter(Boolean).join(", ")} (${e.date})`);
     });
   }
   if (cv.skills.length) {
-    parts.push("\nSKILLS");
+    parts.push("\n" + t("resume.sectionSkills").toUpperCase());
     parts.push(cv.skills.join(" · "));
   }
   return parts.join("\n");
@@ -493,11 +516,12 @@ function AddBtn({ children, onClick }: { children: React.ReactNode; onClick: () 
 }
 
 function RemoveBtn({ onClick }: { onClick: () => void }) {
+  const { t } = useT();
   return (
     <button
       type="button"
       onClick={onClick}
-      aria-label="Remove"
+      aria-label={t("common.remove")}
       className="absolute top-3 right-3 h-7 w-7 rounded-full grid place-items-center text-ink-muted hover:text-ink hover:bg-surface-2 transition-colors duration-180"
     >
       <X className="h-3.5 w-3.5" />

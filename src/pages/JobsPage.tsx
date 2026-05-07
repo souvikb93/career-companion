@@ -23,15 +23,16 @@ function StatusDot({ status }: { status: JobStatus }) {
   );
 }
 
-function formatDate(iso: string) {
+function formatDate(iso: string, locale: string) {
   const [year, month, day] = iso.split("-").map(Number);
   const d = year && month && day ? new Date(year, month - 1, day) : new Date(iso);
-  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  return d.toLocaleDateString(locale, { month: "short", day: "numeric" });
 }
 
 export default function JobsPage() {
   const { jobs, updateJob } = useJobs();
-  const { t } = useT();
+  const { t, lang } = useT();
+  const dateLocale = lang === "de" ? "de-DE" : "en-US";
   const [view, setView] = useState<PipelineView>("all");
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -132,7 +133,7 @@ export default function JobsPage() {
                     {job.salary || <span className="opacity-60">—</span>}
                   </div>
                   <div><StatusDot status={job.status} /></div>
-                  <div className="text-[13px] text-ink-muted truncate">{formatDate(job.dateAdded)}</div>
+                  <div className="text-[13px] text-ink-muted truncate">{formatDate(job.dateAdded, dateLocale)}</div>
                   <div className="hidden lg:flex justify-end text-ink-muted opacity-0 group-hover:opacity-100 transition-opacity duration-180">
                     <ChevronRight className="h-4 w-4" />
                   </div>
