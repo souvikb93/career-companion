@@ -511,3 +511,117 @@ function Section({ title, children }: { title: string; children: React.ReactNode
     </section>
   );
 }
+
+function CvPreview({ cv, layout }: { cv: CV; layout: LayoutVariant }) {
+  const contactLine = [cv.email, cv.phone, cv.linkedin, cv.location].filter(Boolean).join(" · ");
+
+  if (layout === "modern") {
+    return (
+      <div className="grid grid-cols-3 gap-8">
+        <aside className="col-span-1 border-r border-line pr-6 space-y-6">
+          <div>
+            <h2 className="text-[22px] font-semibold text-ink leading-tight">{cv.fullName}</h2>
+            {cv.title && <p className="text-[13px] text-ink-muted mt-1">{cv.title}</p>}
+          </div>
+          <div className="space-y-1 text-[12px] text-ink-muted">
+            {cv.email && <div>{cv.email}</div>}
+            {cv.phone && <div>{cv.phone}</div>}
+            {cv.linkedin && <div>{cv.linkedin}</div>}
+            {cv.location && <div>{cv.location}</div>}
+          </div>
+          {cv.skills.length > 0 && (
+            <div>
+              <h3 className="text-[13px] font-semibold text-ink uppercase tracking-wide mb-2">Skills</h3>
+              <ul className="space-y-1 text-[13px] text-ink-muted">
+                {cv.skills.map((s) => <li key={s}>{s}</li>)}
+              </ul>
+            </div>
+          )}
+        </aside>
+        <div className="col-span-2 space-y-6">
+          {cv.summary && (
+            <Section title="Professional Summary">
+              <p className="text-[14px] text-ink-muted leading-relaxed whitespace-pre-line">{cv.summary}</p>
+            </Section>
+          )}
+          {cv.experiences.length > 0 && (
+            <Section title="Professional Experience">
+              {cv.experiences.map((e) => <ExpItem key={e.id} e={e} />)}
+            </Section>
+          )}
+          {cv.education.length > 0 && (
+            <Section title="Education">
+              {cv.education.map((e) => <EduItem key={e.id} e={e} />)}
+            </Section>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // classic & compact: same structure, compact gets tighter typography
+  const compact = layout === "compact";
+  return (
+    <div className={compact ? "text-[13px] leading-snug" : ""}>
+      <header className="text-center mb-6">
+        <h2 className={compact ? "text-[22px] font-semibold text-ink" : "text-[28px] font-semibold text-ink"}>
+          {cv.fullName}
+        </h2>
+        {cv.title && <p className="text-[13px] text-ink-muted mt-1">{cv.title}</p>}
+        <p className="text-[12px] text-ink-muted mt-2">{contactLine}</p>
+      </header>
+
+      {cv.summary && (
+        <Section title="Professional Summary">
+          <p className="text-[14px] text-ink-muted leading-relaxed whitespace-pre-line">{cv.summary}</p>
+        </Section>
+      )}
+
+      {cv.experiences.length > 0 && (
+        <Section title="Professional Experience">
+          {cv.experiences.map((e) => <ExpItem key={e.id} e={e} />)}
+        </Section>
+      )}
+
+      {cv.education.length > 0 && (
+        <Section title="Education">
+          {cv.education.map((e) => <EduItem key={e.id} e={e} />)}
+        </Section>
+      )}
+
+      {cv.skills.length > 0 && (
+        <Section title="Skills">
+          <p className="text-[14px] text-ink-muted">{cv.skills.join(" · ")}</p>
+        </Section>
+      )}
+    </div>
+  );
+}
+
+function ExpItem({ e }: { e: Experience }) {
+  return (
+    <div className="mb-4">
+      <div className="flex items-baseline justify-between gap-3">
+        <p className="text-[15px] font-semibold text-ink">{e.title}{e.company && ` – ${e.company}`}</p>
+        <p className="text-[12px] text-ink-muted whitespace-nowrap">{[e.start, e.end].filter(Boolean).join(" – ")}</p>
+      </div>
+      {e.description && (
+        <ul className="mt-1 list-disc pl-5 space-y-0.5 text-[14px] text-ink-muted leading-relaxed">
+          {e.description.split("\n").filter(Boolean).map((line, i) => <li key={i}>{line}</li>)}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function EduItem({ e }: { e: Education }) {
+  return (
+    <div className="mb-3">
+      <div className="flex items-baseline justify-between gap-3">
+        <p className="text-[15px] font-semibold text-ink">{e.degree}{e.school && ` – ${e.school}`}</p>
+        <p className="text-[12px] text-ink-muted">{e.date}</p>
+      </div>
+      {e.field && <p className="text-[14px] text-ink-muted">{e.field}</p>}
+    </div>
+  );
+}
