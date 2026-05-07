@@ -16,8 +16,10 @@ interface Education { id: string; school: string; degree: string; field: string;
 
 interface CV {
   fullName: string;
+  title: string;
   email: string;
   phone: string;
+  linkedin: string;
   location: string;
   summary: string;
   experiences: Experience[];
@@ -25,37 +27,41 @@ interface CV {
   skills: string[];
 }
 
+const LOREM_LONG = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.";
+
 const initial: CV = {
-  fullName: "Jordan Doe",
-  email: "jordan@example.com",
-  phone: "+1 555 0142",
-  location: "Brooklyn, NY",
+  fullName: "[Your Name]",
+  title: "[Your Professional Title]",
+  email: "[Your Email Address]",
+  phone: "[Your Phone Number]",
+  linkedin: "[Your LinkedIn Profile]",
+  location: "[Your Address or City, Country]",
   summary:
-    "Product designer with 6+ years building consumer and B2B SaaS products. Focused on craft, systems thinking, and shipping work that feels effortless.",
+    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur vitae sapien id nulla ullamcorper convallis.",
   experiences: [
     {
       id: "e1",
-      title: "Senior Product Designer",
-      company: "Northstar",
-      start: "2023",
+      title: "Job Title 1",
+      company: "Company Name",
+      start: "[Month/Year]",
       end: "Present",
       description:
-        "Led redesign of the core analytics surface, improving weekly active retention by 18%. Built the Northstar design system across web and mobile.",
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit.\nSed do eiusmod tempor incididunt ut labore.",
     },
     {
       id: "e2",
-      title: "Product Designer",
-      company: "Loop",
-      start: "2020",
-      end: "2023",
+      title: "Job Title 2",
+      company: "Company Name",
+      start: "[Month/Year]",
+      end: "[Month/Year]",
       description:
-        "Shipped the original Loop onboarding flow and dashboard. Partnered with engineering on a component library used across 14 surfaces.",
+        "Ut enim ad minim veniam, quis nostrud exercitation.\nDuis aute irure dolor in reprehenderit.",
     },
   ],
   education: [
-    { id: "ed1", school: "Rhode Island School of Design", degree: "BFA", field: "Graphic Design", date: "2019" },
+    { id: "ed1", school: "University Name", degree: "Degree", field: LOREM_LONG, date: "[Year of Graduation]" },
   ],
-  skills: ["Product Design", "Design Systems", "Prototyping", "Figma", "User Research", "HTML / CSS"],
+  skills: ["Lorem ipsum", "Dolor sit amet", "Consectetur adipiscing"],
 };
 
 const uid = () => Math.random().toString(36).slice(2, 9);
