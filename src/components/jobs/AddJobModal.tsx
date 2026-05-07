@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useJobs } from "@/lib/jobs-store";
 import { Job } from "@/lib/jobs-data";
 import { useToast } from "@/hooks/use-toast";
+import { useT } from "@/lib/i18n";
 
 interface AddJobModalProps {
   open: boolean;
@@ -11,6 +12,7 @@ interface AddJobModalProps {
 }
 
 export function AddJobModal({ open, onClose }: AddJobModalProps) {
+  const { t } = useT();
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<"url" | "manual">("url");
@@ -40,7 +42,7 @@ export function AddJobModal({ open, onClose }: AddJobModalProps) {
     try {
       new URL(normalized);
     } catch {
-      toast({ title: "Invalid URL", description: "Please paste a valid job posting URL.", variant: "destructive" });
+      toast({ title: t("addJob.invalidUrl"), description: t("addJob.invalidUrlDesc"), variant: "destructive" });
       return;
     }
     setLoading(true);
@@ -64,11 +66,11 @@ export function AddJobModal({ open, onClose }: AddJobModalProps) {
         dateAdded: new Date().toISOString().slice(0, 10),
       };
       addJob(job);
-      toast({ title: "Job added", description: `${job.company} — ${job.role}` });
+      toast({ title: t("addJob.added"), description: `${job.company} — ${job.role}` });
       close();
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Failed to fetch job";
-      toast({ title: "Couldn't fetch job", description: msg, variant: "destructive" });
+      toast({ title: t("addJob.cantFetch"), description: msg, variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -76,7 +78,7 @@ export function AddJobModal({ open, onClose }: AddJobModalProps) {
 
   const saveManual = () => {
     if (!manual.company.trim() || !manual.role.trim()) {
-      toast({ title: "Missing details", description: "Company and role are required.", variant: "destructive" });
+      toast({ title: t("addJob.missingDetails"), description: t("addJob.missingDetailsDesc"), variant: "destructive" });
       return;
     }
     const job: Job = {
@@ -92,7 +94,7 @@ export function AddJobModal({ open, onClose }: AddJobModalProps) {
       dateAdded: new Date().toISOString().slice(0, 10),
     };
     addJob(job);
-    toast({ title: "Job added", description: `${job.company} — ${job.role}` });
+    toast({ title: t("addJob.added"), description: `${job.company} — ${job.role}` });
     close();
   };
 
@@ -108,7 +110,7 @@ export function AddJobModal({ open, onClose }: AddJobModalProps) {
         <button
           type="button"
           onClick={close}
-          aria-label="Close"
+          aria-label={t("common.close")}
           className="absolute top-4 right-4 h-9 w-9 grid place-items-center rounded-full text-ink-muted hover:text-ink hover:bg-surface-2 transition-colors"
         >
           <X className="h-4 w-4" />
@@ -116,19 +118,17 @@ export function AddJobModal({ open, onClose }: AddJobModalProps) {
 
         {mode === "url" ? (
           <>
-            <h2 className="text-2xl font-semibold text-ink mb-6">Add a job</h2>
-            <label className="field-label" htmlFor="job-url">Job posting URL</label>
+            <h2 className="text-2xl font-semibold text-ink mb-6">{t("addJob.title")}</h2>
+            <label className="field-label" htmlFor="job-url">{t("addJob.urlLabel")}</label>
             <input
               id="job-url"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              placeholder="Paste any job URL (LinkedIn, Stepstone, company site...)"
+              placeholder={t("addJob.urlPlaceholder")}
               className="input-base"
               disabled={loading}
             />
-            <p className="text-[12px] text-ink-muted mt-2">
-              We'll fetch the page and pull in the job details automatically.
-            </p>
+            <p className="text-[12px] text-ink-muted mt-2">{t("addJob.urlHelp")}</p>
             <div className="mt-6 flex gap-3">
               <button
                 type="button"
@@ -136,7 +136,7 @@ export function AddJobModal({ open, onClose }: AddJobModalProps) {
                 disabled={loading}
                 className="flex-1 h-12 rounded-full border border-ink-2 text-ink text-[12px] font-bold uppercase tracking-[0.08em] transition-colors duration-200 ease-out hover:bg-surface-2 disabled:opacity-50"
               >
-                Enter Manually
+                {t("addJob.enterManually")}
               </button>
               <button
                 type="button"
@@ -145,34 +145,34 @@ export function AddJobModal({ open, onClose }: AddJobModalProps) {
                 className="flex-1 h-12 rounded-full bg-brand text-primary-foreground text-[12px] font-bold uppercase tracking-[0.08em] transition-opacity duration-200 ease-out hover:opacity-95 inline-flex items-center justify-center gap-2 disabled:opacity-60"
               >
                 {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-                {loading ? "Fetching…" : "Fetch Job"}
+                {loading ? t("addJob.fetching") : t("addJob.fetchJob")}
               </button>
             </div>
           </>
         ) : (
           <>
-            <h2 className="text-2xl font-semibold text-ink mb-6">Enter job details</h2>
+            <h2 className="text-2xl font-semibold text-ink mb-6">{t("addJob.manualTitle")}</h2>
             <div className="space-y-4">
               <div>
-                <label className="field-label" htmlFor="m-company">Company</label>
-                <input id="m-company" value={manual.company} onChange={(e) => setManual({ ...manual, company: e.target.value })} className="input-base" placeholder="e.g. Google" />
+                <label className="field-label" htmlFor="m-company">{t("addJob.company")}</label>
+                <input id="m-company" value={manual.company} onChange={(e) => setManual({ ...manual, company: e.target.value })} className="input-base" />
               </div>
               <div>
-                <label className="field-label" htmlFor="m-role">Role</label>
-                <input id="m-role" value={manual.role} onChange={(e) => setManual({ ...manual, role: e.target.value })} className="input-base" placeholder="e.g. UX Designer" />
+                <label className="field-label" htmlFor="m-role">{t("addJob.role")}</label>
+                <input id="m-role" value={manual.role} onChange={(e) => setManual({ ...manual, role: e.target.value })} className="input-base" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="field-label" htmlFor="m-location">Location</label>
-                  <input id="m-location" value={manual.location} onChange={(e) => setManual({ ...manual, location: e.target.value })} className="input-base" placeholder="Berlin, Germany" />
+                  <label className="field-label" htmlFor="m-location">{t("addJob.location")}</label>
+                  <input id="m-location" value={manual.location} onChange={(e) => setManual({ ...manual, location: e.target.value })} className="input-base" />
                 </div>
                 <div>
-                  <label className="field-label" htmlFor="m-salary">Salary</label>
-                  <input id="m-salary" value={manual.salary} onChange={(e) => setManual({ ...manual, salary: e.target.value })} className="input-base" placeholder="€70,000 – €90,000" />
+                  <label className="field-label" htmlFor="m-salary">{t("addJob.salary")}</label>
+                  <input id="m-salary" value={manual.salary} onChange={(e) => setManual({ ...manual, salary: e.target.value })} className="input-base" />
                 </div>
               </div>
               <div>
-                <label className="field-label" htmlFor="m-link">Link (optional)</label>
+                <label className="field-label" htmlFor="m-link">{t("addJob.linkOptional")}</label>
                 <input id="m-link" value={manual.link} onChange={(e) => setManual({ ...manual, link: e.target.value })} className="input-base" placeholder="https://..." />
               </div>
             </div>
@@ -182,7 +182,7 @@ export function AddJobModal({ open, onClose }: AddJobModalProps) {
                 onClick={() => setMode("url")}
                 className="flex-1 h-12 rounded-full border border-ink-2 text-ink text-[12px] font-bold uppercase tracking-[0.08em] transition-colors duration-200 ease-out hover:bg-surface-2"
               >
-                Back
+                {t("common.back")}
               </button>
               <button
                 type="button"
@@ -191,7 +191,7 @@ export function AddJobModal({ open, onClose }: AddJobModalProps) {
                 className="flex-1 h-12 rounded-full bg-brand text-primary-foreground text-[12px] font-bold uppercase tracking-[0.08em] transition-opacity duration-200 ease-out hover:opacity-95 inline-flex items-center justify-center gap-2 disabled:opacity-60"
               >
                 <Plus className="h-4 w-4" />
-                Add Job
+                {t("addJob.addJob")}
               </button>
             </div>
           </>

@@ -1,5 +1,6 @@
-import { Job, JobStatus, STATUS_ORDER, STATUS_LABEL } from "@/lib/jobs-data";
+import { Job, JobStatus, STATUS_ORDER } from "@/lib/jobs-data";
 import { useJobs } from "@/lib/jobs-store";
+import { useT } from "@/lib/i18n";
 import { useNavigate } from "react-router-dom";
 import { X, ExternalLink, FileText, Mail, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -15,6 +16,7 @@ interface Props {
 export function JobDetailPanel({ job, onClose, onUpdate }: Props) {
   const navigate = useNavigate();
   const { setTargetJobId } = useJobs();
+  const { t } = useT();
   if (!job) return null;
 
   const goTo = (path: "/cv" | "/cover-letter") => {
@@ -36,7 +38,7 @@ export function JobDetailPanel({ job, onClose, onUpdate }: Props) {
             <button
               type="button"
               onClick={onClose}
-              aria-label="Close"
+              aria-label={t("common.close")}
               className="h-9 w-9 rounded-full grid place-items-center border border-line text-ink hover:bg-surface-2 transition-colors duration-200"
             >
               <X className="h-4 w-4" />
@@ -45,7 +47,7 @@ export function JobDetailPanel({ job, onClose, onUpdate }: Props) {
 
           <div className="mb-6 inline-flex items-center gap-2 text-[13px] text-ink">
             <span className={cn("h-2 w-2 rounded-full", STATUS_DOT_CLASS[job.status])} />
-            {STATUS_LABEL[job.status]}
+            {t(`status.${job.status}`)}
           </div>
 
           {job.link && (
@@ -56,13 +58,13 @@ export function JobDetailPanel({ job, onClose, onUpdate }: Props) {
                 rel="noreferrer"
                 className="inline-flex items-center gap-1.5 text-[13px] text-brand font-semibold mb-6 hover:opacity-80 transition-opacity duration-200"
               >
-                View original posting <ExternalLink className="h-3.5 w-3.5" />
+                {t("jobDetail.viewOriginal")} <ExternalLink className="h-3.5 w-3.5" />
               </a>
             </div>
           )}
 
           <div className="card-surface p-5 mb-5">
-            <p className="eyebrow mb-3">Description</p>
+            <p className="eyebrow mb-3">{t("jobDetail.description")}</p>
             <p className="text-[14px] text-ink-muted leading-relaxed whitespace-pre-line">
               {job.description}
             </p>
@@ -70,7 +72,7 @@ export function JobDetailPanel({ job, onClose, onUpdate }: Props) {
 
           <div className="space-y-5">
             <div>
-              <label className="field-label">Status</label>
+              <label className="field-label">{t("jobDetail.status")}</label>
               <div className="relative">
                 <select
                   value={job.status}
@@ -78,7 +80,7 @@ export function JobDetailPanel({ job, onClose, onUpdate }: Props) {
                   className="input-base appearance-none cursor-pointer pr-10"
                 >
                   {STATUS_ORDER.map((s) => (
-                    <option key={s} value={s}>{STATUS_LABEL[s]}</option>
+                    <option key={s} value={s}>{t(`status.${s}`)}</option>
                   ))}
                 </select>
                 <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-muted" />
@@ -86,22 +88,22 @@ export function JobDetailPanel({ job, onClose, onUpdate }: Props) {
             </div>
 
             <div>
-              <label className="field-label">Salary</label>
+              <label className="field-label">{t("jobDetail.salary")}</label>
               <input
                 value={job.salary ?? ""}
                 onChange={(e) => onUpdate({ ...job, salary: e.target.value })}
-                placeholder="e.g. €80k – €100k"
+                placeholder={t("jobDetail.salaryPlaceholder")}
                 className="input-base"
               />
             </div>
 
             <div>
-              <label className="field-label">Notes</label>
+              <label className="field-label">{t("jobDetail.notes")}</label>
               <textarea
                 value={job.notes ?? ""}
                 onChange={(e) => onUpdate({ ...job, notes: e.target.value })}
                 rows={5}
-                placeholder="Add notes about this role..."
+                placeholder={t("jobDetail.notesPlaceholder")}
                 className="textarea-base"
               />
             </div>
@@ -113,14 +115,14 @@ export function JobDetailPanel({ job, onClose, onUpdate }: Props) {
               onClick={() => goTo("/cv")}
               className="flex-1 h-12 rounded-full border border-ink-2 text-ink text-[12px] font-bold uppercase tracking-[0.08em] transition-all duration-200 ease-out hover:bg-surface-2 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:shadow-none inline-flex items-center justify-center gap-2"
             >
-              <FileText className="h-4 w-4" /> Custom CV
+              <FileText className="h-4 w-4" /> {t("jobDetail.customCv")}
             </button>
             <button
               type="button"
               onClick={() => goTo("/cover-letter")}
               className="flex-1 h-12 rounded-full bg-brand text-primary-foreground text-[12px] font-bold uppercase tracking-[0.08em] transition-all duration-200 ease-out hover:opacity-95 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:shadow-none inline-flex items-center justify-center gap-2"
             >
-              <Mail className="h-4 w-4" /> Cover Letter
+              <Mail className="h-4 w-4" /> {t("jobDetail.coverLetter")}
             </button>
           </div>
         </div>
