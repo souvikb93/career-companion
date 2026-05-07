@@ -142,7 +142,7 @@ export default function CoverLetterPage() {
       if ((data as { error?: string })?.error) throw new Error((data as { error: string }).error);
       await pushStep(t("letter.matchingSkills"));
       await pushStep(t("letter.generatingDraft"));
-      setLetter(letterFor(data.company || "the company", data.role || "this role", data.description || ""));
+      setLetter(letterFor(t, lang, data.company || "the company", data.role || "this role", data.description || ""));
       setMessages((m) => [...m, { role: "assistant", content: t("letter.draftedShort", { company: data.company, role: data.role }) }]);
       setJobUrl("");
       toast({ title: t("letter.drafted"), description: t("letter.tailoredFor", { company: data.company }) });
