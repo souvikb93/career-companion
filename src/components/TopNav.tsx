@@ -30,7 +30,7 @@ export function TopNav() {
 
   return (
     <header className="sticky top-0 z-40 w-full bg-surface border-b border-line">
-      <div className="h-16 px-6 flex items-center justify-between">
+      <div className="h-16 px-8 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <img src={logo} alt="Tracka logo" className="h-10 w-10" />
           <span className="logo-wordmark hidden sm:inline text-[28px] leading-none text-ink">tracka</span>
