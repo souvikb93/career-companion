@@ -515,6 +515,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 function CvPreview({ cv, layout }: { cv: CV; layout: LayoutVariant }) {
+  const { t } = useT();
   const contactLine = [cv.email, cv.phone, cv.linkedin, cv.location].filter(Boolean).join(" · ");
 
   if (layout === "modern") {
@@ -533,7 +534,7 @@ function CvPreview({ cv, layout }: { cv: CV; layout: LayoutVariant }) {
           </div>
           {cv.skills.length > 0 && (
             <div>
-              <h3 className="text-[13px] font-semibold text-ink uppercase tracking-wide mb-2">Skills</h3>
+              <h3 className="text-[13px] font-semibold text-ink uppercase tracking-wide mb-2">{t("resume.sectionSkills")}</h3>
               <ul className="space-y-1 text-[13px] text-ink-muted">
                 {cv.skills.map((s) => <li key={s}>{s}</li>)}
               </ul>
@@ -542,17 +543,17 @@ function CvPreview({ cv, layout }: { cv: CV; layout: LayoutVariant }) {
         </aside>
         <div className="col-span-2 space-y-6">
           {cv.summary && (
-            <Section title="Professional Summary">
+            <Section title={t("resume.sectionSummary")}>
               <p className="text-[14px] text-ink-muted leading-relaxed whitespace-pre-line">{cv.summary}</p>
             </Section>
           )}
           {cv.experiences.length > 0 && (
-            <Section title="Professional Experience">
+            <Section title={t("resume.sectionExperience")}>
               {cv.experiences.map((e) => <ExpItem key={e.id} e={e} />)}
             </Section>
           )}
           {cv.education.length > 0 && (
-            <Section title="Education">
+            <Section title={t("resume.sectionEducation")}>
               {cv.education.map((e) => <EduItem key={e.id} e={e} />)}
             </Section>
           )}
@@ -561,7 +562,6 @@ function CvPreview({ cv, layout }: { cv: CV; layout: LayoutVariant }) {
     );
   }
 
-  // classic & compact: same structure, compact gets tighter typography
   const compact = layout === "compact";
   return (
     <div className={compact ? "text-[13px] leading-snug" : ""}>
@@ -574,25 +574,25 @@ function CvPreview({ cv, layout }: { cv: CV; layout: LayoutVariant }) {
       </header>
 
       {cv.summary && (
-        <Section title="Professional Summary">
+        <Section title={t("resume.sectionSummary")}>
           <p className="text-[14px] text-ink-muted leading-relaxed whitespace-pre-line">{cv.summary}</p>
         </Section>
       )}
 
       {cv.experiences.length > 0 && (
-        <Section title="Professional Experience">
+        <Section title={t("resume.sectionExperience")}>
           {cv.experiences.map((e) => <ExpItem key={e.id} e={e} />)}
         </Section>
       )}
 
       {cv.education.length > 0 && (
-        <Section title="Education">
+        <Section title={t("resume.sectionEducation")}>
           {cv.education.map((e) => <EduItem key={e.id} e={e} />)}
         </Section>
       )}
 
       {cv.skills.length > 0 && (
-        <Section title="Skills">
+        <Section title={t("resume.sectionSkills")}>
           <p className="text-[14px] text-ink-muted">{cv.skills.join(" · ")}</p>
         </Section>
       )}
