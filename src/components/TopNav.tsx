@@ -18,7 +18,7 @@ const NAV = [
 
 const MENU = [
   { icon: User, label: "Profile" },
-  { icon: Globe, label: "Language" },
+  { icon: Globe, label: "AI Model" },
   { icon: Settings, label: "Settings" },
   { icon: LifeBuoy, label: "Support" },
   { icon: LogOut, label: "Log out" },
