@@ -59,6 +59,11 @@ export default function CoverLetterPage() {
   const [hoverPreview, setHoverPreview] = useState(false);
   const [savedOpen, setSavedOpen] = useState(false);
   const [saveOpen, setSaveOpen] = useState(false);
+  const [layout, setLayoutState] = useState<LayoutVariant>(() => loadLayout("letter_layout"));
+  const setLayout = (v: LayoutVariant) => {
+    setLayoutState(v);
+    try { window.localStorage.setItem("letter_layout", v); } catch { /* ignore */ }
+  };
   const { list: savedLetters, save: saveLetter, remove: removeLetter } = useSavedCVs<LetterDoc>("saved_letters_v2", () => {
     const daysAgo = (n: number) => new Date(Date.now() - n * 86400000).toISOString();
     const seeds: Array<{ company: string; role: string; desc: string; days: number }> = [
