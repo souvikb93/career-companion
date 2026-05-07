@@ -458,25 +458,25 @@ export default function CVBuilderPage() {
   );
 }
 
-function renderCvAsText(cv: CV): string {
+function renderCvAsText(cv: CV, t: TFn): string {
   const parts: string[] = [];
   parts.push([cv.email, cv.phone, cv.location].filter(Boolean).join(" · "));
   if (cv.summary) parts.push("\n" + cv.summary);
   if (cv.experiences.length) {
-    parts.push("\nEXPERIENCE");
+    parts.push("\n" + t("resume.sectionExperience").toUpperCase());
     cv.experiences.forEach((e) => {
       parts.push(`\n${e.title}${e.company ? " · " + e.company : ""}  (${[e.start, e.end].filter(Boolean).join(" – ")})`);
       if (e.description) parts.push(e.description);
     });
   }
   if (cv.education.length) {
-    parts.push("\nEDUCATION");
+    parts.push("\n" + t("resume.sectionEducation").toUpperCase());
     cv.education.forEach((e) => {
       parts.push(`${e.school} — ${[e.degree, e.field].filter(Boolean).join(", ")} (${e.date})`);
     });
   }
   if (cv.skills.length) {
-    parts.push("\nSKILLS");
+    parts.push("\n" + t("resume.sectionSkills").toUpperCase());
     parts.push(cv.skills.join(" · "));
   }
   return parts.join("\n");
@@ -516,11 +516,12 @@ function AddBtn({ children, onClick }: { children: React.ReactNode; onClick: () 
 }
 
 function RemoveBtn({ onClick }: { onClick: () => void }) {
+  const { t } = useT();
   return (
     <button
       type="button"
       onClick={onClick}
-      aria-label="Remove"
+      aria-label={t("common.remove")}
       className="absolute top-3 right-3 h-7 w-7 rounded-full grid place-items-center text-ink-muted hover:text-ink hover:bg-surface-2 transition-colors duration-180"
     >
       <X className="h-3.5 w-3.5" />
