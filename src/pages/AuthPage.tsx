@@ -112,7 +112,7 @@ export default function AuthPage() {
               <Button
                 onClick={sendCode}
                 disabled={loading}
-                className="w-full bg-ink text-surface hover:bg-accent-orange hover:text-ink"
+                className="w-full bg-ink text-white hover:bg-brand"
               >
                 {loading ? "Sending…" : "Send code"}
               </Button>
@@ -152,7 +152,7 @@ export default function AuthPage() {
               <Button
                 onClick={verifyCode}
                 disabled={loading || code.length !== 6}
-                className="w-full bg-ink text-surface hover:bg-accent-orange hover:text-ink"
+                className="w-full bg-ink text-white hover:bg-brand"
               >
                 {loading ? "Verifying…" : "Verify & sign in"}
               </Button>

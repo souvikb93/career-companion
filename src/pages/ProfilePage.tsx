@@ -58,7 +58,7 @@ export default function ProfilePage() {
         <Button
           onClick={save}
           disabled={saving || loading}
-          className="bg-ink text-surface hover:bg-accent-orange hover:text-ink"
+          className="bg-ink text-white hover:bg-brand"
         >
           {saving ? "Saving…" : "Save changes"}
         </Button>

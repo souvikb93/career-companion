@@ -69,7 +69,7 @@ export default function AIModelPage() {
         <Button
           onClick={save}
           disabled={saving || loading}
-          className="mt-4 bg-ink text-surface hover:bg-accent-orange hover:text-ink"
+          className="mt-4 bg-ink text-white hover:bg-brand"
         >
           {saving ? "Saving…" : "Save"}
         </Button>
