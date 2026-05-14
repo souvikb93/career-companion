@@ -92,11 +92,11 @@ export default function AIModelPage() {
 
       <div className="max-w-2xl space-y-5">
 
-        <div className="glass-card p-5">
+        <div className="card-surface p-5">
           <h3 className="text-[15px] font-semibold text-ink mb-1">{t("aiModel.instructionsTitle")}</h3>
           <p className="text-[13px] text-ink-muted mb-4">{t("aiModel.instructionsDesc")}</p>
           <textarea
-            className="w-full rounded-xl border border-line bg-white px-3 py-2.5 text-[14px] text-ink resize-none focus:outline-none focus:border-brand transition-colors"
+            className="textarea-base"
             rows={5}
             value={instructions}
             onChange={(e) => handleInstructionsChange(e.target.value)}
@@ -105,7 +105,7 @@ export default function AIModelPage() {
           <p className="text-[12px] text-ink-muted mt-2">{t("aiModel.instructionsFooter")}</p>
         </div>
 
-        <div className="glass-card p-5">
+        <div className="card-surface p-5">
           <h3 className="text-[15px] font-semibold text-ink mb-1">{t("aiModel.modelTitle")}</h3>
           <p className="text-[13px] text-ink-muted mb-4">{t("aiModel.modelDesc")}</p>
           <div className="space-y-2">

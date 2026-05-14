@@ -117,7 +117,7 @@ function InfoModal({ type, onClose }: { type: NonNullable<ModalType>; onClose: (
   const { title, body } = MODAL_CONTENT[type];
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-ink/30 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-ink/40 backdrop-blur-sm" onClick={onClose} />
       <div className="relative glass-modal w-full max-w-lg max-h-[80vh] flex flex-col">
         <div className="flex items-center justify-between px-6 py-5 border-b border-line/60">
           <h2 className="text-[17px] font-semibold text-ink">{title}</h2>
@@ -252,7 +252,7 @@ export default function AuthPage() {
                       onFocus={() => setIsTyping(true)}
                       onBlur={() => setIsTyping(false)}
                       onKeyDown={(e) => e.key === "Enter" && sendLink()}
-                      className="glass-input h-12 rounded-xl text-[15px] focus-visible:ring-0 focus-visible:ring-offset-0"
+                      className="glass-input h-12 rounded-xl text-[15px]"
                     />
 
                     <button
@@ -354,7 +354,7 @@ export default function AuthPage() {
                         onBlur={() => setIsTyping(false)}
                         onKeyDown={(e) => e.key === "Enter" && sendLink()}
                         autoFocus
-                        className="h-11 rounded-xl border-line bg-surface focus:border-brand focus-visible:ring-0 focus-visible:ring-offset-0 text-[14px]"
+                        className="h-11 rounded-xl border-line bg-surface focus:border-brand text-[14px]"
                       />
                     </div>
 

@@ -112,7 +112,7 @@ export default function JobsPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t("tracker.searchPlaceholder")}
-              className="w-full bg-white/40 backdrop-blur-md border border-white/50 rounded-2xl pl-10 pr-4 h-11 text-[14px] text-ink placeholder:text-ink-muted/60 transition-all duration-200 ease-out outline-none focus:border-brand focus:bg-white/60"
+              className="glass-input pl-10 pr-4 h-11"
             />
           </div>
           <button
@@ -204,7 +204,7 @@ function EmptyState({ totalJobs, onAdd }: { totalJobs: number; onAdd: () => void
 
   return (
     <div className="py-24 px-6 text-center">
-      <h2 className="text-[56px] sm:text-[64px] leading-[1.02] font-semibold text-ink tracking-tight">
+      <h2 className="display-1">
         {isFirstTime ? t("tracker.emptyTitle") : t("tracker.stageEmptyTitle")}
       </h2>
       <p className="text-[16px] text-ink-muted mt-4 max-w-md mx-auto">

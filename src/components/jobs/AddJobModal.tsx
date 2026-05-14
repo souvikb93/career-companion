@@ -44,8 +44,6 @@ export function AddJobModal({ open, onClose, onJobAdded }: AddJobModalProps) {
   const { addJob } = useJobs();
   const { toast } = useToast();
 
-  const backdropRef = useRef<HTMLDivElement>(null);
-  const pointerDownOnBackdrop = useRef(false);
   const justFocused = useRef(false);
 
   useEffect(() => {
@@ -188,18 +186,11 @@ export function AddJobModal({ open, onClose, onJobAdded }: AddJobModalProps) {
     aiMissed.has(k) && !draft[k] ? "Unknown" : fallback;
 
   return (
-    <div
-      ref={backdropRef}
-      className="fixed inset-0 z-50 grid place-items-center bg-ink/20 backdrop-blur-sm px-4"
-      onPointerDown={(e) => {
-        if (justFocused.current) { justFocused.current = false; return; }
-        pointerDownOnBackdrop.current = e.target === backdropRef.current;
-      }}
-      onPointerUp={(e) => {
-        if (pointerDownOnBackdrop.current && e.target === backdropRef.current) close();
-        pointerDownOnBackdrop.current = false;
-      }}
-    >
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+      <div
+        className="absolute inset-0 bg-ink/40 backdrop-blur-sm"
+        onClick={() => { if (!justFocused.current) close(); }}
+      />
       <div className="relative w-full max-w-[500px] glass-modal p-5 sm:p-8 max-h-[90dvh] overflow-y-auto">
         <button
           type="button"
@@ -230,8 +221,8 @@ export function AddJobModal({ open, onClose, onJobAdded }: AddJobModalProps) {
               }}
               placeholder={t("addJob.urlPlaceholder")}
               className={cn(
-                "w-full rounded-2xl border bg-surface px-4 py-3 text-[14px] text-ink resize-none focus:outline-none transition-colors placeholder:text-ink-muted",
-                inputError ? "border-red-400 focus:border-red-400" : "border-line focus:border-brand"
+                "textarea-base",
+                inputError ? "border-red-400 focus:border-red-400" : ""
               )}
             />
 
@@ -249,18 +240,10 @@ export function AddJobModal({ open, onClose, onJobAdded }: AddJobModalProps) {
             )}
 
             <div className="mt-6 flex gap-3">
-              <button
-                type="button"
-                onClick={goManual}
-                className="flex-1 h-12 rounded-full border border-line text-ink text-[12px] font-bold uppercase tracking-[0.08em] hover:bg-surface-2 transition-colors"
-              >
+              <button type="button" onClick={goManual} className="btn-ghost flex-1 justify-center">
                 {t("addJob.enterManually")}
               </button>
-              <button
-                type="button"
-                onClick={analyse}
-                className="flex-1 h-12 rounded-full bg-ink text-white text-[12px] font-bold uppercase tracking-[0.08em] hover:bg-brand transition-colors inline-flex items-center justify-center gap-2"
-              >
+              <button type="button" onClick={analyse} className="btn-primary flex-1 justify-center">
                 <Plus className="h-4 w-4" />
                 {t("addJob.analyse")}
               </button>
@@ -317,18 +300,10 @@ export function AddJobModal({ open, onClose, onJobAdded }: AddJobModalProps) {
             </div>
 
             <div className="mt-6 flex gap-3">
-              <button
-                type="button"
-                onClick={() => setStage("input")}
-                className="flex-1 h-12 rounded-full border border-line text-ink text-[12px] font-bold uppercase tracking-[0.08em] hover:bg-surface-2 transition-colors"
-              >
+              <button type="button" onClick={() => setStage("input")} className="btn-ghost flex-1 justify-center">
                 {t("addJob.back")}
               </button>
-              <button
-                type="button"
-                onClick={save}
-                className="flex-1 h-12 rounded-full bg-ink text-white text-[12px] font-bold uppercase tracking-[0.08em] hover:bg-brand transition-colors inline-flex items-center justify-center gap-2"
-              >
+              <button type="button" onClick={save} className="btn-primary flex-1 justify-center">
                 <Plus className="h-4 w-4" />
                 {t("addJob.addJob")}
               </button>

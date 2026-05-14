@@ -53,7 +53,7 @@ export function JobDetailPanel({ job, onClose, onUpdate, onDelete }: Props) {
     <>
       {/* Panel scrim */}
       <div
-        className="fixed inset-0 z-40 bg-ink/20 backdrop-blur-sm animate-panel-in"
+        className="fixed inset-0 z-40 bg-ink/40 backdrop-blur-sm animate-panel-in"
         onClick={onClose}
       />
 
@@ -273,18 +273,10 @@ export function JobDetailPanel({ job, onClose, onUpdate, onDelete }: Props) {
 
           {/* Primary CTAs */}
           <div className="mt-8 flex gap-3">
-            <button
-              type="button"
-              onClick={() => goTo("/cv")}
-              className="flex-1 h-12 rounded-full bg-surface-2 border border-line text-ink text-[12px] font-bold uppercase tracking-[0.08em] transition-colors duration-200 ease-out hover:bg-surface-hover inline-flex items-center justify-center gap-2"
-            >
+            <button type="button" onClick={() => goTo("/cv")} className="btn-ghost flex-1 justify-center">
               <FileText className="h-4 w-4" /> {t("jobDetail.customCv")}
             </button>
-            <button
-              type="button"
-              onClick={() => goTo("/cover-letter")}
-              className="flex-1 h-12 rounded-full bg-ink text-white text-[12px] font-bold uppercase tracking-[0.08em] transition-colors duration-200 ease-out hover:bg-brand active:bg-brand inline-flex items-center justify-center gap-2"
-            >
+            <button type="button" onClick={() => goTo("/cover-letter")} className="btn-primary flex-1 justify-center">
               <Mail className="h-4 w-4" /> {t("jobDetail.coverLetter")}
             </button>
           </div>
@@ -306,8 +298,9 @@ export function JobDetailPanel({ job, onClose, onUpdate, onDelete }: Props) {
 
       {/* Delete confirmation modal — sibling to panel, stacks above at z-[60] */}
       {confirmDelete && (
-        <div className="fixed inset-0 z-[60] grid place-items-center px-4 bg-ink/30 backdrop-blur-sm">
-          <div className="glass-modal w-full max-w-[360px] p-6 animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-ink/40 backdrop-blur-sm" onClick={() => setConfirmDelete(false)} />
+          <div className="relative glass-modal w-full max-w-[360px] p-6 animate-in fade-in zoom-in-95 duration-200">
             <div className="flex flex-col items-center text-center gap-4">
               <div className="h-12 w-12 rounded-full bg-red-50 grid place-items-center">
                 <Trash2 className="h-5 w-5 text-red-500" />
@@ -320,17 +313,13 @@ export function JobDetailPanel({ job, onClose, onUpdate, onDelete }: Props) {
                 </p>
               </div>
               <div className="flex gap-3 w-full pt-1">
-                <button
-                  type="button"
-                  onClick={() => setConfirmDelete(false)}
-                  className="flex-1 h-11 rounded-full bg-surface-2 border border-line text-ink text-[13px] font-semibold hover:bg-surface-hover transition-colors duration-150 cursor-pointer"
-                >
+                <button type="button" onClick={() => setConfirmDelete(false)} className="btn-ghost flex-1 justify-center">
                   Cancel
                 </button>
                 <button
                   type="button"
                   onClick={() => onDelete(job.id)}
-                  className="flex-1 h-11 rounded-full bg-red-500 text-white text-[13px] font-semibold hover:bg-red-600 transition-colors duration-150 cursor-pointer"
+                  className="flex-1 h-11 px-5 rounded-full bg-red-500 text-white text-[12px] font-bold uppercase tracking-[0.08em] transition-colors hover:bg-red-600 inline-flex items-center justify-center"
                 >
                   Delete
                 </button>

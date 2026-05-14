@@ -50,20 +50,20 @@ function ConfirmDialog({
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-ink/30 backdrop-blur-sm" onClick={onCancel} />
+      <div className="absolute inset-0 bg-ink/40 backdrop-blur-sm" onClick={onCancel} />
       <div className="relative glass-modal p-6 w-full max-w-sm mx-4">
         <button onClick={onCancel} className="absolute top-4 right-4 h-7 w-7 rounded-full grid place-items-center text-ink-muted hover:bg-surface-2 transition-colors">
           <X className="h-4 w-4" />
         </button>
-        <h2 className="text-[18px] font-semibold text-ink mb-2">{title}</h2>
+        <h2 className="text-[18px] font-semibold text-ink mb-2 pr-8">{title}</h2>
         <p className="text-[14px] text-ink-muted mb-6">{description}</p>
-        <div className="flex gap-3 justify-end">
-          <button onClick={onCancel} className="h-10 px-4 rounded-xl border border-line text-[13px] font-medium text-ink hover:bg-surface transition-colors">
+        <div className="flex gap-3">
+          <button onClick={onCancel} className="btn-ghost flex-1 justify-center">
             {cancelLabel}
           </button>
           <button
             onClick={onConfirm}
-            className="h-10 px-4 rounded-xl text-[13px] font-medium text-white bg-red-600 hover:bg-red-700 transition-colors"
+            className="flex-1 h-11 px-5 rounded-full bg-red-500 text-white text-[12px] font-bold uppercase tracking-[0.08em] transition-colors hover:bg-red-600 inline-flex items-center justify-center"
           >
             {confirmLabel}
           </button>
@@ -86,7 +86,7 @@ function DeleteAccountDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-ink/30 backdrop-blur-sm" onClick={() => !deleting && onCancel()} />
+      <div className="absolute inset-0 bg-ink/40 backdrop-blur-sm" onClick={() => !deleting && onCancel()} />
       <div className="relative glass-modal p-6 w-full max-w-sm mx-4">
         <button
           onClick={onCancel}
@@ -123,18 +123,18 @@ function DeleteAccountDialog({
           </div>
         </label>
 
-        <div className="flex gap-3 justify-end">
+        <div className="flex gap-3">
           <button
             onClick={onCancel}
             disabled={deleting}
-            className="h-10 px-4 rounded-xl border border-line text-[13px] font-medium text-ink hover:bg-surface transition-colors disabled:opacity-40"
+            className="btn-ghost flex-1 justify-center disabled:opacity-40"
           >
             {t("settings.deleteDialog.cancel")}
           </button>
           <button
             onClick={() => onConfirm(deleteData)}
             disabled={deleting}
-            className="h-10 px-4 rounded-xl text-[13px] font-medium text-white bg-red-600 hover:bg-red-700 transition-colors disabled:opacity-60"
+            className="flex-1 h-11 px-5 rounded-full bg-red-500 text-white text-[12px] font-bold uppercase tracking-[0.08em] transition-colors hover:bg-red-600 disabled:opacity-60 inline-flex items-center justify-center"
           >
             {deleting
               ? t("settings.deleteDialog.pleaseWait")
@@ -236,7 +236,7 @@ export default function SettingsPage() {
             <select
               value={theme}
               onChange={(e) => handleThemeChange(e.target.value as Theme)}
-              className="sm:hidden h-10 w-full rounded-xl border border-line bg-white px-3 text-[14px] text-ink outline-none focus:border-brand transition-colors"
+              className="sm:hidden h-10 w-full rounded-xl border border-line bg-white px-3 text-[14px] text-ink outline-none focus:border-brand focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 transition-colors"
             >
               {themes.map(({ value, label }) => (
                 <option key={value} value={value}>{label}</option>
@@ -345,7 +345,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   return (
     <div>
       <h2 className="text-[14px] font-semibold text-ink-muted uppercase tracking-wide mb-3 px-1">{title}</h2>
-      <div className="glass-card overflow-hidden divide-y divide-line/60">
+      <div className="card-surface overflow-hidden divide-y divide-line/60">
         {children}
       </div>
     </div>

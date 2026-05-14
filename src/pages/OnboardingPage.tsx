@@ -364,7 +364,7 @@ export default function OnboardingPage() {
                     </div>
                     <Field label={t("onboarding.summary")} className="mt-4">
                       <textarea
-                        className="w-full rounded-xl border border-line bg-surface px-3 py-2.5 text-[14px] text-ink resize-none focus:outline-none focus:border-brand transition-colors"
+                        className="textarea-base"
                         rows={3}
                         value={profile.summary}
                         onChange={(e) => update("summary", e.target.value)}
@@ -422,7 +422,7 @@ export default function OnboardingPage() {
                             <Input className="h-10" placeholder="Start (e.g. Jan 2022)" value={exp.start} onChange={(e) => update("experiences", profile.experiences.map((x) => x.id === exp.id ? { ...x, start: e.target.value } : x))} />
                             <Input className="h-10" placeholder="End (or Present)" value={exp.end} onChange={(e) => update("experiences", profile.experiences.map((x) => x.id === exp.id ? { ...x, end: e.target.value } : x))} />
                           </div>
-                          <textarea className="w-full mt-3 rounded-xl border border-line bg-surface px-3 py-2.5 text-[13px] resize-none focus:outline-none focus:border-brand transition-colors" rows={2} placeholder={t("onboarding.expDescPlaceholder")} value={exp.description} onChange={(e) => update("experiences", profile.experiences.map((x) => x.id === exp.id ? { ...x, description: e.target.value } : x))} />
+                          <textarea className="textarea-base mt-3" rows={2} placeholder={t("onboarding.expDescPlaceholder")} value={exp.description} onChange={(e) => update("experiences", profile.experiences.map((x) => x.id === exp.id ? { ...x, description: e.target.value } : x))} />
                         </div>
                       ))}
                     </div>

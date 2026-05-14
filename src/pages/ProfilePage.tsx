@@ -185,7 +185,7 @@ export default function ProfilePage() {
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="glass-card p-5">
+    <div className="card-surface p-5">
       <h3 className="text-[15px] font-semibold text-ink mb-4">{title}</h3>
       {children}
     </div>
