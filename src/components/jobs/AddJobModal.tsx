@@ -200,7 +200,7 @@ export function AddJobModal({ open, onClose, onJobAdded }: AddJobModalProps) {
         pointerDownOnBackdrop.current = false;
       }}
     >
-      <div className="relative w-full max-w-[500px] glass-modal p-8">
+      <div className="relative w-full max-w-[500px] glass-modal p-5 sm:p-8 max-h-[90dvh] overflow-y-auto">
         <button
           type="button"
           onClick={close}

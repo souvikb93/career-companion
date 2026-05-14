@@ -80,7 +80,7 @@ export default function JobsPage() {
         containerClassName="absolute inset-0 -z-10"
       />
 
-      <main className="relative w-full min-w-0 p-8">
+      <main className="relative w-full min-w-0 p-4 sm:p-8">
         {/* Single toolbar row: pipeline view chips + search + add */}
         <div className="flex flex-wrap items-center gap-3 mb-6">
           <div className="flex flex-wrap items-center gap-2 flex-1 min-w-0">
@@ -142,18 +142,32 @@ export default function JobsPage() {
                 <li
                   key={job.id}
                   onClick={() => setSelectedId(job.id)}
-                  className="group grid grid-cols-1 lg:grid-cols-[1.4fr_1.6fr_1.2fr_1fr_140px_110px_24px] gap-4 px-5 py-4 lg:py-3 lg:h-14 items-center cursor-pointer transition-colors duration-180 hover:bg-white/30"
+                  className="group cursor-pointer transition-colors duration-180 hover:bg-white/30 px-4 sm:px-5"
                 >
-                  <div className="text-[15px] font-semibold text-ink truncate">{job.company}</div>
-                  <div className="text-[14px] text-ink truncate">{job.role}</div>
-                  <div className="text-[13px] text-ink-muted truncate">{job.location}</div>
-                  <div className="text-[13px] text-ink-muted truncate">
-                    {job.salary || <span className="opacity-60">—</span>}
+                  {/* Mobile card layout */}
+                  <div className="lg:hidden py-3.5 flex items-center justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="text-[15px] font-semibold text-ink truncate">{job.company}</div>
+                      <div className="text-[13px] text-ink-muted truncate mt-0.5">{job.role}</div>
+                    </div>
+                    <div className="shrink-0 flex items-center gap-2">
+                      <StatusDot status={job.status} />
+                      <ChevronRight className="h-4 w-4 text-ink-muted" />
+                    </div>
                   </div>
-                  <div><StatusDot status={job.status} /></div>
-                  <div className="text-[13px] text-ink-muted truncate">{formatDate(job.dateAdded, dateLocale)}</div>
-                  <div className="hidden lg:flex justify-end text-ink-muted opacity-0 group-hover:opacity-100 transition-opacity duration-180">
-                    <ChevronRight className="h-4 w-4" />
+                  {/* Desktop table layout */}
+                  <div className="hidden lg:grid grid-cols-[1.4fr_1.6fr_1.2fr_1fr_140px_110px_24px] gap-4 py-3 h-14 items-center">
+                    <div className="text-[15px] font-semibold text-ink truncate">{job.company}</div>
+                    <div className="text-[14px] text-ink truncate">{job.role}</div>
+                    <div className="text-[13px] text-ink-muted truncate">{job.location}</div>
+                    <div className="text-[13px] text-ink-muted truncate">
+                      {job.salary || <span className="opacity-60">—</span>}
+                    </div>
+                    <div><StatusDot status={job.status} /></div>
+                    <div className="text-[13px] text-ink-muted truncate">{formatDate(job.dateAdded, dateLocale)}</div>
+                    <div className="flex justify-end text-ink-muted opacity-0 group-hover:opacity-100 transition-opacity duration-180">
+                      <ChevronRight className="h-4 w-4" />
+                    </div>
                   </div>
                 </li>
               ))}
@@ -161,7 +175,7 @@ export default function JobsPage() {
           )}
         </div>
 
-        <div className="sm:hidden fixed bottom-6 right-6">
+        <div className="sm:hidden fixed right-5" style={{ bottom: "max(20px, env(safe-area-inset-bottom, 20px))" }}>
           <button
             type="button"
             onClick={() => setAddOpen(true)}

@@ -52,20 +52,20 @@ export function TopNav() {
 
   return (
     <header className="sticky top-0 z-40 w-full bg-surface border-b border-line">
-      <div className="h-16 px-8 flex items-center justify-between">
+      <div className="h-16 px-4 sm:px-8 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <img src={logo} alt="Tracka logo" className="h-10 w-10" />
           <span className="logo-wordmark hidden sm:inline text-[28px] leading-none text-ink">tracka</span>
         </div>
 
-        <nav className="flex items-center gap-8">
+        <nav className="flex items-center gap-4 sm:gap-8">
           {NAV.map((n) => (
             <NavLink
               key={n.to}
               to={n.to}
               end={n.end}
               className={({ isActive }) =>
-                cn("nav-item", isActive && "nav-item-active text-ink")
+                cn("nav-item text-[12px] sm:text-[13px]", isActive && "nav-item-active text-ink")
               }
             >
               {n.label}
@@ -73,7 +73,7 @@ export function TopNav() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           <LanguageToggle />
           <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
             <DropdownMenuTrigger
