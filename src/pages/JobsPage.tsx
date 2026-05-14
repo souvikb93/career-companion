@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback, useRef, useEffect } from "react";
 import { Search, Plus, ChevronRight } from "lucide-react";
 import {
   JobStatus,
@@ -9,8 +9,10 @@ import {
 } from "@/lib/jobs-data";
 import { useJobs } from "@/lib/jobs-store";
 import { useT } from "@/lib/i18n";
+import type { Job } from "@/lib/jobs-data";
 import { JobDetailPanel } from "@/components/jobs/JobDetailPanel";
 import { AddJobModal } from "@/components/jobs/AddJobModal";
+import { BackgroundGradientAnimation } from "@/components/BackgroundGradientAnimation";
 import { cn } from "@/lib/utils";
 
 function StatusDot({ status }: { status: JobStatus }) {
@@ -37,6 +39,15 @@ export default function JobsPage() {
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(false);
+  const openDelayRef = useRef<ReturnType<typeof setTimeout>>();
+
+  const handleJobAdded = useCallback((job: Job) => {
+    if (openDelayRef.current) clearTimeout(openDelayRef.current);
+    openDelayRef.current = setTimeout(() => setSelectedId(job.id), 320);
+  }, []);
+
+  useEffect(() => () => { if (openDelayRef.current) clearTimeout(openDelayRef.current); }, []);
+
 
   const counts = useMemo(() => {
     const c: Record<PipelineView, number> = {
@@ -63,8 +74,13 @@ export default function JobsPage() {
   const selected = jobs.find((j) => j.id === selectedId) ?? null;
 
   return (
-    <div className="w-full" style={{ minHeight: "calc(100vh - 64px)" }}>
-      <main className="w-full min-w-0 p-8">
+    <div className="relative w-full" style={{ minHeight: "calc(100vh - 64px)" }}>
+      <BackgroundGradientAnimation
+        interactive={false}
+        containerClassName="absolute inset-0 -z-10"
+      />
+
+      <main className="relative w-full min-w-0 p-8">
         {/* Single toolbar row: pipeline view chips + search + add */}
         <div className="flex flex-wrap items-center gap-3 mb-6">
           <div className="flex flex-wrap items-center gap-2 flex-1 min-w-0">
@@ -76,10 +92,10 @@ export default function JobsPage() {
                   type="button"
                   onClick={() => setView(v.id)}
                   className={cn(
-                    "h-10 px-4 rounded-full border text-[13px] font-medium inline-flex items-center gap-2 transition-colors duration-180",
+                    "h-10 px-4 rounded-full border text-[13px] font-medium inline-flex items-center gap-2 transition-all duration-180 backdrop-blur-md",
                     active
-                      ? "border-brand text-brand bg-transparent"
-                      : "border-line text-ink hover:bg-surface-hover",
+                      ? "border-brand text-brand bg-white/40"
+                      : "border-white/40 text-ink bg-white/30 hover:bg-white/50",
                   )}
                 >
                   <span>{t(`pipeline.${v.id}`)}</span>
@@ -91,40 +107,42 @@ export default function JobsPage() {
             })}
           </div>
           <div className="relative w-full sm:w-[260px]">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-muted" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-muted z-10" />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t("tracker.searchPlaceholder")}
-              className="input-base pl-10"
+              className="w-full bg-white/40 backdrop-blur-md border border-white/50 rounded-2xl pl-10 pr-4 h-11 text-[14px] text-ink placeholder:text-ink-muted/60 transition-all duration-200 ease-out outline-none focus:border-brand focus:bg-white/60"
             />
           </div>
           <button
             type="button"
             onClick={() => setAddOpen(true)}
             aria-label={t("tracker.addJob")}
-            className="hidden sm:grid place-items-center h-12 w-12 rounded-full bg-ink text-white transition-colors duration-200 ease-out hover:bg-brand active:bg-brand"
+            className="hidden sm:grid place-items-center h-12 w-12 rounded-xl bg-ink text-white transition-colors duration-200 ease-out hover:bg-brand active:bg-brand shadow-lg shadow-ink/10"
           >
             <Plus className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="card-surface overflow-hidden">
-          <div className="hidden lg:grid grid-cols-[1.4fr_1.6fr_1.2fr_1fr_140px_110px_24px] gap-4 px-5 py-3 bg-surface border-b border-line">
-            {[t("tracker.colCompany"), t("tracker.colRole"), t("tracker.colLocation"), t("tracker.colSalary"), t("tracker.colStatus"), t("tracker.colDate"), ""].map((h, i) => (
-              <p key={i} className="eyebrow whitespace-nowrap">{h}</p>
-            ))}
-          </div>
+        <div className="bg-white/40 backdrop-blur-2xl border border-white/50 rounded-2xl overflow-hidden shadow-xl shadow-ink/5">
+          {filtered.length > 0 && (
+            <div className="hidden lg:grid grid-cols-[1.4fr_1.6fr_1.2fr_1fr_140px_110px_24px] gap-4 px-5 py-3 border-b border-white/40">
+              {[t("tracker.colCompany"), t("tracker.colRole"), t("tracker.colLocation"), t("tracker.colSalary"), t("tracker.colStatus"), t("tracker.colDate"), ""].map((h, i) => (
+                <p key={i} className="eyebrow whitespace-nowrap">{h}</p>
+              ))}
+            </div>
+          )}
 
           {filtered.length === 0 ? (
             <EmptyState onAdd={() => setAddOpen(true)} />
           ) : (
-            <ul className="divide-y divide-line">
+            <ul className="divide-y divide-white/40">
               {filtered.map((job) => (
                 <li
                   key={job.id}
                   onClick={() => setSelectedId(job.id)}
-                  className="group grid grid-cols-1 lg:grid-cols-[1.4fr_1.6fr_1.2fr_1fr_140px_110px_24px] gap-4 px-5 py-4 lg:py-3 lg:h-14 items-center cursor-pointer transition-colors duration-180 hover:bg-surface-hover"
+                  className="group grid grid-cols-1 lg:grid-cols-[1.4fr_1.6fr_1.2fr_1fr_140px_110px_24px] gap-4 px-5 py-4 lg:py-3 lg:h-14 items-center cursor-pointer transition-colors duration-180 hover:bg-white/30"
                 >
                   <div className="text-[15px] font-semibold text-ink truncate">{job.company}</div>
                   <div className="text-[14px] text-ink truncate">{job.role}</div>
@@ -147,7 +165,7 @@ export default function JobsPage() {
           <button
             type="button"
             onClick={() => setAddOpen(true)}
-            className="h-14 w-14 rounded-full bg-ink text-white grid place-items-center shadow-lg transition-colors duration-200 ease-out hover:bg-brand active:bg-brand"
+            className="h-14 w-14 rounded-xl bg-ink text-white grid place-items-center shadow-lg transition-colors duration-200 ease-out hover:bg-brand active:bg-brand"
             aria-label={t("tracker.addJob")}
           >
             <Plus className="h-6 w-6" />
@@ -160,7 +178,7 @@ export default function JobsPage() {
         onClose={() => setSelectedId(null)}
         onUpdate={updateJob}
       />
-      <AddJobModal open={addOpen} onClose={() => setAddOpen(false)} />
+      <AddJobModal open={addOpen} onClose={() => setAddOpen(false)} onJobAdded={handleJobAdded} />
     </div>
   );
 }
@@ -168,13 +186,14 @@ export default function JobsPage() {
 function EmptyState({ onAdd }: { onAdd: () => void }) {
   const { t } = useT();
   return (
-    <div className="py-20 px-6 text-center">
-      <div className="mx-auto h-14 w-14 rounded-2xl bg-surface-2 border border-line grid place-items-center mb-5">
-        <Plus className="h-6 w-6 text-ink-muted" />
-      </div>
-      <h2 className="text-[28px] font-semibold text-ink">{t("tracker.emptyTitle")}</h2>
-      <p className="text-[15px] text-ink-muted mt-2">{t("tracker.emptyBody")}</p>
-      <button type="button" onClick={onAdd} className="btn-primary mt-6 h-12 px-6">
+    <div className="py-24 px-6 text-center">
+      <h2 className="text-[56px] sm:text-[64px] leading-[1.02] font-semibold text-ink tracking-tight">
+        {t("tracker.emptyTitle")}
+      </h2>
+      <p className="text-[16px] text-ink-muted mt-4 max-w-md mx-auto">
+        {t("tracker.emptyBody")}
+      </p>
+      <button type="button" onClick={onAdd} className="btn-primary mt-8 h-12 px-6">
         <Plus className="h-4 w-4" /> {t("tracker.emptyCta")}
       </button>
     </div>

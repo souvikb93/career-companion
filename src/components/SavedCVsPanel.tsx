@@ -9,15 +9,16 @@ interface Props<T> {
   list: SavedCV<T>[];
   onLoad: (item: SavedCV<T>) => void;
   onDelete: (id: string) => void;
+  newItemId?: string;
 }
 
-export function SavedCVsPanel<T>({ open, onClose, title, list, onLoad, onDelete }: Props<T>) {
+export function SavedCVsPanel<T>({ open, onClose, title, list, onLoad, onDelete, newItemId }: Props<T>) {
   const { t } = useT();
   if (!open) return null;
   return (
     <>
-      <div className="fixed inset-0 z-40 bg-ink/20 animate-panel-in" onClick={onClose} />
-      <aside className="fixed top-0 right-0 z-50 h-screen w-full max-w-[440px] bg-popover border-l border-line overflow-y-auto animate-slide-in-right">
+      <div className="fixed inset-0 z-40 bg-ink/20 backdrop-blur-sm animate-panel-in" onClick={onClose} />
+      <aside className="fixed top-0 right-0 z-50 h-screen w-full max-w-[440px] bg-white/70 backdrop-blur-2xl border-l border-white/50 overflow-y-auto animate-slide-in-right">
         <div className="p-8">
           <div className="flex items-start justify-between gap-4 mb-6">
             <div>
@@ -36,13 +37,16 @@ export function SavedCVsPanel<T>({ open, onClose, title, list, onLoad, onDelete 
 
           <p className="eyebrow mb-3">{t("common.saved", { n: list.length })}</p>
           {list.length === 0 ? (
-            <div className="card-surface p-6 text-center">
+            <div className={`card-surface p-6 text-center ${newItemId === undefined ? "" : "animate-library-item-in"}`}>
               <p className="text-[14px] text-ink-muted">{t("common.nothingSaved")}</p>
             </div>
           ) : (
             <ul className="space-y-2">
               {list.map((item) => (
-                <li key={item.id} className="card-surface p-4 flex items-start gap-3">
+                <li
+                  key={item.id}
+                  className={`card-surface p-4 flex items-start gap-3 ${item.id === newItemId ? "animate-library-item-in" : ""}`}
+                >
                   <div className="h-10 w-10 shrink-0 rounded-2xl bg-surface-2 border border-line grid place-items-center">
                     <FileText className="h-4 w-4 text-ink-muted" />
                   </div>

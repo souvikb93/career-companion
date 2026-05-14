@@ -1,16 +1,21 @@
 import { useEffect, useRef, useState } from "react";
-import { Plus, X, Loader2, Sparkles, FolderOpen, Save } from "lucide-react";
+import { Plus, X, FolderOpen, Save } from "lucide-react";
 import { useJobs } from "@/lib/jobs-store";
 import { ZoomControls } from "@/components/ZoomControls";
 import { ExportMenu } from "@/components/ExportMenu";
 import { SavedCVsPanel } from "@/components/SavedCVsPanel";
 import { SaveModal } from "@/components/SaveModal";
 import { LayoutMenu, LayoutVariant, loadLayout } from "@/components/LayoutMenu";
-import { useSavedCVs } from "@/lib/saved-cvs";
+import { useSavedResumes } from "@/lib/saved-items";
 import { exportAs, ExportFormat } from "@/lib/exporters";
 import { supabase } from "@/integrations/supabase/client";
+import { tailorResume, scrapeJobFromUrl } from "@/lib/groq";
+import { useProfile } from "@/lib/profile-store";
 import { useToast } from "@/hooks/use-toast";
 import { useT } from "@/lib/i18n";
+import { loadFromStorage, saveToStorage } from "@/lib/storage";
+import { isUrl } from "@/lib/utils";
+import BuildFromJobCard from "@/components/BuildFromJobCard";
 
 interface Experience { id: string; title: string; company: string; start: string; end: string; description: string }
 interface Education { id: string; school: string; degree: string; field: string; date: string }
@@ -76,12 +81,48 @@ function makeInitial(t: TFn): CV {
 
 const uid = () => Math.random().toString(36).slice(2, 9);
 
+const CV_DRAFT_KEY = "tracka_cv_draft";
+const CV_JD_KEY = "tracka_cv_jd";
+
+
 export default function CVBuilderPage() {
   const { toast } = useToast();
   const { t, lang } = useT();
+  const { profile, loading: profileLoading } = useProfile();
   const initial = makeInitial(t);
-  const [cv, setCv] = useState<CV>(() => makeInitial(t));
+  const [cv, setCv] = useState<CV>(() => loadFromStorage<CV>(CV_DRAFT_KEY) ?? makeInitial(t));
   const prevDefaultRef = useRef<CV>(initial);
+  const profileApplied = useRef(false);
+  const hasDraft = useRef(!!loadFromStorage(CV_DRAFT_KEY));
+
+  // Persist cv to localStorage on every change
+  useEffect(() => { saveToStorage(CV_DRAFT_KEY, cv); }, [cv]);
+
+  // Auto-fill from profile only if user has no saved draft yet
+  useEffect(() => {
+    if (profileLoading || profileApplied.current) return;
+    profileApplied.current = true;
+    if (!profile.fullName && !profile.email) return;
+    // Replace a field only when it is blank or still holds the untouched placeholder.
+    // If the user has actually typed something, leave it alone.
+    const def = makeInitial(t);
+    const fill = (cur: string, profileVal: string, placeholder: string) =>
+      (!cur || cur === placeholder) ? (profileVal || cur) : cur;
+    setCv((prev) => ({
+      ...prev,
+      fullName:  fill(prev.fullName,  profile.fullName,  def.fullName),
+      title:     fill(prev.title,     profile.title,     def.title),
+      email:     fill(prev.email,     profile.email,     def.email),
+      phone:     fill(prev.phone,     profile.phone,     def.phone),
+      location:  fill(prev.location,  profile.location,  def.location),
+      linkedin:  fill(prev.linkedin,  profile.linkedin,  def.linkedin),
+      summary: hasDraft.current ? prev.summary : (profile.summary || prev.summary),
+      experiences: hasDraft.current ? prev.experiences : (profile.experiences.length ? profile.experiences : prev.experiences),
+      education: hasDraft.current ? prev.education : (profile.education.length ? profile.education : prev.education),
+      skills: hasDraft.current ? prev.skills : (profile.skills.length ? profile.skills : prev.skills),
+    }));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profileLoading]);
 
   // When language changes, replace any fields that still match the previous-language default.
   useEffect(() => {
@@ -135,11 +176,10 @@ export default function CVBuilderPage() {
 
   const [skillDraft, setSkillDraft] = useState("");
   const [zoom, setZoom] = useState(0.6);
-  const [jdText, setJdText] = useState("");
-  const [jdUrl, setJdUrl] = useState("");
   const [building, setBuilding] = useState(false);
   const [savedOpen, setSavedOpen] = useState(false);
   const [saveOpen, setSaveOpen] = useState(false);
+  const [newCvId, setNewCvId] = useState<string | undefined>(undefined);
   const [hoverPreview, setHoverPreview] = useState(false);
   const [layout, setLayoutState] = useState<LayoutVariant>(() => loadLayout("cv_layout"));
   const setLayout = (v: LayoutVariant) => {
@@ -147,30 +187,10 @@ export default function CVBuilderPage() {
     try { window.localStorage.setItem("cv_layout", v); } catch { /* ignore */ }
   };
   const { getJob, targetJobId, setTargetJobId } = useJobs();
-  const { list: savedCVs, save: saveCV, remove: removeCV } = useSavedCVs<CV>("saved_cvs_v2", () => {
-    const daysAgo = (n: number) => new Date(Date.now() - n * 86400000).toISOString();
-    const variant = (summary: string, skills: string[]): CV => ({ ...initial, summary, skills });
-    const lbl = t("resume.defaultSaveName");
-    return [
-      { id: "demo-cv-1", name: `${lbl} — Zalando Senior Designer`, savedAt: daysAgo(3),
-        data: variant("Tailored for Zalando — Senior Product Designer.", ["Design Systems", "Product Design", "Figma", "Prototyping", "User Research", "HTML / CSS"]) },
-      { id: "demo-cv-2", name: `${lbl} — Delivery Hero Product Engineer`, savedAt: daysAgo(5),
-        data: variant("Tailored for Delivery Hero — hybrid designer/engineer.", ["HTML / CSS", "Prototyping", "Design Systems", "Figma", "Product Design", "User Research"]) },
-      { id: "demo-cv-3", name: `${lbl} — N26 Product Designer`, savedAt: daysAgo(7),
-        data: variant("Tailored for N26 — fintech-focused product designer.", ["Product Design", "User Research", "Prototyping", "Design Systems", "Figma", "HTML / CSS"]) },
-      { id: "demo-cv-4", name: `${lbl} — FlixBus Brand Designer`, savedAt: daysAgo(8),
-        data: variant("Tailored for FlixBus — brand-leaning product designer.", ["Figma", "Design Systems", "Product Design", "Prototyping", "HTML / CSS", "User Research"]) },
-      { id: "demo-cv-5", name: `${lbl} — Bolt Frontend Engineer`, savedAt: daysAgo(10),
-        data: variant("Tailored for Bolt — designer-engineer.", ["HTML / CSS", "Figma", "Prototyping", "Design Systems", "Product Design", "User Research"]) },
-      { id: "demo-cv-6", name: `${lbl} — General`, savedAt: daysAgo(12), data: initial },
-    ];
-  });
+  const { list: savedCVs, save: saveCV, remove: removeCV } = useSavedResumes<CV>();
   const targetJob = targetJobId ? getJob(targetJobId) : null;
 
   useEffect(() => {
-    if (targetJob) {
-      setJdText(`${targetJob.role} at ${targetJob.company}\n\n${targetJob.description}`);
-    }
     if (targetJobId) setTargetJobId(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -183,27 +203,26 @@ export default function CVBuilderPage() {
     exportAs(format, cv.fullName || "CV", body, filename);
   };
 
-  const buildFromJD = async () => {
-    let jd = jdText.trim();
-    if (!jd && !jdUrl.trim()) return;
+  const buildFromJD = async (input: string) => {
     setBuilding(true);
     try {
-      if (!jd && jdUrl.trim()) {
-        const { data, error } = await supabase.functions.invoke("scrape-job", { body: { url: jdUrl.trim() } });
-        if (error) throw error;
-        if ((data as { error?: string })?.error) throw new Error((data as { error: string }).error);
+      let jd = input;
+      if (isUrl(input)) {
+        const data = await scrapeJobFromUrl(input);
         jd = `${data.role} at ${data.company}\n\n${data.description}`;
       }
-      // Tailor: tweak summary + reorder skills based on JD keywords (lightweight prototype)
-      const lower = jd.toLowerCase();
-      const tailored = {
-        ...cv,
-        summary: `Tailored for: ${jd.split("\n")[0]}.\n\n${cv.summary}`,
-        skills: [...cv.skills].sort((a, b) =>
-          (lower.includes(b.toLowerCase()) ? 1 : 0) - (lower.includes(a.toLowerCase()) ? 1 : 0),
-        ),
-      };
-      setCv(tailored);
+      const result = await tailorResume(cv, jd);
+      setCv((prev) => ({
+        ...prev,
+        summary: result.summary || prev.summary,
+        skills: result.skills?.length ? result.skills : prev.skills,
+        experiences: prev.experiences.map((exp) => {
+          const match = result.experiences?.find(
+            (r) => r.title.toLowerCase() === exp.title.toLowerCase(),
+          );
+          return match ? { ...exp, description: match.description } : exp;
+        }),
+      }));
       toast({ title: t("resume.tailored"), description: t("resume.tailoredDesc") });
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Failed";
@@ -215,9 +234,9 @@ export default function CVBuilderPage() {
 
   return (
     <div className="w-full">
-      <div className="px-8 py-5 flex items-center justify-between border-b border-line bg-surface flex-wrap gap-3">
+      <div className="px-8 py-5 flex items-center justify-between border-b border-white/50 flex-wrap gap-3 bg-white/30 backdrop-blur-md">
         <div>
-          <h1 className="text-[24px] font-semibold text-ink">{t("resume.pageTitle")}</h1>
+          <h1 className="heading-1">{t("resume.pageTitle")}</h1>
         </div>
         <div className="flex items-center gap-3">
           <button type="button" onClick={() => setSaveOpen(true)} className="btn-ghost">
@@ -233,9 +252,10 @@ export default function CVBuilderPage() {
 
       <SavedCVsPanel
         open={savedOpen}
-        onClose={() => setSavedOpen(false)}
+        onClose={() => { setSavedOpen(false); setNewCvId(undefined); }}
         title={t("resume.libraryTitle")}
         list={savedCVs}
+        newItemId={newCvId}
         onLoad={(item) => {
           setCv(item.data);
           setSavedOpen(false);
@@ -249,43 +269,28 @@ export default function CVBuilderPage() {
         onClose={() => setSaveOpen(false)}
         title={t("resume.saveTitle")}
         defaultName={targetJob ? `${t("resume.defaultSaveName")} — ${targetJob.company}` : t("resume.defaultSaveName")}
-        onSave={(name, format) => {
-          const item = saveCV(name, cv);
-          handleExport(format);
-          toast({ title: t("resume.saved"), description: `${item.name} · ${format.toUpperCase()}` });
+        onSave={async (name) => {
+          try {
+            const item = await saveCV(name, cv);
+            setNewCvId(item.id);
+            setSavedOpen(true);
+          } catch {
+            toast({ title: t("resume.cantBuild"), variant: "destructive" });
+          }
         }}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-2" style={{ minHeight: "calc(100vh - 64px - 81px)" }}>
         {/* Editor */}
-        <section className="bg-surface border-r border-line p-8 overflow-y-auto"
+        <section className="border-r border-white/50 p-8 overflow-y-auto bg-white/20 backdrop-blur-md"
           style={{ maxHeight: "calc(100vh - 64px - 81px)" }}
         >
-          <Card title={t("resume.buildFromJd")} action={
-            <button
-              type="button"
-              onClick={buildFromJD}
-              disabled={building || (!jdText.trim() && !jdUrl.trim())}
-              className="btn-primary h-9 px-4"
-            >
-              {building ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
-              {building ? t("resume.building") : t("resume.build")}
-            </button>
-          }>
-            <input
-              value={jdUrl}
-              onChange={(e) => setJdUrl(e.target.value)}
-              placeholder={t("resume.jdUrlPlaceholder")}
-              className="input-base mb-3"
-            />
-            <textarea
-              value={jdText}
-              onChange={(e) => setJdText(e.target.value)}
-              rows={4}
-              placeholder={t("resume.jdTextPlaceholder")}
-              className="textarea-base"
-            />
-          </Card>
+          <BuildFromJobCard
+            storageKey={CV_JD_KEY}
+            loading={building}
+            onGenerate={buildFromJD}
+            initialValue={targetJob ? `${targetJob.role} at ${targetJob.company}` : undefined}
+          />
 
           <h2 className="text-[20px] font-semibold text-ink mb-6 mt-6">{t("resume.editYour")}</h2>
 
@@ -493,7 +498,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 function Card({ title, children, action }: { title: string; children: React.ReactNode; action?: React.ReactNode }) {
   return (
-    <div className="card-surface p-5 mb-4 bg-popover">
+    <div className="glass-modal p-5 mb-4">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-[15px] font-semibold text-ink">{title}</h3>
         {action}

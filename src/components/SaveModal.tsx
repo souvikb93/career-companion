@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { X, ChevronDown } from "lucide-react";
-import { ExportFormat } from "@/lib/exporters";
+import { X } from "lucide-react";
 import { useT } from "@/lib/i18n";
 
 interface Props {
@@ -8,26 +7,19 @@ interface Props {
   onClose: () => void;
   title?: string;
   defaultName?: string;
-  onSave: (name: string, format: ExportFormat) => void;
+  onSave: (name: string) => void;
 }
 
 export function SaveModal({ open, onClose, title, defaultName = "", onSave }: Props) {
   const { t } = useT();
   const [name, setName] = useState(defaultName);
-  const [format, setFormat] = useState<ExportFormat>("pdf");
-
-  const FORMATS: { f: ExportFormat; label: string }[] = [
-    { f: "pdf", label: t("formats.pdf") },
-    { f: "docx", label: t("formats.docx") },
-    { f: "txt", label: t("formats.txt") },
-  ];
 
   if (!open) return null;
   return (
     <>
-      <div className="fixed inset-0 z-50 bg-ink/40 animate-panel-in" onClick={onClose} />
+      <div className="fixed inset-0 z-50 bg-ink/30 backdrop-blur-sm animate-panel-in" onClick={onClose} />
       <div className="fixed inset-0 z-50 grid place-items-center p-4 pointer-events-none">
-        <div className="relative pointer-events-auto w-full max-w-md rounded-3xl bg-popover border border-line p-6 shadow-2xl">
+        <div className="relative pointer-events-auto w-full max-w-md glass-modal p-6">
           <button
             type="button"
             onClick={onClose}
@@ -43,24 +35,15 @@ export function SaveModal({ open, onClose, title, defaultName = "", onSave }: Pr
             id="save-name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="input-base mb-5"
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                onSave(name.trim() || t("common.untitled"));
+                onClose();
+              }
+            }}
+            className="input-base mb-6"
             autoFocus
           />
-
-          <label className="field-label" htmlFor="save-format">{t("common.format")}</label>
-          <div className="relative mb-6">
-            <select
-              id="save-format"
-              value={format}
-              onChange={(e) => setFormat(e.target.value as ExportFormat)}
-              className="input-base appearance-none pr-10 cursor-pointer"
-            >
-              {FORMATS.map(({ f, label }) => (
-                <option key={f} value={f}>{label}</option>
-              ))}
-            </select>
-            <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-muted" />
-          </div>
 
           <div className="flex gap-3">
             <button type="button" onClick={onClose} className="btn-ghost flex-1 justify-center">
@@ -68,7 +51,7 @@ export function SaveModal({ open, onClose, title, defaultName = "", onSave }: Pr
             </button>
             <button
               type="button"
-              onClick={() => { onSave(name.trim() || t("common.untitled"), format); onClose(); }}
+              onClick={() => { onSave(name.trim() || t("common.untitled")); onClose(); }}
               className="btn-primary flex-1 justify-center"
             >
               {t("common.save")}

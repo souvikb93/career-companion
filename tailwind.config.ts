@@ -101,12 +101,37 @@ export default {
           from: { transform: "translateX(100%)" },
           to: { transform: "translateX(0)" },
         },
+        first: {
+          "0%, 100%": { transform: "translate(0, 0) rotate(0deg)" },
+          "50%": { transform: "translate(0, 25%) rotate(180deg)" },
+        },
+        second: {
+          "0%, 100%": { transform: "rotate(0deg) translate(0, -10%)" },
+          "50%": { transform: "rotate(360deg) translate(10%, 10%)" },
+        },
+        third: {
+          "0%, 100%": { transform: "translate(0, 0) rotate(0deg)" },
+          "50%": { transform: "translate(-25%, 25%) rotate(360deg)" },
+        },
+        fourth: {
+          "0%, 100%": { transform: "translate(0, 0)" },
+          "50%": { transform: "translate(-25%, -10%)" },
+        },
+        fifth: {
+          "0%, 100%": { transform: "translate(0, 0) rotate(0deg)" },
+          "50%": { transform: "translate(15%, -25%) rotate(-360deg)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "panel-in": "panel-in 180ms ease-out",
         "slide-in-right": "slide-in-right 180ms ease-out",
+        first: "first 30s ease infinite",
+        second: "second 25s ease infinite",
+        third: "third 35s ease infinite",
+        fourth: "fourth 28s ease infinite",
+        fifth: "fifth 32s ease infinite",
       },
     },
   },

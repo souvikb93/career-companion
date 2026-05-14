@@ -1,9 +1,12 @@
-import { createContext, useContext, useEffect, useMemo, useState, ReactNode } from "react";
-import { Job, buildSampleJobs, localizeJob } from "./jobs-data";
+import { createContext, useContext, useEffect, useMemo, useState, useCallback, ReactNode } from "react";
+import { Job, localizeJob } from "./jobs-data";
 import { useT } from "./i18n";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Ctx {
   jobs: Job[];
+  jobsLoading: boolean;
   setJobs: (j: Job[]) => void;
   addJob: (j: Job) => void;
   updateJob: (j: Job) => void;
@@ -13,47 +16,134 @@ interface Ctx {
 }
 
 const JobsContext = createContext<Ctx | null>(null);
-const STORAGE_KEY = "jobs_v7";
-const DATA_VERSION_KEY = `${STORAGE_KEY}_data_version`;
-const CURRENT_DATA_VERSION = "shared-jobs-2026-05-07";
 
-function readInitialJobs(): Job[] {
+const CACHE_KEY = "jobs_v7";
+
+function readCache(): Job[] {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    const version = localStorage.getItem(DATA_VERSION_KEY);
-    if (raw && version === CURRENT_DATA_VERSION) return JSON.parse(raw) as Job[];
-    const seed = buildSampleJobs("de");
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(seed));
-    localStorage.setItem(DATA_VERSION_KEY, CURRENT_DATA_VERSION);
-    return seed;
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (raw !== null) return JSON.parse(raw) as Job[];
+  } catch {/* noop */}
+  return [];
+}
+
+function writeCache(jobs: Job[]) {
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify(jobs)); } catch {/* noop */}
+}
+
+/** Clear the local jobs cache. Called on logout / account deletion. */
+export function clearJobsStorage() {
+  try { localStorage.removeItem(CACHE_KEY); } catch {/* noop */}
+}
+
+/**
+ * Try to load jobs from Supabase profiles.jobs column.
+ * Returns null if the column doesn't exist or the query fails for any reason.
+ */
+async function fetchJobsFromSupabase(userId: string): Promise<Job[] | null> {
+  try {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("jobs")
+      .eq("id", userId)
+      .maybeSingle();
+    if (error || !data) return null;
+    const jobs = data.jobs;
+    return Array.isArray(jobs) ? (jobs as Job[]) : null;
   } catch {
-    return buildSampleJobs("de");
+    return null;
   }
 }
 
+/**
+ * Try to persist jobs to Supabase. Fails silently if column doesn't exist.
+ */
+function saveJobsToSupabase(userId: string, jobs: Job[]) {
+  try {
+    supabase
+      .from("profiles")
+      .update({ jobs } as Record<string, unknown>)
+      .eq("id", userId)
+      .then(() => {}, () => {});
+  } catch {/* noop */}
+}
+
 export function JobsProvider({ children }: { children: ReactNode }) {
+  const { user, loading: authLoading } = useAuth();
   const { lang } = useT();
-  const [jobs, setJobsState] = useState<Job[]>(readInitialJobs);
+
+  const [jobs, setJobsState] = useState<Job[]>(readCache);
+  const [jobsLoading, setJobsLoading] = useState(true);
   const [targetJobId, setTargetJobId] = useState<string | null>(null);
 
-  // Re-localize seeded jobs whenever language changes.
-  const localized = useMemo(() => jobs.map((j) => localizeJob(j, lang)), [jobs, lang]);
+  const userId = user?.id;
 
+  // ── Sync from Supabase whenever the logged-in user changes ──────────────
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(jobs));
-      localStorage.setItem(DATA_VERSION_KEY, CURRENT_DATA_VERSION);
-    } catch {/* noop */}
-  }, [jobs]);
+    if (authLoading) return;
 
-  const setJobs = (j: Job[]) => setJobsState(j);
-  const addJob = (j: Job) => setJobsState((prev) => [j, ...prev]);
-  const updateJob = (j: Job) =>
-    setJobsState((prev) => prev.map((x) => (x.id === j.id ? { ...j, locationI18n: x.locationI18n, descriptionI18n: x.descriptionI18n } : x)));
-  const getJob = (id: string) => localized.find((j) => j.id === id);
+    if (!userId) {
+      clearJobsStorage();
+      setJobsState([]);
+      setJobsLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setJobsLoading(true);
+
+    fetchJobsFromSupabase(userId).then((remote) => {
+      if (cancelled) return;
+      if (remote !== null) {
+        setJobsState(remote);
+        writeCache(remote);
+      }
+      // If remote is null (column missing or error), keep cached/current state
+      setJobsLoading(false);
+    });
+
+    return () => { cancelled = true; };
+  }, [userId, authLoading]);
+
+  // ── Persist helpers ──────────────────────────────────────────────────────
+  const persist = useCallback((updated: Job[]) => {
+    writeCache(updated);
+    if (userId) saveJobsToSupabase(userId, updated);
+  }, [userId]);
+
+  const setJobs = useCallback((j: Job[]) => {
+    setJobsState(j);
+    persist(j);
+  }, [persist]);
+
+  const addJob = useCallback((j: Job) => {
+    setJobsState((prev) => {
+      const updated = [j, ...prev];
+      persist(updated);
+      return updated;
+    });
+  }, [persist]);
+
+  const updateJob = useCallback((j: Job) => {
+    setJobsState((prev) => {
+      const updated = prev.map((x) =>
+        x.id === j.id
+          ? { ...j, locationI18n: x.locationI18n, descriptionI18n: x.descriptionI18n }
+          : x
+      );
+      persist(updated);
+      return updated;
+    });
+  }, [persist]);
+
+  // ── Localisation ─────────────────────────────────────────────────────────
+  const localized = useMemo(() => jobs.map((j) => localizeJob(j, lang)), [jobs, lang]);
+  const getJob = useCallback((id: string) => localized.find((j) => j.id === id), [localized]);
 
   return (
-    <JobsContext.Provider value={{ jobs: localized, setJobs, addJob, updateJob, getJob, targetJobId, setTargetJobId }}>
+    <JobsContext.Provider
+      value={{ jobs: localized, jobsLoading, setJobs, addJob, updateJob, getJob, targetJobId, setTargetJobId }}
+    >
       {children}
     </JobsContext.Provider>
   );

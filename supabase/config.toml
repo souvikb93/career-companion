@@ -1,1 +1,4 @@
-project_id = "ucsmtjqisgjvioyvhkeb"
+project_id = "gmbvderikjaxcxiwfbkt"
+
+[functions.scrape-job]
+verify_jwt = true

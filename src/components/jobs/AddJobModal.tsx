@@ -1,194 +1,333 @@
-import { useState } from "react";
-import { Plus, Loader2, X } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useRef, useState } from "react";
+import { Plus, Loader2, X, AlertCircle } from "lucide-react";
 import { useJobs } from "@/lib/jobs-store";
-import { Job } from "@/lib/jobs-data";
+import { scrapeJobFromUrl, parseJobFromText } from "@/lib/groq";
+import type { Job } from "@/lib/jobs-data";
 import { useToast } from "@/hooks/use-toast";
 import { useT } from "@/lib/i18n";
+import { cn } from "@/lib/utils";
 
 interface AddJobModalProps {
   open: boolean;
   onClose: () => void;
+  onJobAdded?: (job: Job) => void;
 }
 
-export function AddJobModal({ open, onClose }: AddJobModalProps) {
+type Stage = "input" | "loading" | "review";
+
+interface JobDraft {
+  company: string;
+  role: string;
+  location: string;
+  salary: string;
+  description: string;
+  link: string;
+}
+
+const EMPTY_DRAFT: JobDraft = {
+  company: "", role: "", location: "", salary: "", description: "", link: "",
+};
+
+function isUrl(input: string): boolean {
+  const s = input.trim();
+  if (s.includes("\n") || s.includes(" ")) return false;
+  try {
+    new URL(/^https?:\/\//i.test(s) ? s : `https://${s}`);
+    return /\.[a-z]{2,}/i.test(s);
+  } catch {
+    return false;
+  }
+}
+
+export function AddJobModal({ open, onClose, onJobAdded }: AddJobModalProps) {
   const { t } = useT();
-  const [url, setUrl] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [mode, setMode] = useState<"url" | "manual">("url");
-  const [manual, setManual] = useState({
-    company: "",
-    role: "",
-    location: "",
-    salary: "",
-    link: "",
-  });
   const { addJob } = useJobs();
   const { toast } = useToast();
+
+  const backdropRef = useRef<HTMLDivElement>(null);
+  const pointerDownOnBackdrop = useRef(false);
+  const justFocused = useRef(false);
+
+  useEffect(() => {
+    if (!open) return;
+    const onFocus = () => {
+      justFocused.current = true;
+      setTimeout(() => { justFocused.current = false; }, 300);
+    };
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [open]);
+
+  const [stage, setStage] = useState<Stage>("input");
+  const [input, setInput] = useState("");
+  const [inputError, setInputError] = useState(false);
+  const [fetchFailed, setFetchFailed] = useState(false);
+  const [draft, setDraft] = useState<JobDraft>(EMPTY_DRAFT);
+  const [aiMissed, setAiMissed] = useState<Set<keyof JobDraft>>(new Set());
+  const [fieldErrors, setFieldErrors] = useState<Set<keyof JobDraft>>(new Set());
 
   if (!open) return null;
 
   const close = () => {
-    setUrl("");
-    setManual({ company: "", role: "", location: "", salary: "", link: "" });
-    setMode("url");
+    setStage("input");
+    setInput("");
+    setInputError(false);
+    setFetchFailed(false);
+    setDraft(EMPTY_DRAFT);
+    setAiMissed(new Set());
+    setFieldErrors(new Set());
     onClose();
   };
 
-  const fetchJob = async () => {
-    const raw = url.trim();
-    if (!raw) return;
-    const normalized = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
-    try {
-      new URL(normalized);
-    } catch {
-      toast({ title: t("addJob.invalidUrl"), description: t("addJob.invalidUrlDesc"), variant: "destructive" });
-      return;
-    }
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("scrape-job", {
-        body: { url: normalized },
-      });
-      if (error) throw error;
-      if ((data as { error?: string })?.error) throw new Error((data as { error: string }).error);
+  const goManual = () => {
+    setDraft({ ...EMPTY_DRAFT, link: isUrl(input.trim()) ? input.trim() : "" });
+    setAiMissed(new Set());
+    setFieldErrors(new Set());
+    setFetchFailed(false);
+    setStage("review");
+  };
 
-      const job: Job = {
-        id: crypto.randomUUID(),
-        company: data.company || "Unknown company",
-        role: data.role || "Unknown role",
-        location: data.location || "",
-        salary: data.salary || "",
-        description: data.description || "",
-        notes: "",
-        status: "saved",
-        link: data.link || url.trim(),
-        dateAdded: new Date().toISOString().slice(0, 10),
-      };
-      addJob(job);
-      toast({ title: t("addJob.added"), description: `${job.company} — ${job.role}` });
-      close();
+  const analyse = async () => {
+    const raw = input.trim();
+    if (!raw) { setInputError(true); return; }
+    setInputError(false);
+    setFetchFailed(false);
+    setStage("loading");
+
+    try {
+      let result: JobDraft;
+
+      if (isUrl(raw)) {
+        const normalized = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+        try {
+          const data = await scrapeJobFromUrl(normalized);
+          result = {
+            company: data.company || "",
+            role: data.role || "",
+            location: data.location || "",
+            salary: data.salary || "",
+            description: data.description || "",
+            link: data.link || normalized,
+          };
+        } catch {
+          // URL fetch failed — stay in input stage, show inline error
+          setFetchFailed(true);
+          setStage("input");
+          return;
+        }
+      } else {
+        const parsed = await parseJobFromText(raw);
+        result = {
+          company: parsed.company || "",
+          role: parsed.role || "",
+          location: parsed.location || "",
+          salary: parsed.salary || "",
+          description: parsed.description || "",
+          link: "",
+        };
+      }
+
+      const missed = new Set<keyof JobDraft>();
+      (Object.keys(result) as (keyof JobDraft)[]).forEach((k) => {
+        if (!result[k]) missed.add(k);
+      });
+
+      setDraft(result);
+      setAiMissed(missed);
+      setFieldErrors(new Set());
+      setStage("review");
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Failed to fetch job";
-      toast({ title: t("addJob.cantFetch"), description: msg, variant: "destructive" });
-    } finally {
-      setLoading(false);
+      const msg = e instanceof Error ? e.message : "Failed to read job details";
+      toast({ title: t("addJob.cantRead"), description: msg, variant: "destructive" });
+      setStage("input");
     }
   };
 
-  const saveManual = () => {
-    if (!manual.company.trim() || !manual.role.trim()) {
-      toast({ title: t("addJob.missingDetails"), description: t("addJob.missingDetailsDesc"), variant: "destructive" });
+  const save = () => {
+    const errors = new Set<keyof JobDraft>();
+    if (!draft.company.trim()) errors.add("company");
+    if (!draft.role.trim()) errors.add("role");
+
+    if (errors.size > 0) {
+      setFieldErrors(errors);
       return;
     }
+
     const job: Job = {
       id: crypto.randomUUID(),
-      company: manual.company.trim(),
-      role: manual.role.trim(),
-      location: manual.location.trim(),
-      salary: manual.salary.trim(),
-      description: "",
+      company: draft.company.trim(),
+      role: draft.role.trim(),
+      location: draft.location.trim(),
+      salary: draft.salary.trim(),
+      description: draft.description.trim(),
       notes: "",
       status: "saved",
-      link: manual.link.trim(),
+      link: draft.link.trim(),
       dateAdded: new Date().toISOString().slice(0, 10),
     };
     addJob(job);
-    toast({ title: t("addJob.added"), description: `${job.company} — ${job.role}` });
+    onJobAdded?.(job);
     close();
   };
 
+  const field = (k: keyof JobDraft) => ({
+    value: draft[k],
+    onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      setDraft((d) => ({ ...d, [k]: e.target.value }));
+      if (fieldErrors.has(k) && e.target.value.trim()) {
+        setFieldErrors((prev) => { const n = new Set(prev); n.delete(k); return n; });
+      }
+    },
+    className: cn(
+      "input-base !bg-white transition-colors",
+      fieldErrors.has(k) && "!border-red-500 focus:!border-red-500"
+    ),
+  });
+
+  const ph = (k: keyof JobDraft, fallback: string) =>
+    aiMissed.has(k) && !draft[k] ? "Unknown" : fallback;
+
   return (
     <div
-      className="fixed inset-0 z-50 grid place-items-center bg-ink/30 px-4 animate-panel-in"
-      onClick={close}
+      ref={backdropRef}
+      className="fixed inset-0 z-50 grid place-items-center bg-ink/20 backdrop-blur-sm px-4"
+      onPointerDown={(e) => {
+        if (justFocused.current) { justFocused.current = false; return; }
+        pointerDownOnBackdrop.current = e.target === backdropRef.current;
+      }}
+      onPointerUp={(e) => {
+        if (pointerDownOnBackdrop.current && e.target === backdropRef.current) close();
+        pointerDownOnBackdrop.current = false;
+      }}
     >
-      <div
-        className="relative w-full max-w-[500px] bg-popover border border-line rounded-[28px] p-8"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="relative w-full max-w-[500px] glass-modal p-8">
         <button
           type="button"
           onClick={close}
-          aria-label={t("common.close")}
           className="absolute top-4 right-4 h-9 w-9 grid place-items-center rounded-full text-ink-muted hover:text-ink hover:bg-surface-2 transition-colors"
         >
           <X className="h-4 w-4" />
         </button>
 
-        {mode === "url" ? (
+        {/* ── INPUT ── */}
+        {stage === "input" && (
           <>
-            <h2 className="text-2xl font-semibold text-ink mb-6">{t("addJob.title")}</h2>
-            <label className="field-label" htmlFor="job-url">{t("addJob.urlLabel")}</label>
-            <input
-              id="job-url"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
+            <h2 className="text-[22px] font-semibold text-ink mb-1">
+              {fetchFailed ? t("addJob.fetchFailed") : t("addJob.title")}
+            </h2>
+            <p className="text-[13px] text-ink-muted mb-5">
+              {fetchFailed ? t("addJob.fetchFailedSubtitle") : t("addJob.subtitle")}
+            </p>
+
+            <textarea
+              autoFocus
+              rows={6}
+              value={input}
+              onChange={(e) => {
+                setInput(e.target.value);
+                if (inputError) setInputError(false);
+                if (fetchFailed) setFetchFailed(false);
+              }}
               placeholder={t("addJob.urlPlaceholder")}
-              className="input-base"
-              disabled={loading}
+              className={cn(
+                "w-full rounded-2xl border bg-surface px-4 py-3 text-[14px] text-ink resize-none focus:outline-none transition-colors placeholder:text-ink-muted",
+                inputError ? "border-red-400 focus:border-red-400" : "border-line focus:border-brand"
+              )}
             />
-            <p className="text-[12px] text-ink-muted mt-2">{t("addJob.urlHelp")}</p>
+
+            {inputError && (
+              <p className="text-[12px] text-red-500 mt-1.5">{t("addJob.emptyError")}</p>
+            )}
+
+            {!fetchFailed && (
+              <div className="flex gap-2 mt-3 p-3 rounded-xl bg-surface-2 border border-line">
+                <AlertCircle className="h-4 w-4 text-ink-muted shrink-0 mt-0.5" />
+                <p className="text-[12px] text-ink-muted leading-relaxed">
+                  {t("addJob.blockedNote")}
+                </p>
+              </div>
+            )}
+
             <div className="mt-6 flex gap-3">
               <button
                 type="button"
-                onClick={() => setMode("manual")}
-                disabled={loading}
-                className="flex-1 h-12 rounded-full border border-ink-2 text-ink text-[12px] font-bold uppercase tracking-[0.08em] transition-colors duration-200 ease-out hover:bg-surface-2 disabled:opacity-50"
+                onClick={goManual}
+                className="flex-1 h-12 rounded-full border border-line text-ink text-[12px] font-bold uppercase tracking-[0.08em] hover:bg-surface-2 transition-colors"
               >
                 {t("addJob.enterManually")}
               </button>
               <button
                 type="button"
-                onClick={fetchJob}
-                disabled={loading || !url.trim()}
-                className="flex-1 h-12 rounded-full bg-ink text-white text-[12px] font-bold uppercase tracking-[0.08em] transition-colors duration-200 ease-out hover:bg-brand active:bg-brand inline-flex items-center justify-center gap-2 disabled:opacity-60 disabled:hover:bg-ink"
+                onClick={analyse}
+                className="flex-1 h-12 rounded-full bg-ink text-white text-[12px] font-bold uppercase tracking-[0.08em] hover:bg-brand transition-colors inline-flex items-center justify-center gap-2"
               >
-                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-                {loading ? t("addJob.fetching") : t("addJob.fetchJob")}
+                <Plus className="h-4 w-4" />
+                {t("addJob.analyse")}
               </button>
             </div>
           </>
-        ) : (
-          <>
-            <h2 className="text-2xl font-semibold text-ink mb-6">{t("addJob.manualTitle")}</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="field-label" htmlFor="m-company">{t("addJob.company")}</label>
-                <input id="m-company" value={manual.company} onChange={(e) => setManual({ ...manual, company: e.target.value })} className="input-base" />
-              </div>
-              <div>
-                <label className="field-label" htmlFor="m-role">{t("addJob.role")}</label>
-                <input id="m-role" value={manual.role} onChange={(e) => setManual({ ...manual, role: e.target.value })} className="input-base" />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="field-label" htmlFor="m-location">{t("addJob.location")}</label>
-                  <input id="m-location" value={manual.location} onChange={(e) => setManual({ ...manual, location: e.target.value })} className="input-base" />
-                </div>
-                <div>
-                  <label className="field-label" htmlFor="m-salary">{t("addJob.salary")}</label>
-                  <input id="m-salary" value={manual.salary} onChange={(e) => setManual({ ...manual, salary: e.target.value })} className="input-base" />
-                </div>
-              </div>
-              <div>
-                <label className="field-label" htmlFor="m-link">{t("addJob.linkOptional")}</label>
-                <input id="m-link" value={manual.link} onChange={(e) => setManual({ ...manual, link: e.target.value })} className="input-base" placeholder="https://..." />
-              </div>
+        )}
+
+        {/* ── LOADING ── */}
+        {stage === "loading" && (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <div className="h-14 w-14 rounded-2xl bg-surface-2 grid place-items-center mb-6">
+              <Loader2 className="h-6 w-6 text-brand animate-spin" />
             </div>
+            <h2 className="text-[18px] font-semibold text-ink mb-1">{t("addJob.analysing")}</h2>
+            <p className="text-[13px] text-ink-muted">{t("addJob.analysingDesc")}</p>
+          </div>
+        )}
+
+        {/* ── REVIEW ── */}
+        {stage === "review" && (
+          <>
+            <h2 className="text-[22px] font-semibold text-ink mb-1">{t("addJob.reviewTitle")}</h2>
+            <p className="text-[13px] text-ink-muted mb-5">
+              {aiMissed.size > 0 ? t("addJob.reviewSomeMissed") : t("addJob.reviewAllGood")}
+            </p>
+
+            <div className="space-y-3">
+              <FieldRow label={t("addJob.company")} required error={fieldErrors.has("company")}>
+                <input placeholder={ph("company", "e.g. Acme GmbH")} {...field("company")} />
+                {fieldErrors.has("company") && (
+                  <p className="text-[11px] text-red-500 mt-1">{t("addJob.fieldRequired")}</p>
+                )}
+              </FieldRow>
+
+              <FieldRow label={t("addJob.role")} required error={fieldErrors.has("role")}>
+                <input placeholder={ph("role", "e.g. Product Designer")} {...field("role")} />
+                {fieldErrors.has("role") && (
+                  <p className="text-[11px] text-red-500 mt-1">{t("addJob.fieldRequired")}</p>
+                )}
+              </FieldRow>
+
+              <div className="grid grid-cols-2 gap-3">
+                <FieldRow label={t("addJob.location")}>
+                  <input placeholder={ph("location", "Berlin / Remote")} {...field("location")} />
+                </FieldRow>
+                <FieldRow label={t("addJob.salary")}>
+                  <input placeholder={ph("salary", "€60k–80k")} {...field("salary")} />
+                </FieldRow>
+              </div>
+
+              <FieldRow label={t("addJob.link")}>
+                <input placeholder={ph("link", "https://…")} {...field("link")} />
+              </FieldRow>
+            </div>
+
             <div className="mt-6 flex gap-3">
               <button
                 type="button"
-                onClick={() => setMode("url")}
-                className="flex-1 h-12 rounded-full border border-ink-2 text-ink text-[12px] font-bold uppercase tracking-[0.08em] transition-colors duration-200 ease-out hover:bg-surface-2"
+                onClick={() => setStage("input")}
+                className="flex-1 h-12 rounded-full border border-line text-ink text-[12px] font-bold uppercase tracking-[0.08em] hover:bg-surface-2 transition-colors"
               >
-                {t("common.back")}
+                {t("addJob.back")}
               </button>
               <button
                 type="button"
-                onClick={saveManual}
-                disabled={!manual.company.trim() || !manual.role.trim()}
-                className="flex-1 h-12 rounded-full bg-ink text-white text-[12px] font-bold uppercase tracking-[0.08em] transition-colors duration-200 ease-out hover:bg-brand active:bg-brand inline-flex items-center justify-center gap-2 disabled:opacity-60 disabled:hover:bg-ink"
+                onClick={save}
+                className="flex-1 h-12 rounded-full bg-ink text-white text-[12px] font-bold uppercase tracking-[0.08em] hover:bg-brand transition-colors inline-flex items-center justify-center gap-2"
               >
                 <Plus className="h-4 w-4" />
                 {t("addJob.addJob")}
@@ -197,6 +336,25 @@ export function AddJobModal({ open, onClose }: AddJobModalProps) {
           </>
         )}
       </div>
+    </div>
+  );
+}
+
+function FieldRow({
+  label, required, error, children,
+}: {
+  label: string;
+  required?: boolean;
+  error?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <div className="flex items-center gap-1 mb-1">
+        <label className={cn("field-label !mb-0", error && "text-red-500")}>{label}</label>
+        {required && <span className="text-[13px] font-semibold text-brand leading-none -mt-0.5">*</span>}
+      </div>
+      {children}
     </div>
   );
 }
