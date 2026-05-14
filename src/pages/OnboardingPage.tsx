@@ -123,22 +123,22 @@ export default function OnboardingPage() {
       </div>
 
       {/* ── Right panel — frosted, scrollable ── */}
-      <div className="relative flex flex-col min-h-screen lg:h-screen lg:overflow-y-auto overflow-hidden bg-white/60 backdrop-blur-xl">
+      <div className="relative flex flex-col min-h-screen lg:h-screen bg-white/60 backdrop-blur-xl">
 
-        {/* Top bar */}
-        <div className="relative z-10 flex items-center justify-between px-10 py-5 border-b border-line lg:border-none">
-          <div className="lg:hidden flex items-center gap-2">
+        {/* Top bar — sticky */}
+        <div className="sticky top-0 z-20 flex items-center justify-between px-6 sm:px-10 h-14 border-b border-white/30 bg-white/60 backdrop-blur-xl shrink-0">
+          <div className="flex items-center gap-2">
             <img src={logo} alt="Tracka" className="h-7 w-7" />
             <span className="logo-wordmark text-[20px] leading-none text-ink">tracka</span>
           </div>
           {step !== "parsing" && (
-            <button onClick={skip} className="ml-auto text-[13px] text-ink-muted hover:text-ink hover:underline underline-offset-2 transition-colors">
+            <button onClick={skip} className="text-[13px] text-ink-muted hover:text-ink hover:underline underline-offset-2 transition-colors">
               {t("onboarding.skip")}
             </button>
           )}
         </div>
 
-        <div className="relative z-10 flex-1 flex items-center justify-center px-10 py-10">
+        <div className="relative z-10 flex-1 overflow-y-auto flex items-center justify-center px-6 sm:px-10 py-10">
           <div className="w-full max-w-lg">
 
             {/* ── UPLOAD ── */}

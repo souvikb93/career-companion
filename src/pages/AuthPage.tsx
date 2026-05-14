@@ -214,17 +214,24 @@ export default function AuthPage() {
         </div>
 
         {/* ── Right — card centred, language toggle absolutely pinned ── */}
-        <div className="relative flex items-center justify-center px-8 overflow-hidden bg-white/30 backdrop-blur-md">
-          <div className="absolute top-12 right-12 z-10">
+        <div className="relative flex flex-col bg-white/30 backdrop-blur-md overflow-hidden">
+          {/* Mobile top bar */}
+          <div className="lg:hidden sticky top-0 z-10 flex items-center justify-between px-6 h-14 bg-white/50 backdrop-blur-md border-b border-white/30 shrink-0">
+            <div className="flex items-center gap-2">
+              <img src={logo} alt="Tracka" className="h-7 w-7" />
+              <span className="logo-wordmark text-[20px] leading-none text-ink">tracka</span>
+            </div>
             <LanguageToggle />
           </div>
 
-          <div className="w-full max-w-[400px] glass-modal p-8">
-            {/* Logo — mobile only */}
-            <div className="lg:hidden flex items-center justify-center gap-2 mb-8">
-              <img src={logo} alt="Tracka" className="h-8 w-8" />
-              <span className="logo-wordmark text-[22px] leading-none text-ink">tracka</span>
-            </div>
+          {/* Desktop language toggle */}
+          <div className="hidden lg:block absolute top-12 right-12 z-10">
+            <LanguageToggle />
+          </div>
+
+          {/* Card — centred in remaining space */}
+          <div className="flex-1 flex items-center justify-center px-6 sm:px-8 py-10 lg:py-0 min-h-[calc(100vh-56px)] lg:min-h-screen">
+          <div className="w-full max-w-[400px] glass-modal p-6 sm:p-8">
 
             {step === "email" ? (
               <>
@@ -315,6 +322,7 @@ export default function AuthPage() {
                 </button>
               </div>
             )}
+          </div>
           </div>
         </div>
       </div>
