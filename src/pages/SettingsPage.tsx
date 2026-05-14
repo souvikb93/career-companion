@@ -225,14 +225,25 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="w-full px-10 py-8">
+    <div className="w-full p-4 sm:p-8">
       <h1 className="display-2 mb-10">{t("settings.title")}</h1>
 
       <div className="max-w-2xl space-y-5">
 
         <Section title={t("settings.appearance")}>
           <Row label={t("settings.theme")} description={t("settings.themeDesc")}>
-            <div className="flex items-center rounded-2xl border border-line bg-surface-2 p-1 gap-0.5">
+            {/* Mobile: dropdown */}
+            <select
+              value={theme}
+              onChange={(e) => handleThemeChange(e.target.value as Theme)}
+              className="sm:hidden h-10 w-full rounded-xl border border-line bg-white px-3 text-[14px] text-ink outline-none focus:border-brand transition-colors"
+            >
+              {themes.map(({ value, label }) => (
+                <option key={value} value={value}>{label}</option>
+              ))}
+            </select>
+            {/* Desktop: toggle */}
+            <div className="hidden sm:flex items-center rounded-2xl border border-line bg-surface-2 p-1 gap-0.5">
               {themes.map(({ value, label, icon: Icon }) => (
                 <button
                   key={value}

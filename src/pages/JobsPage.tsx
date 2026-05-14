@@ -32,7 +32,7 @@ function formatDate(iso: string, locale: string) {
 }
 
 export default function JobsPage() {
-  const { jobs, updateJob } = useJobs();
+  const { jobs, updateJob, removeJob } = useJobs();
   const { t, lang } = useT();
   const dateLocale = lang === "de" ? "de-DE" : "en-US";
   const [view, setView] = useState<PipelineView>("all");
@@ -83,7 +83,7 @@ export default function JobsPage() {
       <main className="relative w-full min-w-0 p-4 sm:p-8">
         {/* Single toolbar row: pipeline view chips + search + add */}
         <div className="flex flex-wrap items-center gap-3 mb-6">
-          <div className="flex flex-wrap items-center gap-2 flex-1 min-w-0">
+          <div className="flex flex-nowrap lg:flex-wrap items-center gap-2 flex-1 min-w-0 overflow-x-auto scrollbar-hide">
             {PIPELINE_VIEWS.map((v) => {
               const active = view === v.id;
               return (
@@ -92,7 +92,7 @@ export default function JobsPage() {
                   type="button"
                   onClick={() => setView(v.id)}
                   className={cn(
-                    "h-10 px-4 rounded-full border text-[13px] font-medium inline-flex items-center gap-2 transition-all duration-180 backdrop-blur-md",
+                    "h-10 px-4 rounded-full border text-[13px] font-medium inline-flex items-center gap-2 transition-all duration-180 backdrop-blur-md shrink-0",
                     active
                       ? "border-brand text-brand bg-white/40"
                       : "border-white/40 text-ink bg-white/30 hover:bg-white/50",
@@ -135,7 +135,7 @@ export default function JobsPage() {
           )}
 
           {filtered.length === 0 ? (
-            <EmptyState onAdd={() => setAddOpen(true)} />
+            <EmptyState totalJobs={jobs.length} onAdd={() => setAddOpen(true)} />
           ) : (
             <ul className="divide-y divide-white/40">
               {filtered.map((job) => (
@@ -191,25 +191,30 @@ export default function JobsPage() {
         job={selected}
         onClose={() => setSelectedId(null)}
         onUpdate={updateJob}
+        onDelete={(id) => { removeJob(id); setSelectedId(null); }}
       />
       <AddJobModal open={addOpen} onClose={() => setAddOpen(false)} onJobAdded={handleJobAdded} />
     </div>
   );
 }
 
-function EmptyState({ onAdd }: { onAdd: () => void }) {
+function EmptyState({ totalJobs, onAdd }: { totalJobs: number; onAdd: () => void }) {
   const { t } = useT();
+  const isFirstTime = totalJobs === 0;
+
   return (
     <div className="py-24 px-6 text-center">
       <h2 className="text-[56px] sm:text-[64px] leading-[1.02] font-semibold text-ink tracking-tight">
-        {t("tracker.emptyTitle")}
+        {isFirstTime ? t("tracker.emptyTitle") : t("tracker.stageEmptyTitle")}
       </h2>
       <p className="text-[16px] text-ink-muted mt-4 max-w-md mx-auto">
-        {t("tracker.emptyBody")}
+        {isFirstTime ? t("tracker.emptyBody") : t("tracker.stageEmptyBody")}
       </p>
-      <button type="button" onClick={onAdd} className="btn-primary mt-8 h-12 px-6">
-        <Plus className="h-4 w-4" /> {t("tracker.emptyCta")}
-      </button>
+      {isFirstTime && (
+        <button type="button" onClick={onAdd} className="btn-primary mt-8 h-12 px-6">
+          <Plus className="h-4 w-4" /> {t("tracker.emptyCta")}
+        </button>
+      )}
     </div>
   );
 }

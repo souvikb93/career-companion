@@ -100,11 +100,13 @@ export default function OnboardingPage() {
     navigate("/", { replace: true });
   };
 
+  const secondaryBtnClass = "w-full h-12 rounded-xl border border-line bg-white hover:bg-surface transition-colors flex items-center justify-center gap-2 text-[14px] font-medium text-ink";
+
   return (
     <div className="relative min-h-screen lg:h-screen lg:overflow-hidden grid lg:grid-cols-2">
       <BackgroundGradientAnimation containerClassName="absolute inset-0" interactive={false} />
 
-      {/* ── Left panel — characters centred, logo + quote absolutely pinned ── */}
+      {/* ── Left panel — characters centred, logo + quote absolutely pinned (desktop) ── */}
       <div className="relative hidden lg:flex items-center justify-center p-12 overflow-hidden">
         <div className="absolute top-12 left-12 z-10 flex items-center gap-2">
           <img src={logo} alt="Tracka" className="h-9 w-9" />
@@ -122,11 +124,83 @@ export default function OnboardingPage() {
         </div>
       </div>
 
-      {/* ── Right panel — frosted, scrollable ── */}
-      <div className="relative flex flex-col min-h-screen lg:h-screen bg-white/60 backdrop-blur-xl">
+      {/* ── MOBILE upload step ── */}
+      {step === "upload" && (
+        <div className="relative flex flex-col min-h-screen lg:hidden">
+          {/* Top bar */}
+          <div className="sticky top-0 z-20 flex items-center justify-between px-6 h-14 border-b border-white/30 bg-white/50 backdrop-blur-md shrink-0">
+            <div className="flex items-center gap-2">
+              <img src={logo} alt="Tracka" className="h-7 w-7" />
+              <span className="logo-wordmark text-[20px] leading-none text-ink">tracka</span>
+            </div>
+            <button onClick={skip} className="text-[13px] text-ink-muted hover:text-ink hover:underline underline-offset-2 transition-colors">
+              {t("onboarding.skip")}
+            </button>
+          </div>
 
-        {/* Top bar — sticky */}
-        <div className="sticky top-0 z-20 flex items-center justify-between px-6 sm:px-10 h-14 border-b border-white/30 bg-white/60 backdrop-blur-xl shrink-0">
+          {/* Form — takes only natural height */}
+          <div className="shrink-0 px-8 pt-10 pb-4">
+            <div className="mb-8">
+              <h1 className="text-[32px] font-semibold text-ink tracking-tight leading-[1.1]">{t("onboarding.setupTitle")}</h1>
+              <p className="text-[15px] text-ink-muted mt-2 leading-relaxed">{t("onboarding.setupSubtitle")}</p>
+            </div>
+
+            <div
+              onClick={() => fileRef.current?.click()}
+              className="border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all duration-200 border-line active:border-brand active:bg-brand/5"
+            >
+              <div className="h-14 w-14 rounded-2xl grid place-items-center bg-surface-2">
+                <Upload className="h-6 w-6 text-ink-muted" />
+              </div>
+              <div className="text-center">
+                <p className="text-[15px] font-semibold text-ink">{t("onboarding.uploadCv")}</p>
+                <p className="text-[13px] text-ink-muted mt-1">{t("onboarding.browseHintMobile")}</p>
+              </div>
+            </div>
+
+            <input
+              ref={fileRef}
+              type="file"
+              accept=".pdf,.docx,.doc"
+              className="hidden"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
+            />
+
+            <div className="flex items-center gap-3 my-7">
+              <div className="flex-1 h-px bg-line/60" />
+              <span className="text-[12px] text-ink-muted">{t("onboarding.or")}</span>
+              <div className="flex-1 h-px bg-line/60" />
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setStep("manual-1")}
+              className={secondaryBtnClass}
+            >
+              <PenLine className="h-4 w-4 text-ink-muted" />
+              {t("onboarding.fillManually")}
+            </button>
+          </div>
+
+          {/* Illustration — fills remaining space, centered */}
+          <div className="flex-1 flex items-center justify-center overflow-hidden">
+            <div style={{ width: 288, height: 204, overflow: "hidden" }}>
+              <div style={{ transform: "scale(0.6) translateX(38px)", transformOrigin: "top left" }}>
+                <AuthCharacters idleMode />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Right panel — frosted, scrollable (desktop always, mobile for non-upload steps) ── */}
+      <div className={cn(
+        "relative flex flex-col min-h-screen lg:h-screen bg-white/60 backdrop-blur-xl",
+        step === "upload" ? "hidden lg:flex" : "flex"
+      )}>
+
+        {/* Top bar — mobile only (desktop has logo on left panel) */}
+        <div className="sticky top-0 z-20 flex items-center justify-between px-6 sm:px-10 h-14 border-b border-white/30 bg-white/60 backdrop-blur-xl shrink-0 lg:hidden">
           <div className="flex items-center gap-2">
             <img src={logo} alt="Tracka" className="h-7 w-7" />
             <span className="logo-wordmark text-[20px] leading-none text-ink">tracka</span>
@@ -137,11 +211,22 @@ export default function OnboardingPage() {
             </button>
           )}
         </div>
+        {/* Desktop skip — just the link, top-right of right panel */}
+        {step !== "parsing" && (
+          <div className="hidden lg:flex justify-end px-10 pt-6 shrink-0">
+            <button onClick={skip} className="text-[13px] text-ink-muted hover:text-ink hover:underline underline-offset-2 transition-colors">
+              {t("onboarding.skip")}
+            </button>
+          </div>
+        )}
 
-        <div className="relative z-10 flex-1 overflow-y-auto flex items-center justify-center px-6 sm:px-10 py-10">
+        <div className={cn(
+          "relative z-10 flex-1 overflow-y-auto flex justify-center px-6 sm:px-10 py-10",
+          step === "review" ? "items-start" : "items-center"
+        )}>
           <div className="w-full max-w-lg">
 
-            {/* ── UPLOAD ── */}
+            {/* ── UPLOAD (desktop only) ── */}
             {step === "upload" && (
               <div>
                 <h1 className="text-[30px] font-semibold text-ink mb-1">{t("onboarding.setupTitle")}</h1>
@@ -186,11 +271,10 @@ export default function OnboardingPage() {
                 <button
                   type="button"
                   onClick={() => setStep("manual-1")}
-                  className="mt-6 w-full h-12 rounded-xl border border-line hover:border-brand hover:bg-surface transition-colors flex items-center justify-center gap-2 text-[14px] font-medium text-ink"
+                  className={cn(secondaryBtnClass, "mt-6")}
                 >
                   <PenLine className="h-4 w-4 text-ink-muted" />
                   {t("onboarding.fillManually")}
-                  <ArrowRight className="h-4 w-4 text-ink-muted" />
                 </button>
               </div>
             )}
@@ -497,9 +581,9 @@ function ReviewSection({ title, children, onEdit }: { title: string; children: R
 function ReviewRow({ label, value }: { label: string; value: string }) {
   if (!value) return null;
   return (
-    <div>
+    <div className="min-w-0">
       <span className="text-ink-muted">{label}: </span>
-      <span className="text-ink">{value}</span>
+      <span className="text-ink break-all line-clamp-1">{value}</span>
     </div>
   );
 }

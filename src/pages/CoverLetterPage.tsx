@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { Send, Loader2, Save, FolderOpen } from "lucide-react";
+import { Send, Loader2, Save, FolderOpen, Pencil, Check, FilePlus, X } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { MobileActionsMenu } from "@/components/MobileActionsMenu";
+import { SegmentedControl } from "@/components/SegmentedControl";
 import { useJobs } from "@/lib/jobs-store";
 import { ZoomControls } from "@/components/ZoomControls";
 import { ExportMenu } from "@/components/ExportMenu";
@@ -109,11 +112,21 @@ export default function CoverLetterPage() {
   useEffect(() => { saveToStorage(LETTER_DRAFT_KEY, letter); }, [letter]);
   useEffect(() => { saveToStorage(LETTER_MSGS_KEY, messages); }, [messages]);
 
-  const [zoom, setZoom] = useState(0.6);
+  const [zoom, setZoom] = useState<number>(() =>
+    typeof window !== "undefined" && window.innerWidth < 1024
+      ? Math.max(0.35, (window.innerWidth - 40) / 794)
+      : 0.6
+  );
   const [hoverPreview, setHoverPreview] = useState(false);
+  const [letterEditing, setLetterEditing] = useState(false);
+
+  const patchLetter = (patch: Partial<LetterContent>) =>
+    setLetter((prev) => prev ? { ...prev, ...patch } : prev);
+  const [mobileTab, setMobileTab] = useState<"chat" | "preview">("chat");
   const [savedOpen, setSavedOpen] = useState(false);
   const [saveOpen, setSaveOpen] = useState(false);
   const [newLetterId, setNewLetterId] = useState<string | undefined>(undefined);
+  const [showNewModal, setShowNewModal] = useState(false);
   const [layout, setLayoutState] = useState<LayoutVariant>(() => loadLayout("letter_layout"));
   const setLayout = (v: LayoutVariant) => {
     setLayoutState(v);
@@ -124,6 +137,7 @@ export default function CoverLetterPage() {
   const [genPhase, setGenPhase] = useState<GenPhase>("idle");
 
   const scrollRef = useRef<HTMLDivElement>(null);
+  const desktopScrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const introTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const didMount = useRef(false);
@@ -182,6 +196,7 @@ export default function CoverLetterPage() {
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+    desktopScrollRef.current?.scrollTo({ top: desktopScrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, introPhase, generating]);
 
   const adjustTextareaHeight = () => {
@@ -198,6 +213,23 @@ export default function CoverLetterPage() {
   const handleExport = (format: ExportFormat) => {
     const filename = targetJob ? `cover-letter-${targetJob.company}` : "cover-letter";
     exportAs(format, "Cover Letter", letter ? letterContentToText(letter) : "", filename);
+  };
+
+  const hasLetterContent = () => letter !== null || messages.length > 0;
+
+  const handleNew = () => {
+    if (!hasLetterContent()) return;
+    setShowNewModal(true);
+  };
+
+  const doReset = () => {
+    setLetter(null);
+    setMessages([]);
+    try {
+      window.localStorage.removeItem(LETTER_DRAFT_KEY);
+      window.localStorage.removeItem(LETTER_MSGS_KEY);
+    } catch { /* ignore */ }
+    setShowNewModal(false);
   };
 
   const send = async (overrideText?: string) => {
@@ -296,8 +328,148 @@ export default function CoverLetterPage() {
   };
 
   return (
-    <div className="w-full">
-      <div className="px-8 py-5 flex items-center justify-between border-b border-white/50 flex-wrap gap-3 bg-white/30 backdrop-blur-md">
+    <>
+    <div className="w-full flex flex-col h-[calc(100dvh-64px)] lg:h-auto lg:block">
+      {/* Mobile header */}
+      <div className="lg:hidden shrink-0 px-4 py-4 flex items-center justify-between border-b border-white/50 bg-white/30 backdrop-blur-md">
+        <div className="min-w-0 flex-1">
+          <h1 className="heading-1">{t("letter.pageTitle")}</h1>
+          {targetJob && (
+            <p className="text-[13px] text-ink-muted mt-0.5 truncate">{targetJob.company} — {targetJob.role}</p>
+          )}
+        </div>
+        <MobileActionsMenu
+          onNew={handleNew}
+          onSave={() => setSaveOpen(true)}
+          layout={layout}
+          onLayoutChange={setLayout}
+          onExport={handleExport}
+          onLibrary={() => setSavedOpen(true)}
+        />
+      </div>
+
+      {/* Mobile segmented control */}
+      <div className="lg:hidden shrink-0 px-4 py-3 bg-white/30 backdrop-blur-md border-b border-white/50">
+        <SegmentedControl
+          options={[
+            { value: "chat", label: t("letter.tabChat") },
+            { value: "preview", label: t("letter.tabPreview") },
+          ]}
+          value={mobileTab}
+          onChange={setMobileTab}
+        />
+      </div>
+
+      {/* ── Mobile content area — full remaining height, keyboard-aware ── */}
+      <div className="lg:hidden flex-1 min-h-0">
+        {/* Chat tab */}
+        {mobileTab === "chat" && (
+          <div className="h-full flex flex-col bg-white/20 backdrop-blur-md">
+            <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 pt-4 pb-2 space-y-5">
+              {introPhase === "typing1" && <TypingIndicator />}
+              {(introPhase === "msg1" || introPhase === "typing2" || introPhase === "msg2") && (
+                <div className={`flex justify-start ${introPhase === "msg1" ? "animate-msg-in" : ""}`}>
+                  <div className="max-w-[80%] rounded-2xl px-4 py-3 text-[14px] bg-surface-2 text-ink">{t("letter.greetingMsg1")}</div>
+                </div>
+              )}
+              {introPhase === "typing2" && <TypingIndicator />}
+              {introPhase === "msg2" && (
+                <div className="flex justify-start animate-msg-in">
+                  <div className="max-w-[80%] rounded-2xl px-4 py-3 text-[14px] bg-surface-2 text-ink">{t("letter.greetingMsg2")}</div>
+                </div>
+              )}
+              {(() => {
+                const lastChipIdx = messages.reduce((acc, m, i) => m.chips?.length ? i : acc, -1);
+                return messages.map((m, i) => (
+                  <div key={i} className={m.role === "user" ? "flex justify-end" : "flex justify-start"}>
+                    <div className={m.role === "user" ? "max-w-[80%] rounded-2xl px-4 py-3 text-[14px] bg-brand text-primary-foreground" : "max-w-[80%] rounded-2xl px-4 py-3 text-[14px] bg-surface-2 text-ink"}>
+                      {m.content.split("\n").map((line, li) => <span key={li}>{li > 0 && <br />}{line}</span>)}
+                      {m.chips && i === lastChipIdx && genPhase !== "idle" && !generating && (
+                        <div className="flex flex-wrap gap-2 mt-3">
+                          {m.chips.map((chip) => (
+                            <button key={chip} type="button" onClick={() => send(chip)} className="h-8 px-3 rounded-full border border-ink/20 bg-white/60 text-[13px] text-ink hover:bg-white hover:border-ink/40 transition-colors">{chip}</button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ));
+              })()}
+              {generating && <TypingIndicator />}
+            </div>
+            {/* Sticky input — stays above keyboard when it opens */}
+            <div className="shrink-0 px-4 pt-3 border-t border-line pb-safe">
+              <div className="flex gap-2 items-end">
+                <textarea
+                  ref={textareaRef}
+                  value={draft}
+                  onChange={(e) => { setDraft(e.target.value); adjustTextareaHeight(); }}
+                  onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
+                  placeholder={letter ? t("letter.askChange") : t("letter.inputPlaceholder")}
+                  rows={1}
+                  disabled={generating}
+                  className="chat-input flex-1"
+                  style={{ touchAction: "manipulation" }}
+                />
+                <button type="button" onClick={send} disabled={generating || !draft.trim()} aria-label={t("common.send")} className="h-11 w-11 shrink-0 rounded-full bg-ink text-white grid place-items-center transition-colors duration-200 ease-out hover:bg-brand active:bg-brand disabled:opacity-40 disabled:cursor-not-allowed">
+                  {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Preview tab */}
+        {mobileTab === "preview" && (
+          <div className="h-full overflow-y-auto overscroll-contain flex justify-center px-4 pt-6 pb-8 bg-white/10">
+            <div style={{ width: `${794 * zoom}px`, height: `${1123 * zoom}px` }}>
+              <article
+                className={"bg-white text-ink font-sans shadow-xl origin-top-left relative overflow-hidden " + (layout === "compact" ? "letter-page-compact" : "letter-page")}
+                style={{ width: "794px", minHeight: "1123px", transform: `scale(${zoom})` }}
+              >
+                {layout === "modern" && <div className="absolute left-0 top-0 bottom-0 w-3 bg-brand" />}
+                <div style={{ paddingLeft: layout === "modern" ? "20px" : undefined }}>
+                  {letter === null ? (
+                    <>
+                      <div className="letter-head-row"><div className="letter-recipient"><div className="letter-recipient-name">{t("letter.ph_companyName")}</div><div className="letter-meta">{t("letter.ph_companyStreet")}</div><div className="letter-meta">{t("letter.ph_companyCity")}</div></div><div className="letter-sender-block"><div className="letter-sender-name">{t("letter.ph_yourName")}</div><div className="letter-meta">{t("letter.ph_yourEmail")}</div><div className="letter-meta">{t("letter.ph_yourPhone")}</div><div className="letter-meta">{t("letter.ph_yourCity")}</div></div></div>
+                      <div className="letter-date">{t("letter.ph_date")}</div>
+                      <div className="letter-subject">{t("letter.ph_subject")}</div>
+                      <div className="letter-salutation">{t("letter.ph_dear")}</div>
+                      <p className="letter-body">{LOREM}</p><p className="letter-body">{LOREM}</p><p className="letter-body">{LOREM}</p>
+                      <div className="letter-signoff">{t("letter.ph_sincerely")}</div>
+                      <div className="letter-signature">{t("letter.ph_yourName")}</div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="letter-head-row">
+                        <div className="letter-recipient">
+                          {letter.companyName && <div className="letter-recipient-name">{letter.companyName}</div>}
+                          {letter.companyAddress.filter(Boolean).map((line, i) => <div key={i} className="letter-meta">{line}</div>)}
+                        </div>
+                        <div className="letter-sender-block">
+                          {letter.senderName && <div className="letter-sender-name">{letter.senderName}</div>}
+                          {letter.senderEmail && <div className="letter-meta">{letter.senderEmail}</div>}
+                          {letter.senderPhone && <div className="letter-meta">{letter.senderPhone}</div>}
+                          {letter.senderAddress.filter(Boolean).map((line, i) => <div key={i} className="letter-meta">{line}</div>)}
+                        </div>
+                      </div>
+                      {letter.date && <div className="letter-date">{letter.date}</div>}
+                      {letter.subject && <div className="letter-subject">{letter.subject}</div>}
+                      {letter.salutation && <div className="letter-salutation">{letter.salutation}</div>}
+                      {letter.body.filter(Boolean).map((p, i) => <p key={i} className="letter-body">{p}</p>)}
+                      {letter.signoff && <div className="letter-signoff">{letter.signoff}</div>}
+                      {letter.senderName && <div className="letter-signature">{letter.senderName}</div>}
+                    </>
+                  )}
+                </div>
+              </article>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Desktop header */}
+      <div className="hidden lg:flex px-8 py-5 items-center justify-between border-b border-white/50 flex-wrap gap-3 bg-white/30 backdrop-blur-md">
         <div>
           <h1 className="heading-1">{t("letter.pageTitle")}</h1>
           {targetJob && (
@@ -305,6 +477,9 @@ export default function CoverLetterPage() {
           )}
         </div>
         <div className="flex items-center gap-3">
+          <button type="button" onClick={handleNew} className="btn-ghost">
+            <FilePlus className="h-4 w-4" /> {t("common.newDoc")}
+          </button>
           <button type="button" onClick={() => setSaveOpen(true)} className="btn-ghost">
             <Save className="h-4 w-4" /> {t("common.save")}
           </button>
@@ -365,15 +540,12 @@ export default function CoverLetterPage() {
         }}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2" style={{ minHeight: "calc(100vh - 64px - 81px)" }}>
+      <div className="hidden lg:grid lg:grid-cols-2 lg:min-h-[calc(100vh-64px-81px)]">
 
         {/* ── Chat panel ─────────────────────────────────── */}
-        <section
-          className="border-r border-white/50 flex flex-col bg-white/20 backdrop-blur-md"
-          style={{ maxHeight: "calc(100vh - 64px - 81px)" }}
-        >
+        <section className="border-r border-white/50 flex flex-col bg-white/20 backdrop-blur-md lg:max-h-[calc(100vh-64px-81px)]">
           {/* Messages */}
-          <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 pt-6 pb-4 space-y-5">
+          <div ref={desktopScrollRef} className="flex-1 overflow-y-auto px-6 pt-6 pb-4 space-y-5">
 
             {/* Greeting intro sequence — always from t(), never stored */}
             {introPhase === "typing1" && <TypingIndicator />}
@@ -467,19 +639,57 @@ export default function CoverLetterPage() {
 
         {/* ── Preview panel ───────────────────────────────── */}
         <div
-          className="relative"
-          style={{ maxHeight: "calc(100vh - 64px - 81px)" }}
+          className="relative lg:max-h-[calc(100vh-64px-81px)]"
           onMouseEnter={() => setHoverPreview(true)}
           onMouseLeave={() => setHoverPreview(false)}
         >
+          {/* Edit affordance badge */}
+          {letter && (
+            <button
+              type="button"
+              onClick={() => (document.activeElement as HTMLElement)?.blur()}
+              className={cn(
+                "absolute top-5 right-6 z-10 flex items-center gap-1.5 h-7 px-3 rounded-full text-[12px] font-medium transition-all duration-200 cursor-default",
+                letterEditing
+                  ? "bg-brand text-white opacity-100 cursor-pointer"
+                  : hoverPreview
+                    ? "bg-white/80 backdrop-blur-sm border border-white/50 text-ink-muted opacity-100"
+                    : "opacity-0 pointer-events-none",
+              )}
+            >
+              {letterEditing
+                ? <><Check className="h-3 w-3" /> Done</>
+                : <><Pencil className="h-3 w-3" /> Edit</>
+              }
+            </button>
+          )}
+
           <section
-            className="bg-transparent px-6 pt-6 pb-24 overflow-auto h-full flex justify-center"
-            style={{ maxHeight: "calc(100vh - 64px - 81px)" }}
+            className="bg-transparent px-6 pt-6 pb-24 overflow-auto h-full flex justify-center lg:max-h-[calc(100vh-64px-81px)]"
           >
-            <div style={{ width: `${794 * zoom}px`, height: `${1123 * zoom}px` }}>
+            <div
+              className={cn(
+                "transition-[box-shadow] duration-200 rounded-sm",
+                letterEditing
+                  ? "shadow-[0_0_0_2px_hsl(var(--brand)/0.5)]"
+                  : hoverPreview && letter
+                    ? "shadow-[0_0_0_1px_hsl(var(--brand)/0.25)]"
+                    : "",
+              )}
+              style={{ width: `${794 * zoom}px`, height: `${1123 * zoom}px` }}
+            >
               <article
-                className={"bg-white text-ink font-sans shadow-2xl origin-top-left relative overflow-hidden " + (layout === "compact" ? "letter-page-compact" : "letter-page")}
+                className={cn(
+                  "bg-white text-ink font-sans shadow-2xl origin-top-left relative overflow-hidden outline-none",
+                  layout === "compact" ? "letter-page-compact" : "letter-page",
+                )}
                 style={{ width: "794px", minHeight: "1123px", transform: `scale(${zoom})` }}
+                onFocus={() => letter && setLetterEditing(true)}
+                onBlur={(e) => {
+                  if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                    setLetterEditing(false);
+                  }
+                }}
               >
                 {layout === "modern" && (
                   <div className="absolute left-0 top-0 bottom-0 w-3 bg-brand" />
@@ -493,7 +703,6 @@ export default function CoverLetterPage() {
                           <div className="letter-meta">{t("letter.ph_companyStreet")}</div>
                           <div className="letter-meta">{t("letter.ph_companyCity")}</div>
                         </div>
-                        {/* Placeholder sender: Name → Email → Phone → City */}
                         <div className="letter-sender-block">
                           <div className="letter-sender-name">{t("letter.ph_yourName")}</div>
                           <div className="letter-meta">{t("letter.ph_yourEmail")}</div>
@@ -514,29 +723,109 @@ export default function CoverLetterPage() {
                     <>
                       <div className="letter-head-row">
                         <div className="letter-recipient">
-                          {letter.companyName && <div className="letter-recipient-name">{letter.companyName}</div>}
+                          {letter.companyName && (
+                            <div
+                              className="letter-recipient-name outline-none"
+                              contentEditable suppressContentEditableWarning
+                              onBlur={(e) => patchLetter({ companyName: e.currentTarget.innerText })}
+                            >{letter.companyName}</div>
+                          )}
                           {letter.companyAddress.filter(Boolean).map((line, i) => (
-                            <div key={i} className="letter-meta">{line}</div>
+                            <div
+                              key={i}
+                              className="letter-meta outline-none"
+                              contentEditable suppressContentEditableWarning
+                              onBlur={(e) => {
+                                const addr = [...letter.companyAddress];
+                                addr[i] = e.currentTarget.innerText;
+                                patchLetter({ companyAddress: addr });
+                              }}
+                            >{line}</div>
                           ))}
                         </div>
-                        {/* Sender: Name → Email → Phone → Address/City */}
                         <div className="letter-sender-block">
-                          {letter.senderName && <div className="letter-sender-name">{letter.senderName}</div>}
-                          {letter.senderEmail && <div className="letter-meta">{letter.senderEmail}</div>}
-                          {letter.senderPhone && <div className="letter-meta">{letter.senderPhone}</div>}
+                          {letter.senderName && (
+                            <div
+                              className="letter-sender-name outline-none"
+                              contentEditable suppressContentEditableWarning
+                              onBlur={(e) => patchLetter({ senderName: e.currentTarget.innerText })}
+                            >{letter.senderName}</div>
+                          )}
+                          {letter.senderEmail && (
+                            <div
+                              className="letter-meta outline-none"
+                              contentEditable suppressContentEditableWarning
+                              onBlur={(e) => patchLetter({ senderEmail: e.currentTarget.innerText })}
+                            >{letter.senderEmail}</div>
+                          )}
+                          {letter.senderPhone && (
+                            <div
+                              className="letter-meta outline-none"
+                              contentEditable suppressContentEditableWarning
+                              onBlur={(e) => patchLetter({ senderPhone: e.currentTarget.innerText })}
+                            >{letter.senderPhone}</div>
+                          )}
                           {letter.senderAddress.filter(Boolean).map((line, i) => (
-                            <div key={i} className="letter-meta">{line}</div>
+                            <div
+                              key={i}
+                              className="letter-meta outline-none"
+                              contentEditable suppressContentEditableWarning
+                              onBlur={(e) => {
+                                const addr = [...letter.senderAddress];
+                                addr[i] = e.currentTarget.innerText;
+                                patchLetter({ senderAddress: addr });
+                              }}
+                            >{line}</div>
                           ))}
                         </div>
                       </div>
-                      {letter.date && <div className="letter-date">{letter.date}</div>}
-                      {letter.subject && <div className="letter-subject">{letter.subject}</div>}
-                      {letter.salutation && <div className="letter-salutation">{letter.salutation}</div>}
+                      {letter.date && (
+                        <div
+                          className="letter-date outline-none"
+                          contentEditable suppressContentEditableWarning
+                          onBlur={(e) => patchLetter({ date: e.currentTarget.innerText })}
+                        >{letter.date}</div>
+                      )}
+                      {letter.subject && (
+                        <div
+                          className="letter-subject outline-none"
+                          contentEditable suppressContentEditableWarning
+                          onBlur={(e) => patchLetter({ subject: e.currentTarget.innerText })}
+                        >{letter.subject}</div>
+                      )}
+                      {letter.salutation && (
+                        <div
+                          className="letter-salutation outline-none"
+                          contentEditable suppressContentEditableWarning
+                          onBlur={(e) => patchLetter({ salutation: e.currentTarget.innerText })}
+                        >{letter.salutation}</div>
+                      )}
                       {letter.body.filter(Boolean).map((p, i) => (
-                        <p key={i} className="letter-body">{p}</p>
+                        <p
+                          key={i}
+                          className="letter-body outline-none"
+                          contentEditable suppressContentEditableWarning
+                          onBlur={(e) => {
+                            const body = [...letter.body];
+                            body[i] = e.currentTarget.innerText;
+                            patchLetter({ body });
+                          }}
+                        >{p}</p>
                       ))}
-                      {letter.signoff && <div className="letter-signoff">{letter.signoff}</div>}
-                      {letter.senderName && <div className="letter-signature">{letter.senderName}</div>}
+                      {letter.signoff && (
+                        <div
+                          className="letter-signoff outline-none"
+                          contentEditable suppressContentEditableWarning
+                          onBlur={(e) => patchLetter({ signoff: e.currentTarget.innerText })}
+                        >{letter.signoff}</div>
+                      )}
+                      {letter.senderName && (
+                        <div
+                          className="letter-signature outline-none"
+                          contentEditable suppressContentEditableWarning
+                          onBlur={(e) => patchLetter({ senderName: e.currentTarget.innerText })}
+                        >{letter.senderName}</div>
+                      )}
                     </>
                   )}
                 </div>
@@ -546,7 +835,7 @@ export default function CoverLetterPage() {
 
           <div
             className={
-              "absolute bottom-8 right-6 z-10 transition-all duration-200 " +
+              "hidden lg:block absolute bottom-8 right-6 z-10 transition-all duration-200 " +
               (hoverPreview ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1 pointer-events-none")
             }
           >
@@ -555,5 +844,41 @@ export default function CoverLetterPage() {
         </div>
       </div>
     </div>
+
+    {/* Unsaved-changes modal */}
+    {showNewModal && (
+      <div className="fixed inset-0 z-[70] flex items-center justify-center px-4">
+        <div className="absolute inset-0 bg-ink/40 backdrop-blur-sm" onClick={() => setShowNewModal(false)} />
+        <div className="relative glass-modal w-full max-w-[380px] p-6 animate-in fade-in zoom-in-95 duration-200">
+          <button
+            type="button"
+            onClick={() => setShowNewModal(false)}
+            aria-label={t("common.close")}
+            className="absolute top-4 right-4 h-8 w-8 rounded-full grid place-items-center text-ink-muted hover:text-ink hover:bg-black/[0.06] transition-colors duration-150"
+          >
+            <X className="h-4 w-4" />
+          </button>
+          <h3 className="text-[17px] font-semibold text-ink mb-1 pr-8">{t("common.unsavedTitle")}</h3>
+          <p className="text-[14px] text-ink-muted leading-relaxed mb-5">{t("common.unsavedBody")}</p>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={doReset}
+              className="btn-ghost flex-1 justify-center"
+            >
+              {t("common.discardAndNew")}
+            </button>
+            <button
+              type="button"
+              onClick={() => { setShowNewModal(false); setSaveOpen(true); }}
+              className="btn-primary flex-1 justify-center"
+            >
+              {t("common.saveAndNew")}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }

@@ -14,10 +14,11 @@ function EyeBall({ size = 48, pupilSize = 16, maxDistance = 10, isBlinking = fal
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (forceLookX !== undefined) return;
     const handler = (e: MouseEvent) => setMouse({ x: e.clientX, y: e.clientY });
     window.addEventListener("mousemove", handler);
     return () => window.removeEventListener("mousemove", handler);
-  }, []);
+  }, [forceLookX]);
 
   const pos = (() => {
     if (forceLookX !== undefined && forceLookY !== undefined) return { x: forceLookX, y: forceLookY };
@@ -44,7 +45,7 @@ function EyeBall({ size = 48, pupilSize = 16, maxDistance = 10, isBlinking = fal
             height: pupilSize,
             backgroundColor: "#151515",
             transform: `translate(${pos.x}px, ${pos.y}px)`,
-            transition: "transform 0.1s ease-out",
+            transition: "transform 0.6s ease-in-out",
           }}
         />
       )}
@@ -57,10 +58,11 @@ function Pupil({ size = 12, maxDistance = 5, forceLookX, forceLookY }: { size?: 
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (forceLookX !== undefined) return;
     const handler = (e: MouseEvent) => setMouse({ x: e.clientX, y: e.clientY });
     window.addEventListener("mousemove", handler);
     return () => window.removeEventListener("mousemove", handler);
-  }, []);
+  }, [forceLookX]);
 
   const pos = (() => {
     if (forceLookX !== undefined && forceLookY !== undefined) return { x: forceLookX, y: forceLookY };
@@ -77,28 +79,49 @@ function Pupil({ size = 12, maxDistance = 5, forceLookX, forceLookY }: { size?: 
     <div
       ref={ref}
       className="rounded-full"
-      style={{ width: size, height: size, backgroundColor: "#151515", transform: `translate(${pos.x}px, ${pos.y}px)`, transition: "transform 0.1s ease-out" }}
+      style={{
+        width: size,
+        height: size,
+        backgroundColor: "#151515",
+        transform: `translate(${pos.x}px, ${pos.y}px)`,
+        transition: forceLookX !== undefined ? "transform 0.6s ease-in-out" : "transform 0.1s ease-out",
+      }}
     />
   );
 }
 
-export function AuthCharacters({ isTyping }: { isTyping?: boolean }) {
+const IDLE_SEQUENCE = [
+  { x: 0,  y: 0  },
+  { x: -6, y: 0  },
+  { x: 0,  y: 0  },
+  { x: 6,  y: 0  },
+  { x: 0,  y: 0  },
+  { x: 1,  y: -5 },
+  { x: 0,  y: 0  },
+  { x: -2, y: 4  },
+];
+
+export function AuthCharacters({ isTyping, idleMode }: { isTyping?: boolean; idleMode?: boolean }) {
   const [mouse, setMouse] = useState({ x: 0, y: 0 });
   const [purpleBlink, setPurpleBlink] = useState(false);
   const [blackBlink, setBlackBlink] = useState(false);
   const [lookEachOther, setLookEachOther] = useState(false);
+  const [idleLook, setIdleLook] = useState({ x: 0, y: 0 });
 
   const purpleRef = useRef<HTMLDivElement>(null);
   const blackRef = useRef<HTMLDivElement>(null);
   const yellowRef = useRef<HTMLDivElement>(null);
   const orangeRef = useRef<HTMLDivElement>(null);
 
+  // Mouse tracking — desktop only
   useEffect(() => {
+    if (idleMode) return;
     const handler = (e: MouseEvent) => setMouse({ x: e.clientX, y: e.clientY });
     window.addEventListener("mousemove", handler);
     return () => window.removeEventListener("mousemove", handler);
-  }, []);
+  }, [idleMode]);
 
+  // Blinking — both modes
   useEffect(() => {
     const blink = (setter: (v: boolean) => void) => {
       const t = setTimeout(() => {
@@ -112,14 +135,33 @@ export function AuthCharacters({ isTyping }: { isTyping?: boolean }) {
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
+  // isTyping look-at-each-other — desktop only
   useEffect(() => {
+    if (idleMode) return;
     if (!isTyping) { setLookEachOther(false); return; }
     setLookEachOther(true);
     const t = setTimeout(() => setLookEachOther(false), 800);
     return () => clearTimeout(t);
-  }, [isTyping]);
+  }, [isTyping, idleMode]);
+
+  // Idle looping animation — mobile only
+  useEffect(() => {
+    if (!idleMode) return;
+    let i = 0;
+    const tick = () => {
+      i = (i + 1) % IDLE_SEQUENCE.length;
+      setIdleLook(IDLE_SEQUENCE[i]);
+    };
+    const id = setInterval(tick, 2200);
+    return () => clearInterval(id);
+  }, [idleMode]);
 
   const calcSkew = (ref: React.RefObject<HTMLDivElement | null>) => {
+    if (idleMode) return {
+      faceX: idleLook.x,
+      faceY: idleLook.y,
+      bodySkew: -idleLook.x / 10,
+    };
     if (!ref.current) return { faceX: 0, faceY: 0, bodySkew: 0 };
     const r = ref.current.getBoundingClientRect();
     const cx = r.left + r.width / 2;
@@ -135,6 +177,8 @@ export function AuthCharacters({ isTyping }: { isTyping?: boolean }) {
   const bp = calcSkew(blackRef);
   const yp = calcSkew(yellowRef);
   const op = calcSkew(orangeRef);
+
+  const idleForce = idleMode ? { x: idleLook.x * 0.6, y: idleLook.y * 0.6 } : { x: undefined as number | undefined, y: undefined as number | undefined };
 
   return (
     <div className="relative" style={{ width: 480, height: 340 }}>
@@ -160,9 +204,11 @@ export function AuthCharacters({ isTyping }: { isTyping?: boolean }) {
           }}
         >
           <EyeBall size={18} pupilSize={7} maxDistance={5} isBlinking={purpleBlink}
-            forceLookX={lookEachOther ? 3 : undefined} forceLookY={lookEachOther ? 4 : undefined} />
+            forceLookX={lookEachOther ? 3 : idleForce.x}
+            forceLookY={lookEachOther ? 4 : idleForce.y} />
           <EyeBall size={18} pupilSize={7} maxDistance={5} isBlinking={purpleBlink}
-            forceLookX={lookEachOther ? 3 : undefined} forceLookY={lookEachOther ? 4 : undefined} />
+            forceLookX={lookEachOther ? 3 : idleForce.x}
+            forceLookY={lookEachOther ? 4 : idleForce.y} />
         </div>
       </div>
 
@@ -190,9 +236,11 @@ export function AuthCharacters({ isTyping }: { isTyping?: boolean }) {
           }}
         >
           <EyeBall size={16} pupilSize={6} maxDistance={4} isBlinking={blackBlink}
-            forceLookX={lookEachOther ? 0 : undefined} forceLookY={lookEachOther ? -4 : undefined} />
+            forceLookX={lookEachOther ? 0 : idleForce.x}
+            forceLookY={lookEachOther ? -4 : idleForce.y} />
           <EyeBall size={16} pupilSize={6} maxDistance={4} isBlinking={blackBlink}
-            forceLookX={lookEachOther ? 0 : undefined} forceLookY={lookEachOther ? -4 : undefined} />
+            forceLookX={lookEachOther ? 0 : idleForce.x}
+            forceLookY={lookEachOther ? -4 : idleForce.y} />
         </div>
       </div>
 
@@ -209,11 +257,11 @@ export function AuthCharacters({ isTyping }: { isTyping?: boolean }) {
         }}
       >
         <div
-          className="absolute flex gap-7 transition-all duration-200"
+          className="absolute flex gap-7 transition-all duration-700"
           style={{ left: 72 + op.faceX, top: 78 + op.faceY }}
         >
-          <Pupil size={12} maxDistance={5} />
-          <Pupil size={12} maxDistance={5} />
+          <Pupil size={12} maxDistance={5} forceLookX={idleForce.x} forceLookY={idleForce.y} />
+          <Pupil size={12} maxDistance={5} forceLookX={idleForce.x} forceLookY={idleForce.y} />
         </div>
       </div>
 
@@ -230,14 +278,14 @@ export function AuthCharacters({ isTyping }: { isTyping?: boolean }) {
         }}
       >
         <div
-          className="absolute flex gap-5 transition-all duration-200"
+          className="absolute flex gap-5 transition-all duration-700"
           style={{ left: 46 + yp.faceX, top: 36 + yp.faceY }}
         >
-          <Pupil size={11} maxDistance={5} />
-          <Pupil size={11} maxDistance={5} />
+          <Pupil size={11} maxDistance={5} forceLookX={idleForce.x} forceLookY={idleForce.y} />
+          <Pupil size={11} maxDistance={5} forceLookX={idleForce.x} forceLookY={idleForce.y} />
         </div>
         <div
-          className="absolute rounded-full transition-all duration-200"
+          className="absolute rounded-full transition-all duration-700"
           style={{ width: 60, height: 4, backgroundColor: "#151515", left: 35 + yp.faceX, top: 80 + yp.faceY }}
         />
       </div>

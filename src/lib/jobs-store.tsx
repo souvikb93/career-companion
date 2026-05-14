@@ -10,6 +10,7 @@ interface Ctx {
   setJobs: (j: Job[]) => void;
   addJob: (j: Job) => void;
   updateJob: (j: Job) => void;
+  removeJob: (id: string) => void;
   getJob: (id: string) => Job | undefined;
   targetJobId: string | null;
   setTargetJobId: (id: string | null) => void;
@@ -136,13 +137,21 @@ export function JobsProvider({ children }: { children: ReactNode }) {
     });
   }, [persist]);
 
+  const removeJob = useCallback((id: string) => {
+    setJobsState((prev) => {
+      const updated = prev.filter((x) => x.id !== id);
+      persist(updated);
+      return updated;
+    });
+  }, [persist]);
+
   // ── Localisation ─────────────────────────────────────────────────────────
   const localized = useMemo(() => jobs.map((j) => localizeJob(j, lang)), [jobs, lang]);
   const getJob = useCallback((id: string) => localized.find((j) => j.id === id), [localized]);
 
   return (
     <JobsContext.Provider
-      value={{ jobs: localized, jobsLoading, setJobs, addJob, updateJob, getJob, targetJobId, setTargetJobId }}
+      value={{ jobs: localized, jobsLoading, setJobs, addJob, updateJob, removeJob, getJob, targetJobId, setTargetJobId }}
     >
       {children}
     </JobsContext.Provider>

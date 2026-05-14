@@ -85,6 +85,10 @@ All tokens are HSL custom properties in `:root`. Use the semantic Tailwind class
 
 - Only animate `transform` and `opacity`. Never animate `width / height / top / left`.
 - Always respect `prefers-reduced-motion` — the mesh background blobs already pause via CSS in `index.css`.
+- **Exit animations** should be 60–70% of the enter duration (feel faster to dismiss): enter 240ms → exit ~150ms.
+- Use `ease-out` for entering elements, `ease-in` for exiting.
+
+**Canonical scrim opacity:** `bg-ink/40` for modals and dialogs. `bg-ink/20` for lightweight panels (e.g. side panel). Do not use `bg-ink/30` — the codebase has legacy instances at this value; standardise to 40 when touching those components.
 
 ---
 
@@ -127,17 +131,28 @@ Rules:
 - Exactly **one primary CTA per screen**. Everything else is ghost / tertiary.
 - Loading state → disable button, swap content for `<Loader2 className="animate-spin" />`.
 - Min touch target 44×44 (mobile) / 48×48 (Android). Already baked into the height utilities below.
-- Use `.btn-action` modifier for "consequential" buttons that should lift on hover.
+- **Disabled state** → add `disabled` attribute; style with `opacity-50 cursor-not-allowed pointer-events-none`. Never fake-disable without the semantic attribute.
+- ~~`.btn-action` modifier~~ — **not implemented**, do not reference it.
 
 ### 4.2 Inputs
 
 | | Solid | Glass |
 |---|---|---|
 | Single line | `.input-base` | `.glass-input` |
-| Multi line | `.textarea-base` | _(none yet — use `.glass-input` styles on a textarea)_ |
+| Multi line | `.textarea-base` | `textarea` with `.glass-input` class + `resize-none` |
 | Label | `.field-label` (always visible, never placeholder-only) | same |
 | Helper text | `text-[12px] text-ink-muted mt-1` | same |
 | Error | `border-red-600` on input + `text-[12px] text-red-600 mt-1` below | same |
+| Required indicator | `<span aria-hidden="true" className="text-red-500 ml-0.5">*</span>` next to label | same |
+| Disabled | `opacity-50 cursor-not-allowed` + `disabled` attribute | same |
+
+**Placeholder styling** — global rule in `@layer base`: `color: rgb(var(--ink) / 0.45)` + `font-style: italic`. Do NOT override with `placeholder:text-*` Tailwind utilities.
+
+**Error accessibility** — error messages below fields must use `role="alert"` or be associated via `aria-describedby` so screen readers announce them:
+```tsx
+<p id="email-error" role="alert" className="text-[12px] text-red-600 mt-1">Required</p>
+<input aria-describedby="email-error" … />
+```
 
 Always place errors **below the field**, never only at the top.
 
@@ -151,19 +166,62 @@ Always place errors **below the field**, never only at the top.
 
 ### 4.4 Modal / dialog
 
-Glass modal recipe — use `.glass-modal` for the panel. The backdrop should be `bg-ink/40 backdrop-blur-sm`.
+Glass modal recipe — use `.glass-modal` for the panel. **Always separate the backdrop into its own `absolute` div** — merging it with the centering container kills the glass-modal's `backdrop-filter`.
 
 ```tsx
-<div className="fixed inset-0 z-50 flex items-center justify-center">
-  <div className="absolute inset-0 bg-ink/40 backdrop-blur-sm" onClick={onCancel} />
-  <div className="relative glass-modal p-6 w-full max-w-sm mx-4">…</div>
+<div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+  {/* scrim — blur + dim on its own layer */}
+  <div className="absolute inset-0 bg-ink/40 backdrop-blur-sm" onClick={onClose} />
+  {/* panel — glass blur samples through the scrim layer */}
+  <div className="relative glass-modal w-full max-w-[400px] p-6 animate-in fade-in zoom-in-95 duration-200">
+    {/* × close button */}
+    <button
+      type="button"
+      onClick={onClose}
+      aria-label="Close"
+      className="absolute top-4 right-4 h-8 w-8 rounded-full grid place-items-center text-ink-muted hover:text-ink hover:bg-black/[0.06] transition-colors duration-150"
+    >
+      <X className="h-4 w-4" />
+    </button>
+    <h3 className="text-[17px] font-semibold text-ink mb-1 pr-8">Title</h3>
+    <p className="text-[14px] text-ink-muted leading-relaxed mb-5">Body copy.</p>
+    {/* Button row */}
+    <div className="flex gap-3">
+      <button type="button" onClick={onClose} className="btn-ghost flex-1 justify-center">
+        Cancel
+      </button>
+      <button type="button" onClick={onConfirm} className="btn-primary flex-1 justify-center">
+        Confirm
+      </button>
+    </div>
+  </div>
 </div>
 ```
 
-Rules:
-- Always provide a close affordance (Escape key + visible × button).
-- Confirm before dismissing modals with unsaved changes.
-- Don't trap focus inside a non-modal popover — only modals.
+**Button row rules (MUST follow):**
+- Always `flex gap-3` row — never stack buttons vertically in a modal.
+- Secondary / cancel action **always on the LEFT** (`btn-ghost flex-1 justify-center`).
+- Primary / confirm action **always on the RIGHT** (`btn-primary flex-1 justify-center`).
+- Destructive confirm uses inline `bg-red-500 text-white … hover:bg-red-600` instead of `btn-primary`.
+- Both buttons are `flex-1` so they share width equally.
+
+**Close affordance rules:**
+- Always an `absolute top-4 right-4` × icon button — never a third text button.
+- Clicking the scrim also closes (wire `onClick` on the backdrop div).
+- Escape key support is expected (add `useEffect` keydown listener or Radix Dialog).
+
+**Z-index slots:**
+| Layer | z-index | Use |
+|---|---|---|
+| Side panel scrim | z-40 | Panel backdrop |
+| Side panel | z-50 | Detail panels, SaveModal |
+| Delete confirm | z-[60] | Confirm on top of panel |
+| Unsaved / system modal | z-[70] | Highest priority dialogs |
+
+**Sizing:**
+- Default max-width: `max-w-[400px]` for two-action modals.
+- Destructive confirm: `max-w-[360px]` (smaller = feels more focused).
+- Always `px-4` on the outer wrapper to keep edge margin on mobile.
 
 ### 4.5 Filter chip
 
@@ -187,7 +245,46 @@ The signature Tracka empty state — display headline over mono eyebrow:
 </div>
 ```
 
-### 4.7 Background mesh
+### 4.7 Accordion (FAQ / collapsible)
+
+Interactive text in accordions follows a two-rule state model:
+
+| State | Desktop | Mobile |
+|---|---|---|
+| Closed, idle | `text-ink` | `text-ink` |
+| Closed, hovered | `text-brand` (`lg:group-hover:text-brand`) | no hover — stays `text-ink` |
+| Open / expanded | `text-brand` (persistent) | `text-brand` (persistent) |
+
+**Why:** On desktop, hover previews the action. Once open, orange persists to signal the active state — removing it on mouse-leave would feel disconnected from the visible answer. On mobile there is no hover concept; state is strictly open/closed only.
+
+Implementation pattern:
+```tsx
+<span className={cn(
+  "transition-colors",
+  open ? "text-brand" : "text-ink lg:group-hover:text-brand"
+)}>
+  {question}
+</span>
+```
+
+### 4.8 Informational badge / tag
+
+Used to label items with metadata (e.g. "Recommended", "Fast", "Beta"). These are **not interactive** — they must never look like buttons.
+
+Recipe — frosted glass chip, ink text, no color tint:
+```tsx
+<span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-white/40 backdrop-blur-md border border-white/50 text-ink">
+  {label}
+</span>
+```
+
+Rules:
+- **Never** use solid `bg-ink` or colored backgrounds — that reads as a button or status indicator.
+- **Never** use brand/accent color on the text — orange is reserved for interactive and active states.
+- Keep size at `text-[11px]` so it reads as subordinate metadata, not a headline.
+- Use on glass surfaces only (over the mesh background). On solid pages use `bg-surface-2 border-line` instead.
+
+### 4.10 Background mesh
 
 Defined in `src/components/BackgroundGradientAnimation.tsx`. Default colour palette is brand-orange–tinted. Use only on:
 
@@ -199,14 +296,155 @@ Defined in `src/components/BackgroundGradientAnimation.tsx`. Default colour pale
 
 Mount it as `containerClassName="absolute inset-0 -z-10"` inside a `relative` page wrapper, with `interactive={false}` unless the page is short.
 
+### 4.11 Toast / notification
+
+Position: **bottom-center** on mobile, **bottom-right** on desktop. Never top-center (clashes with dynamic content entering from top).
+
+```tsx
+{/* Shadcn/Radix toast — already wired via useToast() */}
+toast({ title: "Saved", description: "Your CV has been saved." });
+toast({ title: "Error", description: "Could not save.", variant: "destructive" });
+```
+
+Rules:
+- Auto-dismiss: **4 seconds** for success/info; **6 seconds** for errors (user needs time to read).
+- Toast container must have `aria-live="polite"` for info and `aria-live="assertive"` for errors (Shadcn's `<Toaster>` handles this).
+- Never show more than **2 toasts stacked**. If a third fires, replace the oldest.
+- **Never** use a toast for actions that require user confirmation — use a modal.
+- Variants: `default` (neutral) and `destructive` (red). No other variants — info/warning map to `default`.
+
+### 4.12 Loading states
+
+**Rule: spinner < 1 s wait; skeleton ≥ 1 s wait or known layout.**
+
+| Scenario | Pattern |
+|---|---|
+| Button async action | Disable button, show `<Loader2 className="h-4 w-4 animate-spin" />` inline |
+| Page section loading | `animate-pulse` skeleton matching the shape of the content |
+| Full page loading | Centered `<Loader2 className="h-6 w-6 animate-spin text-ink-muted" />` |
+| AI generation (long) | Typing indicator dots + streaming text — never a blocking spinner |
+
+Skeleton recipe (solid pages):
+```tsx
+<div className="animate-pulse space-y-3">
+  <div className="h-4 bg-surface-2 rounded-full w-3/4" />
+  <div className="h-4 bg-surface-2 rounded-full w-1/2" />
+</div>
+```
+
+### 4.13 Status badge
+
+The coloured pill used in the Jobs tracker. Always pair colour with text (WCAG 1.4.1).
+
+```tsx
+// Use the <StatusBadge status={s} /> component — do not recreate inline.
+// Colour map lives in STATUS_DOT_CLASS in src/lib/jobs-data.ts
+```
+
+Status colour reference:
+
+| Status | Dot class | Badge background |
+|---|---|---|
+| Saved | `bg-status-saved` | `bg-transparent border border-line` |
+| Applied | `bg-status-applied` | `bg-status-applied` |
+| Assignment | `bg-amber-400` | `bg-amber-400` |
+| Interviewing | `bg-amber-600` | `bg-amber-600` |
+| Offer | `bg-status-offer` | `bg-status-offer` |
+| Rejected | `bg-ink-muted` | `bg-ink-muted` |
+
+Rules:
+- Never use status colour alone — the text label inside the badge is mandatory.
+- Status dot without text (e.g. table row) must have an `aria-label` on its container.
+
+### 4.14 Segmented control
+
+Used for mobile tab switching (Chat / Preview, Editor / Preview).
+
+```tsx
+// Use the <SegmentedControl options={…} value={…} onChange={…} /> component.
+```
+
+Rules:
+- Max **3 segments** before it becomes too cramped on 375px screens.
+- Active segment: filled `bg-white` pill. Inactive: transparent, `text-ink-muted`.
+- The control itself sits in a `bg-white/30 backdrop-blur-md` strip below the mobile header.
+
+### 4.15 Custom Select (Radix / glass)
+
+The Radix `<Select>` on glass pages (e.g. status field in Job Detail).
+
+```tsx
+<SelectContent
+  className="z-[55] overflow-hidden rounded-2xl border border-white/60 p-1 bg-white/60 backdrop-blur-xl shadow-lg"
+  position="popper"
+  sideOffset={6}
+>
+```
+
+Rules:
+- Always `position="popper"` — avoids layout-shift on open.
+- Background: `bg-white/60 backdrop-blur-xl` on glass pages. On solid pages: `bg-surface border-line`.
+- `z-[55]` — sits above panels (z-50) but below modals (z-[60]+).
+- `sideOffset={6}` — 6px gap between trigger and dropdown.
+
+### 4.16 Tooltip
+
+For icon-only buttons where an `aria-label` alone doesn't surface in visible UI.
+
+```tsx
+// Use Radix <Tooltip> wrapping the trigger:
+<TooltipProvider>
+  <Tooltip>
+    <TooltipTrigger asChild><button aria-label="Export">…</button></TooltipTrigger>
+    <TooltipContent className="text-[12px] font-medium bg-ink text-white rounded-lg px-2.5 py-1.5 shadow-md">
+      Export as PDF
+    </TooltipContent>
+  </Tooltip>
+</TooltipProvider>
+```
+
+Rules:
+- Tooltip text must be keyboard-reachable (Radix handles this via focus trigger).
+- Don't put actionable content (buttons, links) inside a tooltip — use a popover instead.
+- z-index: `z-[80]` — always above everything else.
+
 ---
 
 ## 5 — Layout patterns
 
-### 5.1 App shell
+### 5.0 Breakpoints & responsive strategy
+
+| Breakpoint | px | Tailwind prefix | Target |
+|---|---|---|---|
+| Mobile S | 375 | (default, no prefix) | iPhone SE, small Android |
+| Mobile L | 430 | (default) | iPhone 15 Pro Max |
+| Tablet | 768 | `md:` | iPad portrait |
+| Desktop S | 1024 | `lg:` | **Primary desktop breakpoint** |
+| Desktop L | 1440 | `xl:` | Large monitors |
+
+**Mobile-first always.** Write base styles for mobile, add `lg:` for desktop. The `md:` tablet breakpoint is rarely used — most layouts go directly from mobile to desktop at `lg:`.
+
+**Separate render trees over shared classes for complex layouts.** Use `lg:hidden` / `hidden lg:block` to fully swap the mobile and desktop JSX rather than modifying shared elements with many responsive variants. This prevents class-order bugs and keeps code readable.
+
+**Height units:** Use `h-[calc(100dvh-64px)]` (not `100vh`) on mobile to account for browser chrome collapsing. `dvh` = dynamic viewport height.
+
+### 5.1 Z-index master table
+
+| Layer | z-index | Element |
+|---|---|---|
+| Base | `z-0` | Normal content flow |
+| Floating | `z-10` | Floating zoom controls, tooltips in preview |
+| Sticky nav | `z-40` | TopNav, panel scrim |
+| Side panel / modal | `z-50` | Job detail panel, SaveModal |
+| Delete confirm | `z-[60]` | Confirm on top of panel |
+| Unsaved / system modal | `z-[70]` | Highest priority dialogs |
+| Tooltip | `z-[80]` | Always above modals |
+| Mesh background | `z-[-10]` | Behind all content |
+
+### 5.2 App shell
 
 - `TopNav` is `h-16 sticky top-0 z-40 bg-surface border-b border-line`. **For the glass trial it stays opaque** — only convert to `.glass-nav` once we standardise glass across all main pages.
-- Main content: `min-h-[calc(100vh-64px)]`.
+- Main content: `min-h-[calc(100dvh-64px)]`.
 
 ### 5.2 Account section (Profile / AI Model / Settings / FAQ)
 
@@ -317,11 +555,60 @@ Always use these classes — do not write `text-[13px] leading-relaxed` inline.
 These are CRITICAL-priority and apply to every component:
 
 1. **Contrast ≥ 4.5:1** for body text, ≥ 3:1 for large/display text. Verify when picking text colour against glass surfaces — `text-ink` over `glass-card` is fine; `text-ink-muted` may fall below the bar on darker mesh sections.
-2. **Visible focus ring** on every interactive element. Don't remove the default; if you customise, use a 2px brand-orange ring.
-3. **Touch target ≥ 44×44px** on mobile, ≥ 48×48px on Android.
-4. **Keyboard nav** — tab order matches visual order; modals trap focus; Escape closes.
-5. **Don't convey info by colour alone.** Status dots must have a label next to them.
-6. **Respect `prefers-reduced-motion`.** Background blobs are already paused via CSS; do the same for any new long-running animation.
+
+2. **Visible focus ring** — never remove `focus-visible`. Use this token for every custom interactive element:
+   ```css
+   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2
+   ```
+   The `ring-offset-2` ensures the ring is visible over both glass and solid surfaces.
+
+3. **Touch target ≥ 44×44px** on mobile. If the visual element is smaller (e.g. an icon), pad with `p-2` or `h-9 w-9` minimum.
+
+4. **Keyboard nav** — tab order matches visual order. Modals must trap focus (use Radix Dialog or manually manage with `focus-trap`). Escape must always close.
+
+5. **Don't convey info by colour alone.** Status dots must have a text label. Error states must use an icon or text, not just a red border.
+
+6. **`prefers-reduced-motion`** — background blobs already pause via CSS. For all other animations use:
+   ```css
+   @media (prefers-reduced-motion: reduce) {
+     /* disable or reduce your animation */
+     animation-duration: 0.01ms !important;
+     transition-duration: 0.01ms !important;
+   }
+   ```
+   In Tailwind: `motion-safe:animate-pulse` (only animates when motion is allowed).
+
+7. **`aria-live` for dynamic content** — toasts, inline errors, and status changes must be announced:
+   - Success/info toasts: `aria-live="polite"`
+   - Error messages: `role="alert"` (implicitly `aria-live="assertive"`)
+   - Loading states that complete: announce completion with a visually-hidden `aria-live` region.
+
+8. **`field-label` at 11px** — this passes contrast only at the specific ink-on-surface ratio. Do not reduce further and do not use on coloured or glass backgrounds where contrast may drop below 4.5:1.
+
+---
+
+## 7b — Dark mode stance
+
+**Tracka does not currently support dark mode.** The Berlin Glass aesthetic depends on the cream/white background and the animated orange mesh — both require a light context.
+
+If dark mode is added in a future version:
+- All glass tokens (`--glass-tint`, `--glass-border`) must be remapped for dark backgrounds.
+- The brand orange (`#FF5A2F`) loses contrast on dark — a lighter tint (`#FF7A56`) would be needed.
+- Never toggle dark mode by inverting colours — redesign the token set.
+- Until the token set is defined, do **not** add `dark:` Tailwind variants to components.
+
+---
+
+## 7c — Print styles (Cover Letter)
+
+The letter page is rendered on-screen but exported as PDF and intended for printing. Rules:
+
+- The `.letter-page` canvas is `background: white` with no transparency — safe to print.
+- `shadow-2xl` is a screen-only effect; PDF export strips it automatically.
+- `font-sans` (Inter/Satoshi) embeds correctly in PDF via Puppeteer/wkhtmltopdf — do not substitute a web-only font.
+- Body text at `14px / 1.7` maps to approximately **10.5pt** in print — the minimum acceptable for business correspondence.
+- The brand spine in `modern` layout (`bg-brand w-3`) prints as orange if the user enables "Print backgrounds" — intentional.
+- **Never** add `print:` Tailwind variants to the app shell (nav, sidebars). Only the letter canvas should be print-visible.
 
 ---
 
@@ -337,10 +624,17 @@ A checklist to run through before considering a UI change "done". This expands a
 - [ ] Pair every status colour with a label or icon.
 - [ ] Add `aria-label` to icon-only buttons.
 - [ ] Keep min body 16px on mobile, min touch target 44×44.
-- [ ] Animate only `transform` / `opacity`. 180ms for hover, 240ms for modal.
+- [ ] Animate only `transform` / `opacity`. 180ms for hover, 240ms for modal enter, 150ms exit.
 - [ ] Show one primary CTA per screen — everything else is ghost or tertiary.
 - [ ] Empty states use the `eyebrow-mono + display-1` recipe.
 - [ ] Errors live **below** the field, not in a summary at top (unless multiple errors in a long form).
+- [ ] Error messages use `role="alert"` or `aria-describedby` — not just a red border.
+- [ ] Modal button row: secondary LEFT (`btn-ghost`), primary RIGHT (`btn-primary`), both `flex-1`.
+- [ ] Modal scrim: `bg-ink/40` on its own `absolute` div — never merged with the centering container.
+- [ ] Use `focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2` on all interactive elements.
+- [ ] Disabled buttons/inputs use `disabled` attribute + `opacity-50 cursor-not-allowed`.
+- [ ] Use `h-[calc(100dvh-…)]` not `100vh` for full-screen mobile layouts.
+- [ ] Z-index must follow the master table in §5.1 — don't invent new values.
 
 ### MUST NOT
 
@@ -353,6 +647,10 @@ A checklist to run through before considering a UI change "done". This expands a
 - [ ] Don't remove `focus-visible` outlines.
 - [ ] Don't add the gradient mesh to dense form pages.
 - [ ] Don't `rounded-2xl` something that should be a pill — pills (`rounded-full`) are reserved for primary/ghost CTAs.
+- [ ] Don't add `dark:` Tailwind variants — dark mode is not currently supported (§7b).
+- [ ] Don't merge the modal scrim and centering container — always separate layers (§4.4).
+- [ ] Don't stack modal buttons vertically — always a horizontal `flex gap-3` row (§4.4).
+- [ ] Don't reference `.btn-action` — it is not defined.
 
 ### When in doubt
 

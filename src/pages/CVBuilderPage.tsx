@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { Plus, X, FolderOpen, Save } from "lucide-react";
+import { Plus, X, FolderOpen, Save, FilePlus } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { MobileActionsMenu } from "@/components/MobileActionsMenu";
+import { SegmentedControl } from "@/components/SegmentedControl";
 import { useJobs } from "@/lib/jobs-store";
 import { ZoomControls } from "@/components/ZoomControls";
 import { ExportMenu } from "@/components/ExportMenu";
@@ -175,12 +178,18 @@ export default function CVBuilderPage() {
   }, [lang]);
 
   const [skillDraft, setSkillDraft] = useState("");
-  const [zoom, setZoom] = useState(0.6);
+  const [zoom, setZoom] = useState<number>(() =>
+    typeof window !== "undefined" && window.innerWidth < 1024
+      ? Math.max(0.35, (window.innerWidth - 40) / 794)
+      : 0.6
+  );
   const [building, setBuilding] = useState(false);
   const [savedOpen, setSavedOpen] = useState(false);
   const [saveOpen, setSaveOpen] = useState(false);
   const [newCvId, setNewCvId] = useState<string | undefined>(undefined);
   const [hoverPreview, setHoverPreview] = useState(false);
+  const [mobileTab, setMobileTab] = useState<"editor" | "preview">("preview");
+  const [showNewModal, setShowNewModal] = useState(false);
   const [layout, setLayoutState] = useState<LayoutVariant>(() => loadLayout("cv_layout"));
   const setLayout = (v: LayoutVariant) => {
     setLayoutState(v);
@@ -196,6 +205,19 @@ export default function CVBuilderPage() {
   }, []);
 
   const update = <K extends keyof CV>(k: K, v: CV[K]) => setCv((p) => ({ ...p, [k]: v }));
+
+  const isCvDefault = () => JSON.stringify(cv) === JSON.stringify(makeInitial(t));
+
+  const handleNew = () => {
+    if (isCvDefault()) return;
+    setShowNewModal(true);
+  };
+
+  const doReset = () => {
+    setCv(makeInitial(t));
+    try { window.localStorage.removeItem(CV_DRAFT_KEY); } catch { /* ignore */ }
+    setShowNewModal(false);
+  };
 
   const handleExport = (format: ExportFormat) => {
     const body = renderCvAsText(cv, t);
@@ -233,12 +255,42 @@ export default function CVBuilderPage() {
   };
 
   return (
-    <div className="w-full">
-      <div className="px-8 py-5 flex items-center justify-between border-b border-white/50 flex-wrap gap-3 bg-white/30 backdrop-blur-md">
+    <>
+    <div className="w-full flex flex-col h-[calc(100dvh-64px)] lg:h-auto lg:block">
+      {/* Mobile header */}
+      <div className="lg:hidden shrink-0 px-4 py-4 flex items-center justify-between border-b border-white/50 bg-white/30 backdrop-blur-md">
+        <h1 className="heading-1">{t("resume.pageTitle")}</h1>
+        <MobileActionsMenu
+          onNew={handleNew}
+          onSave={() => setSaveOpen(true)}
+          layout={layout}
+          onLayoutChange={setLayout}
+          onExport={handleExport}
+          onLibrary={() => setSavedOpen(true)}
+        />
+      </div>
+
+      {/* Mobile segmented control */}
+      <div className="lg:hidden shrink-0 px-4 py-3 bg-white/30 backdrop-blur-md border-b border-white/50">
+        <SegmentedControl
+          options={[
+            { value: "editor", label: t("resume.tabEditor") },
+            { value: "preview", label: t("resume.tabPreview") },
+          ]}
+          value={mobileTab}
+          onChange={setMobileTab}
+        />
+      </div>
+
+      {/* Desktop header */}
+      <div className="hidden lg:flex px-8 py-5 items-center justify-between border-b border-white/50 flex-wrap gap-3 bg-white/30 backdrop-blur-md">
         <div>
           <h1 className="heading-1">{t("resume.pageTitle")}</h1>
         </div>
         <div className="flex items-center gap-3">
+          <button type="button" onClick={handleNew} className="btn-ghost">
+            <FilePlus className="h-4 w-4" /> {t("common.newDoc")}
+          </button>
           <button type="button" onClick={() => setSaveOpen(true)} className="btn-ghost">
             <Save className="h-4 w-4" /> {t("common.save")}
           </button>
@@ -280,10 +332,13 @@ export default function CVBuilderPage() {
         }}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2" style={{ minHeight: "calc(100vh - 64px - 81px)" }}>
+      <div className="flex-1 min-h-0 flex flex-col lg:grid lg:grid-cols-2 lg:min-h-[calc(100vh-64px-81px)]">
         {/* Editor */}
-        <section className="border-r border-white/50 p-8 overflow-y-auto bg-white/20 backdrop-blur-md"
-          style={{ maxHeight: "calc(100vh - 64px - 81px)" }}
+        <section
+          className={cn(
+            "bg-white/20 backdrop-blur-md overflow-y-auto overscroll-contain p-4 lg:p-8 lg:border-r lg:border-white/50 lg:max-h-[calc(100vh-64px-81px)]",
+            mobileTab !== "editor" ? "hidden lg:block" : "flex-1 min-h-0"
+          )}
         >
           <BuildFromJobCard
             storageKey={CV_JD_KEY}
@@ -420,14 +475,15 @@ export default function CVBuilderPage() {
 
         {/* Preview - canvas with A4 page */}
         <div
-          className="relative"
-          style={{ maxHeight: "calc(100vh - 64px - 81px)" }}
+          className={cn(
+            "relative lg:max-h-[calc(100vh-64px-81px)]",
+            mobileTab !== "preview" ? "hidden lg:block" : "flex-1 min-h-0"
+          )}
           onMouseEnter={() => setHoverPreview(true)}
           onMouseLeave={() => setHoverPreview(false)}
         >
         <section
-          className="bg-transparent px-6 pt-6 pb-24 overflow-auto h-full"
-          style={{ maxHeight: "calc(100vh - 64px - 81px)" }}
+          className="bg-transparent overflow-auto h-full flex justify-center px-4 pt-6 pb-24 lg:px-6 lg:max-h-[calc(100vh-64px-81px)]"
         >
           <div
             className="mx-auto"
@@ -445,13 +501,12 @@ export default function CVBuilderPage() {
               <CvPreview cv={cv} layout={layout} />
             </article>
           </div>
-
         </section>
 
-          {/* Floating zoom controls — only on hover */}
+          {/* Floating zoom controls — only on hover, desktop only */}
           <div
             className={
-              "absolute bottom-8 right-6 z-10 transition-all duration-200 " +
+              "hidden lg:block absolute bottom-8 right-6 z-10 transition-all duration-200 " +
               (hoverPreview ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1 pointer-events-none")
             }
           >
@@ -460,6 +515,42 @@ export default function CVBuilderPage() {
         </div>
       </div>
     </div>
+
+    {/* Unsaved-changes modal */}
+    {showNewModal && (
+      <div className="fixed inset-0 z-[70] flex items-center justify-center px-4">
+        <div className="absolute inset-0 bg-ink/40 backdrop-blur-sm" onClick={() => setShowNewModal(false)} />
+        <div className="relative glass-modal w-full max-w-[380px] p-6 animate-in fade-in zoom-in-95 duration-200">
+          <button
+            type="button"
+            onClick={() => setShowNewModal(false)}
+            aria-label={t("common.close")}
+            className="absolute top-4 right-4 h-8 w-8 rounded-full grid place-items-center text-ink-muted hover:text-ink hover:bg-black/[0.06] transition-colors duration-150"
+          >
+            <X className="h-4 w-4" />
+          </button>
+          <h3 className="text-[17px] font-semibold text-ink mb-1 pr-8">{t("common.unsavedTitle")}</h3>
+          <p className="text-[14px] text-ink-muted leading-relaxed mb-5">{t("common.unsavedBody")}</p>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={doReset}
+              className="btn-ghost flex-1 justify-center"
+            >
+              {t("common.discardAndNew")}
+            </button>
+            <button
+              type="button"
+              onClick={() => { setShowNewModal(false); setSaveOpen(true); }}
+              className="btn-primary flex-1 justify-center"
+            >
+              {t("common.saveAndNew")}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }
 

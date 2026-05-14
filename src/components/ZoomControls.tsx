@@ -18,6 +18,9 @@ export function ZoomControls({ zoom, onChange, min = 0.4, max = 2, step = 0.1, f
         className="h-6 w-6 rounded-full grid place-items-center text-ink-muted hover:text-ink hover:bg-surface-2 active:scale-95 transition-all duration-150">
         <Minus className="h-3 w-3" />
       </button>
+      <span className="text-[11px] font-medium text-ink tabular-nums w-8 text-center select-none">
+        {Math.round(zoom * 100)}%
+      </span>
       <button type="button" onClick={inc} aria-label={t("common.zoomIn")}
         className="h-6 w-6 rounded-full grid place-items-center text-ink-muted hover:text-ink hover:bg-surface-2 active:scale-95 transition-all duration-150">
         <Plus className="h-3 w-3" />

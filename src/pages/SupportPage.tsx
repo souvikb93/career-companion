@@ -12,7 +12,7 @@ function AccordionItem({ q, a }: { q: string; a: string }) {
         onClick={() => setOpen((p) => !p)}
         className="w-full flex items-start justify-between gap-4 px-5 py-4 text-left group"
       >
-        <span className="text-[14px] font-medium text-ink group-hover:text-brand transition-colors leading-snug">
+        <span className={cn("text-[14px] font-medium leading-snug transition-colors", open ? "text-brand" : "text-ink lg:group-hover:text-brand")}>
           {q}
         </span>
         <ChevronDown className={cn(
@@ -34,7 +34,7 @@ export default function SupportPage() {
   const items = TRANSLATIONS[lang].faq.items as { q: string; a: string }[];
 
   return (
-    <div className="w-full px-10 py-8">
+    <div className="w-full p-4 sm:p-8">
       <h1 className="display-2 mb-10">{t("faq.title")}</h1>
 
       <div className="max-w-2xl space-y-5">

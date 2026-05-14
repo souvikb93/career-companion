@@ -5,11 +5,9 @@ import { cn } from "@/lib/utils";
 const STYLES: Record<JobStatus, string> = {
   saved: "bg-transparent text-ink border border-line",
   applied: "bg-status-applied text-primary-foreground",
-  assignment: "bg-status-active text-primary-foreground",
-  interviewing: "bg-status-active text-primary-foreground",
-  assessment: "bg-status-assessment text-primary-foreground",
+  assignment: "bg-amber-400 text-white",
+  interviewing: "bg-amber-600 text-white",
   offer: "bg-status-offer text-primary-foreground",
-  accepted: "bg-status-offer text-primary-foreground",
   rejected: "bg-ink-muted text-primary-foreground",
 };
 

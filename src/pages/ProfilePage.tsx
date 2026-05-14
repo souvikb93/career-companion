@@ -92,7 +92,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="w-full px-10 py-8">
+    <div className="w-full p-4 sm:p-8">
       <h1 className="display-2 mb-10">{t("profile.title")}</h1>
 
       <div className="max-w-2xl space-y-5">

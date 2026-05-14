@@ -87,7 +87,7 @@ export default function AIModelPage() {
   };
 
   return (
-    <div className="w-full px-10 py-8">
+    <div className="w-full p-4 sm:p-8">
       <h1 className="display-2 mb-10">{t("aiModel.title")}</h1>
 
       <div className="max-w-2xl space-y-5">
@@ -132,7 +132,7 @@ export default function AIModelPage() {
                   <div className="flex items-center gap-2">
                     <span className="text-[14px] font-medium text-ink">{m.name}</span>
                     {m.badge && (
-                      <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-ink text-white">
+                      <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-white/40 backdrop-blur-md border border-white/50 text-ink">
                         {m.badge}
                       </span>
                     )}
