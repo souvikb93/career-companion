@@ -258,7 +258,7 @@ export default function CVBuilderPage() {
     <>
     <div className="w-full flex flex-col h-[calc(100dvh-64px)] lg:h-auto lg:block">
       {/* Mobile header */}
-      <div className="lg:hidden shrink-0 px-4 py-4 flex items-center justify-between border-b border-white/50 bg-white/30 backdrop-blur-md">
+      <div className="lg:hidden shrink-0 px-4 py-4 flex items-center justify-between border-b border-white/50 bg-white/30 backdrop-blur-md glass-card">
         <h1 className="heading-1">{t("resume.pageTitle")}</h1>
         <MobileActionsMenu
           onNew={handleNew}
@@ -271,7 +271,7 @@ export default function CVBuilderPage() {
       </div>
 
       {/* Mobile segmented control */}
-      <div className="lg:hidden shrink-0 px-4 py-3 bg-white/30 backdrop-blur-md border-b border-white/50">
+      <div className="lg:hidden shrink-0 px-4 py-3 bg-white/30 backdrop-blur-md glass-card border-b border-white/50">
         <SegmentedControl
           options={[
             { value: "editor", label: t("resume.tabEditor") },
@@ -283,7 +283,7 @@ export default function CVBuilderPage() {
       </div>
 
       {/* Desktop header */}
-      <div className="hidden lg:flex px-8 py-5 items-center justify-between border-b border-white/50 flex-wrap gap-3 bg-white/30 backdrop-blur-md">
+      <div className="hidden lg:flex px-8 py-5 items-center justify-between border-b border-white/50 flex-wrap gap-3 bg-white/30 backdrop-blur-md glass-card">
         <div>
           <h1 className="heading-1">{t("resume.pageTitle")}</h1>
         </div>

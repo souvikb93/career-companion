@@ -228,10 +228,6 @@
     @apply uppercase text-[12px] font-semibold text-ink relative pb-1.5 transition-opacity duration-200 ease-out hover:opacity-70 outline-none;
     letter-spacing: 0.08em;
   }
-  .nav-item-active::after {
-    content: "";
-    @apply absolute left-0 right-0 -bottom-0.5 h-[2px] bg-brand rounded-full;
-  }
   /* Tier 1: Action buttons — lift + shadow + tint */
   .btn-action {
     @apply transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:shadow-none;
@@ -240,14 +236,23 @@
   .btn-trigger {
     @apply transition-colors duration-200 ease-out hover:bg-surface-2;
   }
+  /* h-11 (44px) — standard size, used in tab bars (Save, Library, etc.) */
   .btn-ghost {
     @apply inline-flex items-center gap-2 h-11 px-5 rounded-full bg-white/50 backdrop-blur-md border border-line text-ink text-[12px] font-bold uppercase tracking-[0.08em] transition-colors duration-200 ease-out hover:bg-surface-2 disabled:opacity-50 disabled:hover:bg-white/50;
+  }
+  /* h-9 (36px) — compact size, used in settings rows and inline actions */
+  .btn-ghost-sm {
+    @apply inline-flex items-center gap-1.5 h-9 px-3.5 rounded-full bg-white/50 backdrop-blur-md border border-line text-ink text-[11px] font-bold uppercase tracking-[0.08em] transition-colors duration-200 ease-out hover:bg-surface-2 disabled:opacity-50 disabled:hover:bg-white/50;
   }
   .btn-primary {
     @apply inline-flex items-center gap-2 h-11 px-5 rounded-full bg-ink text-white text-[12px] font-bold uppercase tracking-[0.08em] transition-colors duration-200 ease-out hover:bg-brand active:bg-brand disabled:opacity-50 disabled:hover:bg-ink;
   }
   .btn-danger {
-    @apply inline-flex items-center gap-2 h-11 px-5 rounded-full bg-white/50 backdrop-blur-md border border-red-500 text-red-500 text-[12px] font-bold uppercase tracking-[0.08em] transition-colors duration-200 ease-out hover:bg-red-500 hover:text-white disabled:opacity-50;
+    @apply inline-flex items-center gap-2 h-11 px-5 rounded-full bg-white/50 backdrop-blur-md border border-red-400 text-red-500 text-[12px] font-bold uppercase tracking-[0.08em] transition-colors duration-200 ease-out hover:bg-red-50 hover:border-red-500 disabled:opacity-50;
+  }
+  /* h-9 (36px) — compact danger, used in settings rows */
+  .btn-danger-sm {
+    @apply inline-flex items-center gap-1.5 h-9 px-3.5 rounded-full bg-white/50 backdrop-blur-md border border-red-400 text-red-500 text-[11px] font-bold uppercase tracking-[0.08em] transition-colors duration-200 ease-out hover:bg-red-50 hover:border-red-500 disabled:opacity-50;
   }
   .btn-tertiary {
     @apply inline-flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-[0.08em] text-ink bg-transparent border-0 p-0 transition-colors duration-200 ease-out hover:text-brand hover:underline active:text-brand disabled:opacity-50 disabled:hover:text-ink disabled:hover:no-underline;
@@ -272,13 +277,16 @@
     backdrop-filter: blur(12px);
   }
 
-  /* Level 2 — content card */
+  /* Level 2 — content card
+     "Paper on gradient": near-opaque white surface with a subtle dark ink
+     border. The brand gradient shows *around* the card, not through it.
+     This guarantees text contrast and gives sharp card definition. */
   .glass-card {
-    background: rgb(var(--glass-tint) / 0.40);
-    border: 1px solid rgb(var(--glass-border) / 0.50);
-    -webkit-backdrop-filter: blur(24px);
-    backdrop-filter: blur(24px);
-    box-shadow: 0 12px 40px -12px rgb(var(--glass-shadow) / 0.08);
+    background: rgb(var(--glass-tint) / 0.82);
+    border: 1px solid rgb(0 0 0 / 0.07);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 4px 24px -4px rgb(var(--glass-shadow) / 0.06);
     @apply rounded-2xl;
   }
   /* Level 2.5 — slide-in side panel (full-height sheet) */
@@ -645,19 +653,26 @@
     border-right-color: rgb(255 255 255 / 0.07);
   }
 
-  /* Nav item active state: filled for drawer/sidebar items */
-  .nav-item-active {
-    background: hsl(var(--ink));
-    color: white;
-  }
+  /* Nav item active state — dark mode only overrides.
+     Light mode: drawer items keep their Tailwind bg-ink text-white classes.
+     Top-bar items: no fill in either mode, only the ::after orange underline. */
   html.dark .nav-item-active {
     background: rgb(255 255 255 / 0.12);
     color: hsl(var(--ink));
   }
-  /* Top-bar tabs in dark: no fill, underline only (::after handles indicator) */
+  /* Top-bar tabs in dark: transparent background + orange underline indicator */
   html.dark .nav-item.nav-item-active {
     background: transparent;
     color: hsl(var(--ink));
+  }
+  html.dark .nav-item.nav-item-active::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0;
+    bottom: -2px;
+    height: 2px;
+    background: hsl(var(--brand));
+    border-radius: 9999px;
   }
 
   /* Nav item hover (inactive) */
@@ -752,9 +767,9 @@
     box-shadow: 0 12px 40px -12px rgb(var(--glass-shadow) / 0.50);
   }
   html.dark .glass-card {
-    background: rgb(var(--glass-tint) / 0.55);
-    border-color: rgb(var(--glass-border) / 0.07);
-    box-shadow: 0 12px 40px -12px rgb(var(--glass-shadow) / 0.50);
+    background: rgb(var(--glass-tint) / 0.88);
+    border-color: rgb(var(--glass-border) / 0.10);
+    box-shadow: 0 4px 24px -4px rgb(var(--glass-shadow) / 0.40);
   }
   html.dark .side-panel {
     background: rgb(var(--glass-tint) / 0.94);
@@ -811,19 +826,54 @@
   /* Buttons */
   html.dark .btn-ghost {
     background: rgb(var(--glass-tint) / 0.45);
-    border-color: rgb(var(--glass-border) / 0.10);
+    border-color: rgb(var(--glass-border) / 0.14);
+    color: hsl(var(--ink));
   }
   html.dark .btn-ghost:hover:not(:disabled) {
-    background: hsl(var(--surface-2));
+    background: rgb(var(--glass-tint) / 0.62);
+    border-color: rgb(var(--glass-border) / 0.20);
   }
   html.dark .btn-ghost:disabled {
-    background: rgb(var(--glass-tint) / 0.45);
+    background: rgb(var(--glass-tint) / 0.35);
   }
   html.dark .btn-danger {
     background: rgb(var(--glass-tint) / 0.45);
+    border-color: rgb(239 68 68 / 0.55);
+    color: rgb(252 165 165);
+  }
+  html.dark .btn-danger:hover:not(:disabled) {
+    background: rgb(239 68 68 / 0.15);
+    border-color: rgb(239 68 68 / 0.75);
   }
   html.dark .btn-danger:disabled {
     background: rgb(var(--glass-tint) / 0.45);
+    opacity: 0.5;
+  }
+  /* Compact variants — inherit same dark tokens as full-size counterparts */
+  html.dark .btn-ghost-sm {
+    background: rgb(var(--glass-tint) / 0.45);
+    border-color: rgb(var(--glass-border) / 0.14);
+    color: hsl(var(--ink));
+  }
+  html.dark .btn-ghost-sm:hover:not(:disabled) {
+    background: rgb(var(--glass-tint) / 0.62);
+    border-color: rgb(var(--glass-border) / 0.20);
+  }
+  html.dark .btn-ghost-sm:disabled {
+    background: rgb(var(--glass-tint) / 0.35);
+  }
+  html.dark .btn-danger-sm {
+    background: rgb(var(--glass-tint) / 0.45);
+    border-color: rgb(239 68 68 / 0.55);
+    color: rgb(252 165 165);
+  }
+  html.dark .btn-danger-sm:hover:not(:disabled) {
+    background: rgb(239 68 68 / 0.15);
+    border-color: rgb(239 68 68 / 0.75);
+  }
+  html.dark .btn-danger-sm:disabled {
+    background: rgb(var(--glass-tint) / 0.45);
+    opacity: 0.5;
   }
 
   /* input-base inside glass-modal should use surface-2, not forced white */

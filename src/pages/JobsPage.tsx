@@ -125,7 +125,7 @@ export default function JobsPage() {
           </button>
         </div>
 
-        <div className="bg-white/40 backdrop-blur-2xl border border-white/50 rounded-2xl overflow-hidden shadow-xl shadow-ink/5">
+        <div className="bg-white/40 backdrop-blur-2xl border border-white/50 rounded-2xl overflow-hidden shadow-xl shadow-ink/5 glass-card">
           {filtered.length > 0 && (
             <div className="hidden lg:grid grid-cols-[1.4fr_1.6fr_1.2fr_1fr_140px_110px_24px] gap-4 px-5 py-3 border-b border-white/40">
               {[t("tracker.colCompany"), t("tracker.colRole"), t("tracker.colLocation"), t("tracker.colSalary"), t("tracker.colStatus"), t("tracker.colDate"), ""].map((h, i) => (

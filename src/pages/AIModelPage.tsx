@@ -92,7 +92,7 @@ export default function AIModelPage() {
 
       <div className="max-w-2xl space-y-5">
 
-        <div className="card-surface p-5">
+        <div className="glass-card p-5">
           <h3 className="text-[15px] font-semibold text-ink mb-1">{t("aiModel.instructionsTitle")}</h3>
           <p className="text-[13px] text-ink-muted mb-4">{t("aiModel.instructionsDesc")}</p>
           <textarea
@@ -105,7 +105,7 @@ export default function AIModelPage() {
           <p className="text-[12px] text-ink-muted mt-2">{t("aiModel.instructionsFooter")}</p>
         </div>
 
-        <div className="card-surface p-5">
+        <div className="glass-card p-5">
           <h3 className="text-[15px] font-semibold text-ink mb-1">{t("aiModel.modelTitle")}</h3>
           <p className="text-[13px] text-ink-muted mb-4">{t("aiModel.modelDesc")}</p>
           <div className="space-y-2">
@@ -119,7 +119,7 @@ export default function AIModelPage() {
                   "w-full flex items-center gap-4 p-4 rounded-xl border text-left transition-colors",
                   selected === m.id
                     ? "border-brand bg-brand/[0.06]"
-                    : "border-white/40 hover:border-ink/20 hover:bg-white/20"
+                    : "border-line hover:border-brand/40 hover:bg-brand/[0.03]"
                 )}
               >
                 <div className={cn(
@@ -132,7 +132,7 @@ export default function AIModelPage() {
                   <div className="flex items-center gap-2">
                     <span className="text-[14px] font-medium text-ink">{m.name}</span>
                     {m.badge && (
-                      <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-white/40 backdrop-blur-md border border-white/50 text-ink">
+                      <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-brand/[0.08] border border-brand/20 text-brand">
                         {m.badge}
                       </span>
                     )}

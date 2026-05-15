@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
-import { Menu, X, LogOut } from "lucide-react";
+import { Menu, X, LogOut, Sun, Moon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/logo.svg";
 import { useT } from "@/lib/i18n";
@@ -17,6 +17,25 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/material-ui-dropdown-menu";
 import { User, Cpu, Settings, LifeBuoy } from "lucide-react";
+
+/** TEMP: quick dark/light toggle for development — remove before launch */
+function ThemeDevToggle() {
+  const [dark, setDark] = useState(() => document.documentElement.classList.contains("dark"));
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", dark);
+    try { localStorage.setItem("tracka_theme", dark ? "dark" : "light"); } catch { /* noop */ }
+  }, [dark]);
+  return (
+    <button
+      type="button"
+      onClick={() => setDark((d) => !d)}
+      title={dark ? "Switch to light mode" : "Switch to dark mode"}
+      className="h-8 w-8 rounded-lg grid place-items-center text-ink-muted hover:text-ink hover:bg-surface-2 transition-colors"
+    >
+      {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+    </button>
+  );
+}
 
 export function TopNav() {
   const { t } = useT();
@@ -94,6 +113,7 @@ export function TopNav() {
           </nav>
 
           <div className="flex items-center gap-4">
+            <ThemeDevToggle />
             <LanguageToggle />
             <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
               <DropdownMenuTrigger

@@ -113,16 +113,16 @@ export default function ProfilePage() {
                 <button
                   type="button"
                   onClick={() => fileRef.current?.click()}
-                  className="flex items-center gap-2 h-9 px-3 rounded-xl bg-white/40 border border-white/50 backdrop-blur-md text-[13px] font-medium text-ink hover:bg-white/60 transition-colors"
+                  className="btn-ghost-sm"
                 >
-                  <Camera className="h-3.5 w-3.5 text-ink-muted" />
+                  <Camera className="h-3.5 w-3.5" />
                   {local.avatarUrl ? t("profile.replacePhoto") : t("profile.uploadPhoto")}
                 </button>
                 {local.avatarUrl && (
                   <button
                     type="button"
                     onClick={handlePhotoRemove}
-                    className="flex items-center gap-2 h-9 px-3 rounded-xl bg-red-50 border border-red-200 text-[13px] font-medium text-red-600 hover:bg-red-100 transition-colors"
+                    className="btn-danger-sm"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                     {t("profile.removePhoto")}
@@ -185,7 +185,7 @@ export default function ProfilePage() {
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="card-surface p-5">
+    <div className="glass-card p-5">
       <h3 className="text-[15px] font-semibold text-ink mb-4">{title}</h3>
       {children}
     </div>

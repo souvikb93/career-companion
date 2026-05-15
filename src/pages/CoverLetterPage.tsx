@@ -331,7 +331,7 @@ export default function CoverLetterPage() {
     <>
     <div className="w-full flex flex-col h-[calc(100dvh-64px)] lg:h-auto lg:block">
       {/* Mobile header */}
-      <div className="lg:hidden shrink-0 px-4 py-4 flex items-center justify-between border-b border-white/50 bg-white/30 backdrop-blur-md">
+      <div className="lg:hidden shrink-0 px-4 py-4 flex items-center justify-between border-b border-white/50 bg-white/30 backdrop-blur-md glass-card">
         <div className="min-w-0 flex-1">
           <h1 className="heading-1">{t("letter.pageTitle")}</h1>
           {targetJob && (
@@ -349,7 +349,7 @@ export default function CoverLetterPage() {
       </div>
 
       {/* Mobile segmented control */}
-      <div className="lg:hidden shrink-0 px-4 py-3 bg-white/30 backdrop-blur-md border-b border-white/50">
+      <div className="lg:hidden shrink-0 px-4 py-3 bg-white/30 backdrop-blur-md glass-card border-b border-white/50">
         <SegmentedControl
           options={[
             { value: "chat", label: t("letter.tabChat") },
@@ -411,7 +411,7 @@ export default function CoverLetterPage() {
                   className="chat-input flex-1"
                   style={{ touchAction: "manipulation" }}
                 />
-                <button type="button" onClick={send} disabled={generating || !draft.trim()} aria-label={t("common.send")} className="h-11 w-11 shrink-0 rounded-full bg-ink text-white grid place-items-center transition-colors duration-200 ease-out hover:bg-brand active:bg-brand disabled:opacity-40 disabled:cursor-not-allowed">
+                <button type="button" onClick={send} disabled={generating || !draft.trim()} aria-label={t("common.send")} className="h-11 w-11 shrink-0 rounded-full bg-ink text-white active-fill grid place-items-center transition-colors duration-200 ease-out hover:bg-brand active:bg-brand disabled:opacity-40 disabled:cursor-not-allowed">
                   {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                 </button>
               </div>
@@ -469,7 +469,7 @@ export default function CoverLetterPage() {
       </div>
 
       {/* Desktop header */}
-      <div className="hidden lg:flex px-8 py-5 items-center justify-between border-b border-white/50 flex-wrap gap-3 bg-white/30 backdrop-blur-md">
+      <div className="hidden lg:flex px-8 py-5 items-center justify-between border-b border-white/50 flex-wrap gap-3 bg-white/30 backdrop-blur-md glass-card">
         <div>
           <h1 className="heading-1">{t("letter.pageTitle")}</h1>
           {targetJob && (
@@ -627,7 +627,7 @@ export default function CoverLetterPage() {
                 onClick={send}
                 disabled={generating || !draft.trim()}
                 aria-label={t("common.send")}
-                className="h-11 w-11 shrink-0 rounded-full bg-ink text-white grid place-items-center transition-colors duration-200 ease-out hover:bg-brand active:bg-brand disabled:opacity-40 disabled:cursor-not-allowed"
+                className="h-11 w-11 shrink-0 rounded-full bg-ink text-white active-fill grid place-items-center transition-colors duration-200 ease-out hover:bg-brand active:bg-brand disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {generating
                   ? <Loader2 className="h-4 w-4 animate-spin" />
