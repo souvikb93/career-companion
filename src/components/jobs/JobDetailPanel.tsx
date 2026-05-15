@@ -1,18 +1,16 @@
 import { useState } from "react";
-import { format } from "date-fns";
 import { Job, JobStatus, STATUS_ORDER, STATUS_DOT_CLASS } from "@/lib/jobs-data";
 import { useT } from "@/lib/i18n";
 import { useNavigate } from "react-router-dom";
 import { useJobs } from "@/lib/jobs-store";
 import {
-  X, ExternalLink, FileText, Mail, ChevronDown, Trash2, CalendarDays,
+  X, ExternalLink, FileText, Mail, ChevronDown, Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
+import { DeadlinePicker } from "./DeadlinePicker";
 
 interface Props {
   job: Job | null;
@@ -21,17 +19,12 @@ interface Props {
   onDelete: (id: string) => void;
 }
 
-function parseLocalDate(iso: string): Date {
-  const [y, m, d] = iso.split("-").map(Number);
-  return new Date(y, m - 1, d);
-}
 
 export function JobDetailPanel({ job, onClose, onUpdate, onDelete }: Props) {
   const navigate = useNavigate();
   const { setTargetJobId } = useJobs();
   const { t } = useT();
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [calendarOpen, setCalendarOpen] = useState(false);
 
   if (!job) return null;
 
@@ -43,11 +36,6 @@ export function JobDetailPanel({ job, onClose, onUpdate, onDelete }: Props) {
 
   const field = (key: keyof Job, value: string | boolean) =>
     onUpdate({ ...job, [key]: value });
-
-  const selectedDate = job.deadline ? parseLocalDate(job.deadline) : undefined;
-  const deadlineLabel = selectedDate
-    ? format(selectedDate, "d MMM yyyy")
-    : t("jobDetail.deadlinePlaceholder");
 
   return (
     <>
@@ -92,19 +80,12 @@ export function JobDetailPanel({ job, onClose, onUpdate, onDelete }: Props) {
 
             {/* Status — Radix Select with frosted glass */}
             <div>
-              <label className="field-label">{t("jobDetail.status")}</label>
+              <label id="label-status" className="field-label">{t("jobDetail.status")}</label>
               <Select
                 value={job.status}
                 onValueChange={(v) => field("status", v as JobStatus)}
               >
-                <SelectTrigger
-                  className={cn(
-                    "w-full bg-transparent border border-line rounded-2xl h-11 px-4 text-[14px] text-ink",
-                    "flex items-center gap-2.5 outline-none cursor-pointer",
-                    "transition-[border-color,background-color] duration-200 ease-out",
-                    "hover:bg-surface-hover focus:border-brand focus:ring-0 focus:ring-offset-0",
-                  )}
-                >
+                <SelectTrigger aria-labelledby="label-status" className="focus:ring-0 focus:ring-offset-0 gap-2.5">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent
@@ -133,66 +114,34 @@ export function JobDetailPanel({ job, onClose, onUpdate, onDelete }: Props) {
 
             {/* Deadline — date picker popover */}
             <div>
-              <label className="field-label">{t("jobDetail.deadline")}</label>
-              <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
-                <PopoverTrigger asChild>
-                  <button
-                    type="button"
-                    className={cn(
-                      "w-full bg-transparent border border-line rounded-2xl h-11 px-4 text-[14px]",
-                      "flex items-center justify-between gap-2 cursor-pointer",
-                      "transition-[border-color,background-color] duration-200 ease-out outline-none",
-                      "hover:bg-surface-hover focus:border-brand",
-                      selectedDate ? "text-ink" : "text-ink-muted/60",
-                    )}
-                  >
-                    <span>{deadlineLabel}</span>
-                    <CalendarDays className="h-4 w-4 text-ink-muted shrink-0" />
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent
-                  align="end"
-                  sideOffset={8}
-                  className="z-[55] w-auto p-0 border border-white/60 bg-white/70 backdrop-blur-2xl rounded-2xl shadow-lg glass-popover"
-                >
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={(date) => {
-                      field("deadline", date ? format(date, "yyyy-MM-dd") : "");
-                      setCalendarOpen(false);
-                    }}
-                    initialFocus
-                    classNames={{
-                      months: "p-3",
-                      caption_label: "text-[14px] font-semibold text-ink",
-                      nav_button: cn(
-                        "h-7 w-7 bg-transparent p-0 rounded-full border-0",
-                        "hover:bg-black/[0.06] opacity-70 hover:opacity-100 transition-opacity",
-                      ),
-                      head_cell: "text-ink-muted w-9 font-medium text-[11px] uppercase tracking-wide",
-                      cell: "h-9 w-9 text-center text-sm p-0 relative",
-                      day: cn(
-                        "h-9 w-9 p-0 text-[13px] font-normal rounded-full",
-                        "hover:bg-black/[0.06] aria-selected:opacity-100 transition-colors",
-                      ),
-                      day_selected: "!bg-brand !text-white hover:!bg-brand hover:!text-white focus:!bg-brand focus:!text-white",
-                      day_today: "ring-1 ring-brand/60 text-brand font-semibold",
-                      day_outside: "text-ink-muted opacity-40",
-                      day_disabled: "text-ink-muted opacity-30",
-                    }}
-                  />
-                </PopoverContent>
-              </Popover>
+              <label id="label-deadline" className="field-label">{t("jobDetail.deadline")}</label>
+              <DeadlinePicker
+                value={job.deadline ?? ""}
+                onChange={(v) => field("deadline", v)}
+                placeholder={t("jobDetail.deadlinePlaceholder")}
+                aria-labelledby="label-deadline"
+              />
 
               {/* Notify checkbox */}
               <label className="mt-3 flex items-center gap-2.5 cursor-pointer select-none group">
-                <input
-                  type="checkbox"
-                  checked={job.notifyDeadline ?? false}
-                  onChange={(e) => field("notifyDeadline", e.target.checked)}
-                  className="h-4 w-4 rounded border-line accent-brand cursor-pointer"
-                />
+                <button
+                  type="button"
+                  role="checkbox"
+                  aria-checked={job.notifyDeadline ?? false}
+                  onClick={() => field("notifyDeadline", !(job.notifyDeadline ?? false))}
+                  className={cn(
+                    "shrink-0 h-4 w-4 rounded border-2 transition-colors grid place-items-center",
+                    (job.notifyDeadline ?? false)
+                      ? "bg-brand border-brand"
+                      : "bg-transparent border-line group-hover:border-ink-muted"
+                  )}
+                >
+                  {(job.notifyDeadline ?? false) && (
+                    <svg className="h-2.5 w-2.5 text-white" viewBox="0 0 12 12" fill="none">
+                      <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
+                </button>
                 <span className="text-[13px] text-ink-muted group-hover:text-ink transition-colors duration-150">
                   {t("jobDetail.notifyDeadline")}
                 </span>
@@ -201,8 +150,9 @@ export function JobDetailPanel({ job, onClose, onUpdate, onDelete }: Props) {
 
             {/* Location */}
             <div>
-              <label className="field-label">{t("jobDetail.location")}</label>
+              <label htmlFor="field-location" className="field-label">{t("jobDetail.location")}</label>
               <input
+                id="field-location"
                 value={job.location ?? ""}
                 onChange={(e) => field("location", e.target.value)}
                 placeholder="e.g. Berlin, Germany"
@@ -212,9 +162,10 @@ export function JobDetailPanel({ job, onClose, onUpdate, onDelete }: Props) {
 
             {/* Job URL */}
             <div>
-              <label className="field-label">{t("jobDetail.jobUrl")}</label>
+              <label htmlFor="field-link" className="field-label">{t("jobDetail.jobUrl")}</label>
               <div className="relative">
                 <input
+                  id="field-link"
                   value={job.link ?? ""}
                   onChange={(e) => field("link", e.target.value)}
                   placeholder="https://..."
@@ -237,8 +188,9 @@ export function JobDetailPanel({ job, onClose, onUpdate, onDelete }: Props) {
 
             {/* Description */}
             <div>
-              <label className="field-label">{t("jobDetail.description")}</label>
+              <label htmlFor="field-description" className="field-label">{t("jobDetail.description")}</label>
               <textarea
+                id="field-description"
                 value={job.description ?? ""}
                 onChange={(e) => field("description", e.target.value)}
                 rows={6}
@@ -249,8 +201,9 @@ export function JobDetailPanel({ job, onClose, onUpdate, onDelete }: Props) {
 
             {/* Salary */}
             <div>
-              <label className="field-label">{t("jobDetail.salary")}</label>
+              <label htmlFor="field-salary" className="field-label">{t("jobDetail.salary")}</label>
               <input
+                id="field-salary"
                 value={job.salary ?? ""}
                 onChange={(e) => field("salary", e.target.value)}
                 placeholder={t("jobDetail.salaryPlaceholder")}
@@ -260,8 +213,9 @@ export function JobDetailPanel({ job, onClose, onUpdate, onDelete }: Props) {
 
             {/* Notes */}
             <div>
-              <label className="field-label">{t("jobDetail.notes")}</label>
+              <label htmlFor="field-notes" className="field-label">{t("jobDetail.notes")}</label>
               <textarea
+                id="field-notes"
                 value={job.notes ?? ""}
                 onChange={(e) => field("notes", e.target.value)}
                 rows={4}
@@ -286,7 +240,7 @@ export function JobDetailPanel({ job, onClose, onUpdate, onDelete }: Props) {
             <button
               type="button"
               onClick={() => setConfirmDelete(true)}
-              className="inline-flex items-center gap-2 text-[13px] font-medium text-red-500 hover:text-red-600 transition-colors duration-150 cursor-pointer"
+              className="btn-danger-tertiary"
             >
               <Trash2 className="h-4 w-4" />
               Delete job
@@ -306,8 +260,8 @@ export function JobDetailPanel({ job, onClose, onUpdate, onDelete }: Props) {
                 <Trash2 className="h-5 w-5 text-red-500" />
               </div>
               <div>
-                <p className="text-[17px] font-semibold text-ink mb-1">Delete job?</p>
-                <p className="text-[14px] text-ink-muted leading-relaxed">
+                <p className="modal-heading">Delete job?</p>
+                <p className="modal-body">
                   <span className="font-medium text-ink">{job.role}</span>
                   {job.company ? ` at ${job.company}` : ""} will be permanently removed.
                 </p>
@@ -319,7 +273,7 @@ export function JobDetailPanel({ job, onClose, onUpdate, onDelete }: Props) {
                 <button
                   type="button"
                   onClick={() => onDelete(job.id)}
-                  className="flex-1 h-11 px-5 rounded-full bg-red-500 text-white text-[12px] font-bold uppercase tracking-[0.08em] transition-colors hover:bg-red-600 inline-flex items-center justify-center"
+                  className="btn-danger-primary flex-1 justify-center"
                 >
                   Delete
                 </button>

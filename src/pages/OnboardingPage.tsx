@@ -418,7 +418,7 @@ export default function OnboardingPage() {
                         <div key={exp.id} className="rounded-2xl border border-line p-4 relative">
                           <div className="flex items-center justify-between mb-3">
                             <span className="text-[13px] font-semibold text-ink">{t("onboarding.experience", { n: idx + 1 })}</span>
-                            <button type="button" onClick={() => update("experiences", profile.experiences.filter((e) => e.id !== exp.id))} className="h-7 w-7 rounded-full grid place-items-center text-ink-muted hover:text-ink hover:bg-surface-2 transition-colors">
+                            <button type="button" aria-label={t("onboarding.removeExperience")} onClick={() => update("experiences", profile.experiences.filter((e) => e.id !== exp.id))} className="h-7 w-7 rounded-full grid place-items-center text-ink-muted hover:text-ink hover:bg-surface-2 transition-colors">
                               <X className="h-3.5 w-3.5" />
                             </button>
                           </div>
@@ -446,7 +446,7 @@ export default function OnboardingPage() {
                         <div key={ed.id} className="rounded-2xl border border-line p-4 relative">
                           <div className="flex items-center justify-between mb-3">
                             <span className="text-[13px] font-semibold text-ink">{t("onboarding.education", { n: idx + 1 })}</span>
-                            <button type="button" onClick={() => update("education", profile.education.filter((e) => e.id !== ed.id))} className="h-7 w-7 rounded-full grid place-items-center text-ink-muted hover:text-ink hover:bg-surface-2 transition-colors">
+                            <button type="button" aria-label={t("onboarding.removeEducation")} onClick={() => update("education", profile.education.filter((e) => e.id !== ed.id))} className="h-7 w-7 rounded-full grid place-items-center text-ink-muted hover:text-ink hover:bg-surface-2 transition-colors">
                               <X className="h-3.5 w-3.5" />
                             </button>
                           </div>

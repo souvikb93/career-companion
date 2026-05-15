@@ -430,7 +430,7 @@ export default function CoverLetterPage() {
                       {m.chips && i === lastChipIdx && genPhase !== "idle" && !generating && (
                         <div className="flex flex-wrap gap-2 mt-3">
                           {m.chips.map((chip) => (
-                            <button key={chip} type="button" onClick={() => send(chip)} className="h-8 px-3 rounded-full border border-ink/20 bg-white/60 text-[13px] text-ink hover:bg-white hover:border-ink/40 transition-colors">{chip}</button>
+                            <button key={chip} type="button" onClick={() => send(chip)} className="chip-suggestion">{chip}</button>
                           ))}
                         </div>
                       )}
@@ -652,7 +652,7 @@ export default function CoverLetterPage() {
                             key={chip}
                             type="button"
                             onClick={() => send(chip)}
-                            className="h-8 px-3 rounded-full border border-ink/20 bg-white/60 text-[13px] text-ink hover:bg-white hover:border-ink/40 transition-colors"
+                            className="chip-suggestion"
                           >
                             {chip}
                           </button>
@@ -960,8 +960,8 @@ export default function CoverLetterPage() {
           >
             <X className="h-4 w-4" />
           </button>
-          <h3 className="text-[17px] font-semibold text-ink mb-1 pr-8">{t("common.unsavedTitle")}</h3>
-          <p className="text-[14px] text-ink-muted leading-relaxed mb-5">{t("common.unsavedBody")}</p>
+          <h3 className="modal-heading pr-8">{t("common.unsavedTitle")}</h3>
+          <p className="modal-body">{t("common.unsavedBody")}</p>
           <div className="flex gap-3">
             <button
               type="button"

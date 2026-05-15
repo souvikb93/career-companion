@@ -196,8 +196,8 @@ export default function AIModelPage() {
             <div className="h-11 w-11 rounded-2xl glass-chip flex items-center justify-center mb-4">
               <Sparkles className="h-5 w-5 text-brand" />
             </div>
-            <h3 className="text-[17px] font-semibold text-ink mb-1">{t("aiModel.instructionsConfirmTitle")}</h3>
-            <p className="text-[13px] text-ink-muted leading-relaxed mb-6">{t("aiModel.instructionsConfirmBody")}</p>
+            <h3 className="modal-heading">{t("aiModel.instructionsConfirmTitle")}</h3>
+            <p className="modal-body mb-6">{t("aiModel.instructionsConfirmBody")}</p>
             <div className="flex gap-3">
               <button
                 type="button"

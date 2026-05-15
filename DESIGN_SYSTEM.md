@@ -71,10 +71,12 @@ All tokens are HSL custom properties in `:root`. Use the semantic Tailwind class
 - **Radius**:
   - Primary/ghost CTA buttons: `rounded-full` only — these are pills.
   - Icon buttons (square): `rounded-xl`.
-  - **Filter chips, selectable tiles, inputs, cards**: `rounded-2xl` (16px) — the standard interactive / container radius.
-  - Short single-row size/density tiles (h-10): `rounded-xl` exception — visually lighter at that height.
+  - **All form field controls** (`input-base`, `textarea-base`, `field-trigger`, `glass-input`): `rounded-xl` (12px) — the login page is the canonical reference.
+  - **Filter chips, selectable tiles, cards**: `rounded-2xl` (16px).
+  - Short single-row size/density tiles (h-10): `rounded-xl`.
   - Modals / sheets: `rounded-3xl` (24px).
   - `rounded-full` is NOT for chips or tiles — it is reserved for CTA pills only.
+  - MUST NOT override input radius with `rounded-2xl` — `rounded-xl` is the single standard for all form controls.
 - **Borders**: 1px hairline only. `border-line` on solid surfaces, `border-white/50` on glass.
 - **Dividers on glass surfaces**: Always use `.glass-rule` — never `border-line`. It resolves to `rgb(0 0 0 / 0.07)` in light and `rgb(255 255 255 / 0.08)` in dark, matching the glass component family (`glass-card`, `glass-nav`, etc.). Applies to all structural dividers: vertical split (`border-r glass-rule`), horizontal header/content (`border-b glass-rule`), and panel edges. MUST NOT use `border-line` on glass pages — it renders too heavy in both modes.
 
@@ -140,12 +142,52 @@ All recipes live as classes in `index.css`. The Tailwind combinations below are 
 | Ghost compact | `.btn-ghost-sm` | h-9 | Settings rows, inline actions — same visual as ghost, smaller |
 | Tertiary | `.btn-tertiary` | auto | Text-only, hover underlines |
 | Icon primary | `.btn-icon-primary` | caller sets | Round/square send/FAB — ink → brand on hover |
+| Icon secondary | `.btn-icon-sm` | h-7 w-7 typical | Muted ghost icon button — toolbar actions, zoom, section controls |
 | Icon (40–48px square) | `rounded-xl bg-ink text-white hover:bg-brand` | h-10/h-12 | Square icon-only, never pill |
 
 **Ghost button visual spec** — matches `split-panel-btn` (Google sign-in button) exactly:
 - Light: `background: white` (solid, **no** frosted glass / backdrop-blur), `border: 1px solid var(--line)`, hover → `surface-2`
 - Dark: `background: surface`, `border: line`, hover → `surface-hover`
 - MUST NOT add `backdrop-blur` or `bg-white/50` — ghost buttons are always opaque
+
+**Destructive button 3-tier schema** — mirrors neutral hierarchy with red semantics:
+
+| Tier | Class | Mirrors | When to use |
+|---|---|---|---|
+| Tertiary | `.btn-danger-tertiary` | `.btn-tertiary` | Inline/list-item trigger with low visual weight (e.g. "Delete job" at bottom of sidebar) |
+| Secondary | `.btn-danger` / `.btn-danger-sm` | `.btn-ghost` / `.btn-ghost-sm` | Settings Danger Zone row actions — white bg, red border, red text |
+| Primary | `.btn-danger-primary` | `.btn-primary` | Final confirm inside a destructive modal **only** — solid red bg, white text |
+
+- Light secondary: solid `bg-white`, `border-red-400`, `text-red-500`, hover `bg-red-50`
+- Dark secondary: `background: surface`, `border: red-400/45`, `color: red-300`, hover tint `red/12`
+- Light primary: `bg-red-500`, `text-white`, hover `brightness-110`
+- Dark primary: `bg-red-700` (`#dc2626`), `text-white`, hover `brightness-112`
+- Tertiary dark: `text-red-400`, hover `text-red-300` — no fill
+- MUST NOT use inline `bg-red-500 text-white hover:bg-red-600` — always use `.btn-danger-primary`
+- MUST NOT use `.btn-danger-primary` outside a confirmation dialog — it is point-of-no-return only
+
+**Destructive selection row** (clear-data confirmation dialogs):
+
+| Class | Role |
+|---|---|
+| `.danger-select-row` | Clickable option-row container — sets border, bg, hover tint |
+| `.danger-select-row.is-checked` | Selected state — stronger red border + tint |
+| `.danger-checkbox` | Square indicator inside the row — apply `rounded` or `rounded-md` as needed |
+| `.danger-checkbox.is-checked` | Solid red bg + border |
+
+- Add `is-checked` via `cn("danger-select-row", checked && "is-checked")`.
+- Light: `border-line` base, hover/checked → `red-400/70` border + `red-500/4–6%` bg.
+- Dark: same token, `red-500/40–50%` border + `red-500/8–10%` bg.
+- MUST NOT use inline `border-red-300 bg-red-50/60` — always use `.danger-select-row.is-checked`
+
+**Icon secondary button** (`.btn-icon-sm`):
+- `grid place-items-center text-ink-muted rounded-xl transition-colors` base
+- Light hover: `rgb(0 0 0 / 0.06)` background
+- Dark hover: `rgb(255 255 255 / 0.10)` background
+- Caller sets `h-*` and `w-*` (typically `h-7 w-7`); override `rounded-*` only if context demands (e.g. `rounded-full` for close X)
+- MUST NOT use inline `hover:bg-black/[0.06]` without the paired `dark:hover:bg-white/10` — use `.btn-icon-sm`
+
+**Google sign-in SVG exception** — the Google G logo SVG inside `AuthPage.tsx` uses hardcoded `#4285F4 #34A853 #FBBC05 #EA4335` hex values. These are Google brand colors and exempt from the "no raw hex" rule. Do not replace them with tokens.
 
 Rules:
 - Exactly **one primary CTA per screen**. Everything else is ghost / tertiary.
@@ -156,10 +198,57 @@ Rules:
 
 ### 4.2 Inputs
 
+**Field control schema** — every form control (text input, textarea, select trigger, date trigger) shares one visual spec:
+
+| Token | Light | Dark |
+|---|---|---|
+| Background | `transparent` | `hsl(var(--surface-2))` |
+| Background hover | `hsl(var(--surface-hover))` | `hsl(var(--surface-hover))` |
+| Border | `hsl(var(--line))` | `hsl(var(--line))` |
+| Border focus | `hsl(var(--brand))` | `hsl(var(--brand))` |
+| Text | `hsl(var(--ink))` | `hsl(var(--ink))` |
+| Height | `h-11` (44px) | same |
+| Radius | `rounded-xl` | same |
+| Padding | `px-4` | same |
+| Font size | `text-[14px]` | same |
+
+**Classes:**
+
+| Element | Class | Notes |
+|---|---|---|
+| `<input>` text | `.input-base` | Native input element |
+| `<textarea>` | `.textarea-base` | Adds `py-3 resize-y` |
+| `<button>` trigger (Select, DatePicker) | `.field-trigger` | Adds `flex items-center justify-between` |
+| Phone number | `<PhoneInput>` (`phone-input.tsx`) | Uses `.phone-input-wrapper` token — flag+dial combo |
+| OTP code entry | `<InputOTP>` + `<InputOTPGroup>` + `<InputOTPSlot>` (`input-otp.tsx`) | 6 separated boxes, brand border when filled |
+| Glass page variant | `.glass-input` | For pages with the gradient mesh |
+
+**`PhoneInput` schema:**
+- Container: `.phone-input-wrapper` — same visual as `.input-base` but `focus-within:border-brand` (nested input triggers border)
+- Left: country trigger — flag SVG + chevron, `border-r border-line/60` divider, `hover:bg-black/[0.04] dark:hover:bg-white/[0.06]`
+- Right: number input — `flex-1 px-3 bg-transparent text-[14px] text-ink`
+- Country popover: `glass-popover rounded-2xl z-[70]` (must be above modal z-index 50)
+- Validation: use `isValidPhoneNumber()` from `react-phone-number-input` — not manual digit counting
+- Default country via `defaultCountry` prop (e.g. `"DE"`)
+- MUST NOT use `<input type="tel">` directly — always use `<PhoneInput>` for phone number fields
+
+**`InputOTP` / `InputOTPSlot` schema:**
+- Each slot: `h-12 w-10 rounded-xl border-2` — individual separated boxes (not connected)
+- Empty: `border-line`; active (focused): `border-brand/60 bg-surface-hover`; filled: `border-brand`
+- Caret: `bg-brand` blinking line, 20px tall
+- Container gap: `gap-2.5` (10px between boxes)
+- Usage: wrap `InputOTPGroup` + 6× `InputOTPSlot` inside `InputOTP maxLength={6}`
+- MUST NOT build custom OTP inputs from individual `<input>` elements — use `InputOTP` library
+
+- MUST NOT mix `.input-base` and `.field-trigger` on the same element type
+- MUST NOT use shadcn default `bg-background border-input` on `SelectTrigger` — use `.field-trigger`
+- MUST NOT set `h-10` on select triggers — all controls are `h-11` for touch-target compliance
+
 | | Solid | Glass |
 |---|---|---|
 | Single line | `.input-base` | `.glass-input` |
 | Multi line | `.textarea-base` | `textarea` with `.glass-input` class + `resize-none` |
+| Button trigger | `.field-trigger` | Select, DatePicker |
 | Label | `.field-label` (always visible, never placeholder-only) | same |
 | Helper text | `text-[12px] text-ink-muted mt-1` | same |
 | Error | `border-red-600` on input + `text-[12px] text-red-600 mt-1` below | same |
@@ -203,8 +292,8 @@ Glass modal recipe — use `.glass-modal` for the panel. **Always separate the b
     >
       <X className="h-4 w-4" />
     </button>
-    <h3 className="text-[17px] font-semibold text-ink mb-1 pr-8">Title</h3>
-    <p className="text-[14px] text-ink-muted leading-relaxed mb-5">Body copy.</p>
+    <h3 className="modal-heading pr-8">Title</h3>
+    <p className="modal-body">Body copy.</p>
     {/* Button row */}
     <div className="flex gap-3">
       <button type="button" onClick={onClose} className="btn-ghost flex-1 justify-center">
@@ -218,11 +307,17 @@ Glass modal recipe — use `.glass-modal` for the panel. **Always separate the b
 </div>
 ```
 
+**Modal typography classes:**
+- `.modal-heading` — `22px font-semibold text-ink mb-1`. Add `pr-8` when a close button occupies top-right.
+- `.modal-body` — `14px text-ink-muted leading-relaxed mb-5`. Use `!mb-0` or `mb-N` override when spacing differs.
+- MUST NOT use raw `text-[22px] font-semibold`, `text-[17px]`, or `text-[18px]` inline inside modals — always use `.modal-heading`.
+- MUST NOT use raw `text-[13px]` or `text-[14px] text-ink-muted` inline inside modals — always use `.modal-body`.
+
 **Button row rules (MUST follow):**
 - Always `flex gap-3` row — never stack buttons vertically in a modal.
 - Secondary / cancel action **always on the LEFT** (`btn-ghost flex-1 justify-center`).
 - Primary / confirm action **always on the RIGHT** (`btn-primary flex-1 justify-center`).
-- Destructive confirm uses inline `bg-red-500 text-white … hover:bg-red-600` instead of `btn-primary`.
+- Destructive confirm uses `.btn-danger-primary flex-1 justify-center` — never inline red styles.
 - Both buttons are `flex-1` so they share width equally.
 
 **Close affordance rules:**
@@ -269,6 +364,23 @@ Rules:
 - Inactive: `border-transparent` so the tile-surface fill reads as the selected affordance on activation.
 - Count badge inherits the active colour (`text-brand`) or mutes (`text-ink-muted`) — always rendered as a second `<span>` inline.
 - Works on both glass pages (mesh background) and solid pages — `tile-surface` adapts via `--glass-tint`.
+
+### 4.8 Suggestion chip (quick-reply)
+
+Used in chat UIs for predefined prompt options (tone selector, emphasis chips, etc.). Always `rounded-full` pills — these are **not** filter chips and do not use `tile-surface`.
+
+```tsx
+<button type="button" onClick={() => send(chip)} className="chip-suggestion">
+  {chip}
+</button>
+```
+
+Token spec:
+- Light: `bg-surface-2` (`#EFEFED`), `border-line`, `text-ink`, hover → `bg-surface-hover`
+- Dark: same surface tokens + border overridden to `hsl(0 0% 40%)` for legibility against dark bg
+- MUST NOT use `bg-white/60` — opacity-on-white is not dark-mode-aware and renders as flat gray `#999` in dark mode
+- `rounded-full` pill shape — these are conversational chips, not filter/selection chips
+- Height `h-8` (32px) — compact, inline with chat bubbles
 
 ### 4.9 Selectable tile (2-D card variant)
 
@@ -797,7 +909,7 @@ A checklist to run through before considering a UI change "done". This expands a
 - [ ] Don't animate layout properties (`width`, `height`, `top`, `left`).
 - [ ] Don't remove `focus-visible` outlines.
 - [ ] Don't add the gradient mesh to dense form pages.
-- [ ] Don't `rounded-full` something that should be a tile or chip — `rounded-full` is reserved for primary/ghost CTA pills only. Filter chips, selectable tiles, inputs, and cards all use `rounded-2xl`.
+- [ ] Don't `rounded-full` something that should be a tile or chip — `rounded-full` is reserved for primary/ghost CTA pills only. Form field controls use `rounded-xl`; filter chips, selectable tiles, and cards use `rounded-2xl`.
 - [ ] Don't use blue-hued dark surfaces — dark palette MUST be neutral gray (§7b).
 - [ ] Don't add inline `dark:` Tailwind for input states — use `input-base` / `textarea-base` tokens (§7b).
 - [ ] Don't merge the modal scrim and centering container — always separate layers (§4.4).
@@ -821,5 +933,9 @@ A checklist to run through before considering a UI change "done". This expands a
 | `tailwind.config.ts` | Token → Tailwind class wiring, animations |
 | `src/components/BackgroundGradientAnimation.tsx` | The mesh background |
 | `src/lib/utils.ts` | `cn()` for class merging |
+| `src/components/ui/checkbox.tsx` | Checkbox — design system tokens (`border-line`, `bg-ink`, `rounded-[4px]`) |
+| `src/components/ui/input-otp.tsx` | OTP input — 6 separated boxes, brand border states |
+| `src/components/ui/phone-input.tsx` | Phone input — flag+dial country picker, `.phone-input-wrapper` token |
+| `src/components/ui/select.tsx` | Select — `.field-trigger` on trigger, `rounded-xl` content |
 | `DESIGN_SYSTEM.md` | This doc (single source of truth) |
 | `CLAUDE.md` | Pointer so AI sessions load this doc automatically |

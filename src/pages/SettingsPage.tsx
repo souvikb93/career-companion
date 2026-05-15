@@ -1,6 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Trash2, X, Sun, Moon, Monitor, Download } from "lucide-react";
+import { Trash2, X, Sun, Moon, Monitor, Download, Smartphone, CheckCircle2, Loader2, MessageSquare } from "lucide-react";
+import { PhoneInput } from "@/components/ui/phone-input";
+import { isValidPhoneNumber } from "react-phone-number-input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useJobs } from "@/lib/jobs-store";
@@ -18,8 +22,10 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 
-const THEME_KEY = "tracka_theme";
-const NOTIF_KEY = "tracka_email_notif";
+const THEME_KEY        = "tracka_theme";
+const NOTIF_KEY        = "tracka_email_notif";
+const MOBILE_NOTIF_KEY = "tracka_mobile_notif";
+const MOBILE_PHONE_KEY = "tracka_mobile_phone";
 
 type Theme = "light" | "auto" | "dark";
 
@@ -28,6 +34,12 @@ function getStoredTheme(): Theme {
 }
 function getStoredNotif(): boolean {
   try { return localStorage.getItem(NOTIF_KEY) === "true"; } catch { return false; }
+}
+function getStoredMobileNotif(): boolean {
+  try { return localStorage.getItem(MOBILE_NOTIF_KEY) === "true"; } catch { return false; }
+}
+function getStoredMobilePhone(): string {
+  try { return localStorage.getItem(MOBILE_PHONE_KEY) ?? ""; } catch { return ""; }
 }
 
 /* ── Shared UI primitives ────────────────────────────────────── */
@@ -74,7 +86,7 @@ function Modal({ open, onClose, children }: {
 /* ── Export Modal ────────────────────────────────────────────── */
 
 const EXPORT_OPTIONS = [
-  { id: "jobs",   label: "Jobs",         desc: "All tracked jobs as a CSV spreadsheet",   ext: "CSV" },
+  { id: "jobs",   label: "Jobs",         desc: "All tracked jobs as a CSV spreadsheet",   ext: "CSV"  },
   { id: "resume", label: "Resume",       desc: "Saved resume drafts as JSON",              ext: "JSON" },
   { id: "letter", label: "Cover Letter", desc: "Saved cover letter drafts as JSON",        ext: "JSON" },
 ] as const;
@@ -110,10 +122,10 @@ function ExportModal({ open, onClose, jobs }: {
       toast.success("Resume data exported");
     } else if (selected === "letter") {
       const draft = localStorage.getItem("tracka_letter_draft");
-      const msgs = localStorage.getItem("tracka_letter_msgs_v2");
-      const data = JSON.stringify({ draft: draft ? JSON.parse(draft) : null, messages: msgs ? JSON.parse(msgs) : [] }, null, 2);
-      const blob = new Blob([data], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
+      const msgs  = localStorage.getItem("tracka_letter_msgs_v2");
+      const data  = JSON.stringify({ draft: draft ? JSON.parse(draft) : null, messages: msgs ? JSON.parse(msgs) : [] }, null, 2);
+      const blob  = new Blob([data], { type: "application/json" });
+      const url   = URL.createObjectURL(blob);
       const a = document.createElement("a"); a.href = url; a.download = "tracka-letter.json"; a.click();
       URL.revokeObjectURL(url);
       toast.success("Cover letter data exported");
@@ -123,8 +135,8 @@ function ExportModal({ open, onClose, jobs }: {
 
   return (
     <Modal open={open} onClose={onClose}>
-      <h2 className="text-[18px] font-semibold text-ink mb-1 pr-8">Export Data</h2>
-      <p className="text-[13px] text-ink-muted mb-5">Choose what you'd like to export.</p>
+      <h2 className="modal-heading pr-8">Export Data</h2>
+      <p className="modal-body">Choose what you'd like to export.</p>
       <div className="space-y-2 mb-6">
         {EXPORT_OPTIONS.map((opt) => (
           <button
@@ -138,12 +150,11 @@ function ExportModal({ open, onClose, jobs }: {
                 : "border-line hover:border-brand/40 hover:bg-brand/[0.03]"
             )}
           >
-            <div className={cn(
-              "h-4 w-4 rounded-full border-2 shrink-0 flex items-center justify-center transition-colors",
-              selected === opt.id ? "border-brand" : "border-line"
-            )}>
-              {selected === opt.id && <div className="h-2 w-2 rounded-full bg-brand" />}
-            </div>
+            <Checkbox
+              checked={selected === opt.id}
+              onCheckedChange={() => setSelected(opt.id)}
+              className="shrink-0 data-[state=checked]:bg-brand data-[state=checked]:border-brand focus-visible:ring-brand/50"
+            />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <span className="text-[14px] font-medium text-ink">{opt.label}</span>
@@ -158,137 +169,6 @@ function ExportModal({ open, onClose, jobs }: {
         <button onClick={onClose} className="btn-ghost flex-1 justify-center">Cancel</button>
         <button onClick={handleExport} className="btn-primary flex-1 justify-center">
           <Download className="h-3.5 w-3.5" /> Export
-        </button>
-      </div>
-    </Modal>
-  );
-}
-
-/* ── Clear Data Modal ────────────────────────────────────────── */
-
-const CLEAR_OPTIONS = [
-  {
-    id: "jobs",
-    label: "Job Data",
-    desc: "All tracked job applications",
-    keys: ["jobs_v7", "jobs_added_count"],
-  },
-  {
-    id: "resume",
-    label: "Resume Data",
-    desc: "CV drafts, layouts and saved resumes",
-    keys: ["tracka_cv_draft", "cv_layout", "saved_cvs_v1", "saved_cvs_v2", "tracka_cv_jd"],
-  },
-  {
-    id: "letter",
-    label: "Letter Data",
-    desc: "Cover letter drafts, messages and saved letters",
-    keys: ["tracka_letter_draft", "tracka_letter_msgs_v2", "letter_layout", "saved_letters_v1", "saved_letters_v2", "tracka_letter_jd"],
-  },
-] as const;
-
-type ClearId = typeof CLEAR_OPTIONS[number]["id"];
-
-function ClearDataModal({ open, onClose, onClearJobs }: {
-  open: boolean; onClose: () => void; onClearJobs: () => void;
-}) {
-  const [selected, setSelected] = useState<Set<ClearId>>(new Set());
-  const [allData, setAllData] = useState(false);
-
-  const toggleAll = (val: boolean) => {
-    setAllData(val);
-    if (val) setSelected(new Set(CLEAR_OPTIONS.map((o) => o.id)));
-    else setSelected(new Set());
-  };
-
-  const toggleOption = (id: ClearId) => {
-    const next = new Set(selected);
-    next.has(id) ? next.delete(id) : next.add(id);
-    setSelected(next);
-    setAllData(next.size === CLEAR_OPTIONS.length);
-  };
-
-  const handleClear = () => {
-    if (selected.size === 0 && !allData) { toast.error("Select at least one data type"); return; }
-    const toClear = allData ? CLEAR_OPTIONS : CLEAR_OPTIONS.filter((o) => selected.has(o.id));
-    toClear.forEach((opt) => {
-      opt.keys.forEach((k) => { try { localStorage.removeItem(k); } catch { /* noop */ } });
-      if (opt.id === "jobs") onClearJobs();
-    });
-    toast.success("Selected data cleared");
-    setSelected(new Set());
-    setAllData(false);
-    onClose();
-  };
-
-  const noneSelected = selected.size === 0 && !allData;
-
-  return (
-    <Modal open={open} onClose={onClose}>
-      <h2 className="text-[18px] font-semibold text-ink mb-1 pr-8">Clear Data</h2>
-      <p className="text-[13px] text-ink-muted mb-5">Select what you'd like to clear. This cannot be undone.</p>
-
-      {/* All Data toggle */}
-      <button
-        type="button"
-        onClick={() => toggleAll(!allData)}
-        className={cn(
-          "w-full flex items-center gap-3 p-3.5 rounded-xl border mb-3 text-left transition-colors",
-          allData ? "border-red-400 bg-red-50" : "border-line hover:border-red-300 hover:bg-red-50/50"
-        )}
-      >
-        <div className={cn(
-          "h-4 w-4 rounded border-2 shrink-0 flex items-center justify-center transition-colors",
-          allData ? "bg-red-500 border-red-500" : "border-line"
-        )}>
-          {allData && <svg className="h-2.5 w-2.5 text-white" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>}
-        </div>
-        <div>
-          <p className="text-[14px] font-semibold text-ink">All Data</p>
-          <p className="text-[12px] text-ink-muted mt-0.5">Jobs, resumes and cover letters</p>
-        </div>
-      </button>
-
-      <div className="space-y-2 mb-6">
-        {CLEAR_OPTIONS.map((opt) => {
-          const checked = selected.has(opt.id) || allData;
-          return (
-            <button
-              key={opt.id}
-              type="button"
-              onClick={() => !allData && toggleOption(opt.id)}
-              disabled={allData}
-              className={cn(
-                "w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-colors",
-                checked
-                  ? "border-red-300 bg-red-50/60"
-                  : "border-line hover:border-red-200 hover:bg-red-50/30",
-                allData && "opacity-60 cursor-default"
-              )}
-            >
-              <div className={cn(
-                "h-4 w-4 rounded border-2 shrink-0 flex items-center justify-center transition-colors",
-                checked ? "bg-red-500 border-red-500" : "border-line"
-              )}>
-                {checked && <svg className="h-2.5 w-2.5 text-white" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>}
-              </div>
-              <div>
-                <p className="text-[13px] font-medium text-ink">{opt.label}</p>
-                <p className="text-[12px] text-ink-muted mt-0.5">{opt.desc}</p>
-              </div>
-            </button>
-          );
-        })}
-      </div>
-
-      <div className="flex gap-3">
-        <button onClick={onClose} className="btn-ghost flex-1 justify-center">Cancel</button>
-        <button
-          onClick={handleClear}
-          disabled={noneSelected}
-          className="flex-1 h-11 px-5 rounded-full bg-red-500 text-white text-[12px] font-bold uppercase tracking-[0.08em] transition-colors hover:bg-red-600 disabled:opacity-40 inline-flex items-center justify-center gap-2"
-        >
-          <Trash2 className="h-3.5 w-3.5" /> Clear
         </button>
       </div>
     </Modal>
@@ -312,24 +192,15 @@ function DeleteAccountDialog({ open, deleting, onConfirm, onCancel }: {
           className="absolute top-4 right-4 h-7 w-7 rounded-full grid place-items-center text-ink-muted hover:bg-surface-2 transition-colors disabled:opacity-40">
           <X className="h-4 w-4" />
         </button>
-        <h2 className="text-[18px] font-semibold text-ink mb-2">{t("settings.deleteDialog.title")}</h2>
-        <p className="text-[14px] text-ink-muted mb-5">{t("settings.deleteDialog.subtitle")}</p>
-        <label className="flex items-start gap-3 mb-6 cursor-pointer group">
-          <button
-            role="checkbox"
-            aria-checked={deleteData}
-            onClick={() => setDeleteData((v) => !v)}
-            className={cn(
-              "mt-0.5 shrink-0 h-5 w-5 rounded-md border-2 transition-colors grid place-items-center",
-              deleteData ? "bg-red-600 border-red-600" : "bg-white border-line group-hover:border-ink-muted"
-            )}
-          >
-            {deleteData && (
-              <svg className="h-3 w-3 text-white" viewBox="0 0 12 12" fill="none">
-                <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            )}
-          </button>
+        <h2 className="modal-heading mb-2">{t("settings.deleteDialog.title")}</h2>
+        <p className="modal-body">{t("settings.deleteDialog.subtitle")}</p>
+        <label className="flex items-start gap-3 mb-6 cursor-pointer">
+          <Checkbox
+            id="delete-data-checkbox"
+            checked={deleteData}
+            onCheckedChange={(v) => setDeleteData(!!v)}
+            className="mt-0.5 h-5 w-5 data-[state=checked]:bg-red-500 data-[state=checked]:border-red-500 focus-visible:ring-red-400/50"
+          />
           <div>
             <p className="text-[14px] font-medium text-ink leading-snug">{t("settings.deleteDialog.deleteDataLabel")}</p>
             <p className="text-[12px] text-ink-muted mt-0.5">{t("settings.deleteDialog.deleteDataDesc")}</p>
@@ -342,11 +213,223 @@ function DeleteAccountDialog({ open, deleting, onConfirm, onCancel }: {
           <button
             onClick={() => onConfirm(deleteData)}
             disabled={deleting}
-            className="flex-1 h-11 px-5 rounded-full bg-red-500 text-white text-[12px] font-bold uppercase tracking-[0.08em] transition-colors hover:bg-red-600 disabled:opacity-60 inline-flex items-center justify-center"
+            className="btn-danger-primary flex-1 justify-center"
           >
             {deleting ? t("settings.deleteDialog.pleaseWait") : deleteData ? t("settings.deleteDialog.deleteEverything") : t("settings.deleteDialog.deactivate")}
           </button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Mobile Verification Modal ───────────────────────────────── */
+
+type VerifyStage = "phone" | "code" | "success";
+
+function MobileVerifyModal({ open, initialPhone, onClose, onVerified }: {
+  open: boolean;
+  initialPhone: string;
+  onClose: () => void;
+  onVerified: (phone: string) => void;
+}) {
+  const [stage,       setStage]       = useState<VerifyStage>("phone");
+  const [phone,       setPhone]       = useState(initialPhone);
+  const [code,        setCode]        = useState("");
+  const [phoneError,  setPhoneError]  = useState("");
+  const [codeError,   setCodeError]   = useState("");
+  const [sending,     setSending]     = useState(false);
+  const [verifying,   setVerifying]   = useState(false);
+  const [resendTimer, setResendTimer] = useState(0);
+
+  useEffect(() => {
+    if (!open) return;
+    setStage("phone");
+    setPhone(initialPhone);
+    setCode("");
+    setPhoneError("");
+    setCodeError("");
+    setSending(false);
+    setVerifying(false);
+    setResendTimer(0);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
+  useEffect(() => {
+    if (resendTimer <= 0) return;
+    const id = setTimeout(() => setResendTimer((r) => r - 1), 1000);
+    return () => clearTimeout(id);
+  }, [resendTimer]);
+
+  const handleClose = () => {
+    if (verifying) return;
+    onClose();
+  };
+
+  const sendCode = async () => {
+    if (!phone || !isValidPhoneNumber(phone)) { setPhoneError("Enter a valid phone number"); return; }
+    setPhoneError("");
+    setSending(true);
+    await new Promise((r) => setTimeout(r, 1200));
+    setSending(false);
+    setCode("");
+    setCodeError("");
+    setResendTimer(30);
+    setStage("code");
+  };
+
+  const verify = async () => {
+    if (code.length < 6) { setCodeError("Enter all 6 digits"); return; }
+    setCodeError("");
+    setVerifying(true);
+    await new Promise((r) => setTimeout(r, 900));
+    setVerifying(false);
+    setStage("success");
+  };
+
+  const resend = async () => {
+    if (resendTimer > 0 || sending) return;
+    setSending(true);
+    await new Promise((r) => setTimeout(r, 800));
+    setSending(false);
+    setResendTimer(30);
+    setCode("");
+    toast.success("Verification code resent");
+  };
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+      <div className="absolute inset-0 modal-backdrop animate-panel-in" onClick={handleClose} />
+      <div className="relative glass-modal p-6 w-full max-w-sm animate-modal-in">
+
+        {/* Close — hidden on success */}
+        {stage !== "success" && (
+          <button onClick={handleClose} className="absolute top-4 right-4 btn-icon-sm h-7 w-7 rounded-full">
+            <X className="h-4 w-4" />
+          </button>
+        )}
+
+        {/* ── Stage: phone ── */}
+        {stage === "phone" && (
+          <>
+            <div className="flex justify-center mb-5">
+              <div className="h-14 w-14 rounded-2xl bg-surface-2 grid place-items-center">
+                <Smartphone className="h-6 w-6 text-brand" />
+              </div>
+            </div>
+            <h2 className="modal-heading text-center">Verify your number</h2>
+            <p className="modal-body text-center">
+              We'll send a 6-digit code to confirm your mobile number.
+            </p>
+
+            <div className="mb-1">
+              <label htmlFor="verify-phone" className="field-label">Mobile number</label>
+              <PhoneInput
+                id="verify-phone"
+                value={phone as import("react-phone-number-input").Value}
+                onChange={(v) => { setPhone(v ?? ""); if (phoneError) setPhoneError(""); }}
+                defaultCountry="DE"
+                className={cn(phoneError && "!border-red-500 focus-within:!border-red-500")}
+                autoFocus
+              />
+              {phoneError && <p className="text-[12px] text-red-500 mt-1.5">{phoneError}</p>}
+            </div>
+
+            <div className="mt-6 flex gap-3">
+              <button onClick={handleClose} className="btn-ghost flex-1 justify-center">Cancel</button>
+              <button onClick={sendCode} disabled={sending} className="btn-primary flex-1 justify-center">
+                {sending
+                  ? <><Loader2 className="h-4 w-4 animate-spin" /> Sending…</>
+                  : "Send code"}
+              </button>
+            </div>
+          </>
+        )}
+
+        {/* ── Stage: code ── */}
+        {stage === "code" && (
+          <>
+            <div className="flex justify-center mb-5">
+              <div className="h-14 w-14 rounded-2xl bg-surface-2 grid place-items-center">
+                <MessageSquare className="h-6 w-6 text-brand" />
+              </div>
+            </div>
+            <h2 className="modal-heading text-center">Enter the code</h2>
+            <p className="modal-body text-center">
+              Sent to <span className="font-medium text-ink">{phone}</span>
+            </p>
+
+            <InputOTP
+              maxLength={6}
+              value={code}
+              onChange={(v) => { setCode(v); if (codeError) setCodeError(""); }}
+              disabled={verifying}
+            >
+              <InputOTPGroup>
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <InputOTPSlot key={i} index={i} />
+                ))}
+              </InputOTPGroup>
+            </InputOTP>
+            {codeError && <p className="text-[12px] text-red-500 mt-2 text-center">{codeError}</p>}
+
+            <div className="flex justify-center mt-3 mb-6">
+              <button
+                onClick={resend}
+                disabled={resendTimer > 0 || sending}
+                className="text-[13px] text-ink-muted hover:text-ink transition-colors disabled:cursor-default disabled:hover:text-ink-muted"
+              >
+                {resendTimer > 0
+                  ? `Resend in ${resendTimer}s`
+                  : sending ? "Sending…" : "Resend code"}
+              </button>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => { setStage("phone"); setCode(""); setCodeError(""); }}
+                disabled={verifying}
+                className="btn-ghost flex-1 justify-center disabled:opacity-40"
+              >
+                Back
+              </button>
+              <button
+                onClick={verify}
+                disabled={verifying || code.length < 6}
+                className="btn-primary flex-1 justify-center"
+              >
+                {verifying
+                  ? <><Loader2 className="h-4 w-4 animate-spin" /> Verifying…</>
+                  : "Verify"}
+              </button>
+            </div>
+          </>
+        )}
+
+        {/* ── Stage: success ── */}
+        {stage === "success" && (
+          <div className="text-center">
+            <div className="flex justify-center mb-5">
+              <div className="h-14 w-14 rounded-2xl bg-green-50 dark:bg-green-500/15 grid place-items-center">
+                <CheckCircle2 className="h-7 w-7 text-green-600 dark:text-green-400" />
+              </div>
+            </div>
+            <h2 className="modal-heading text-center">Number verified!</h2>
+            <p className="modal-body text-center">
+              Mobile notifications are now active for{" "}
+              <span className="font-medium text-ink">{phone}</span>.
+            </p>
+            <button
+              onClick={() => { onVerified(phone); handleClose(); }}
+              className="btn-primary w-full justify-center mt-2"
+            >
+              Done
+            </button>
+          </div>
+        )}
+
       </div>
     </div>
   );
@@ -361,17 +444,19 @@ export default function SettingsPage() {
   const navigate = useNavigate();
 
   const themes: { value: Theme; label: string; icon: React.ElementType }[] = [
-    { value: "light", label: t("settings.themeLight"), icon: Sun },
+    { value: "light", label: t("settings.themeLight"), icon: Sun     },
     { value: "auto",  label: t("settings.themeAuto"),  icon: Monitor },
-    { value: "dark",  label: t("settings.themeDark"),  icon: Moon },
+    { value: "dark",  label: t("settings.themeDark"),  icon: Moon    },
   ];
 
-  const [theme,         setTheme]         = useState<Theme>(getStoredTheme);
-  const [emailNotif,    setEmailNotif]    = useState(getStoredNotif);
-  const [exportOpen,    setExportOpen]    = useState(false);
-  const [clearOpen,     setClearOpen]     = useState(false);
-  const [deleteDialog,  setDeleteDialog]  = useState(false);
-  const [deleting,      setDeleting]      = useState(false);
+  const [theme,            setTheme]            = useState<Theme>(getStoredTheme);
+  const [emailNotif,       setEmailNotif]       = useState(getStoredNotif);
+  const [mobileNotif,      setMobileNotif]      = useState(getStoredMobileNotif);
+  const [mobilePhone,      setMobilePhone]      = useState(getStoredMobilePhone);
+  const [exportOpen,       setExportOpen]       = useState(false);
+  const [mobileVerifyOpen, setMobileVerifyOpen] = useState(false);
+  const [deleteDialog,     setDeleteDialog]     = useState(false);
+  const [deleting,         setDeleting]         = useState(false);
 
   const handleThemeChange = (v: Theme) => {
     setTheme(v);
@@ -382,6 +467,30 @@ export default function SettingsPage() {
   const handleNotifChange = (val: boolean) => {
     setEmailNotif(val);
     try { localStorage.setItem(NOTIF_KEY, String(val)); } catch { /* noop */ }
+  };
+
+  const handleMobileToggle = (val: boolean) => {
+    if (val) {
+      if (mobilePhone) {
+        setMobileNotif(true);
+        try { localStorage.setItem(MOBILE_NOTIF_KEY, "true"); } catch { /* noop */ }
+      } else {
+        setMobileVerifyOpen(true);
+      }
+    } else {
+      setMobileNotif(false);
+      try { localStorage.setItem(MOBILE_NOTIF_KEY, "false"); } catch { /* noop */ }
+    }
+  };
+
+  const handleMobileVerified = (phone: string) => {
+    setMobilePhone(phone);
+    setMobileNotif(true);
+    try {
+      localStorage.setItem(MOBILE_PHONE_KEY, phone);
+      localStorage.setItem(MOBILE_NOTIF_KEY, "true");
+    } catch { /* noop */ }
+    toast.success("Mobile notifications enabled");
   };
 
   const handleDeleteAccount = async (deleteData: boolean) => {
@@ -415,12 +524,7 @@ export default function SettingsPage() {
           <Row label={t("settings.theme")} description={t("settings.themeDesc")}>
             {/* Mobile: dropdown */}
             <Select value={theme} onValueChange={(v) => handleThemeChange(v as Theme)}>
-              <SelectTrigger className={cn(
-                "sm:hidden w-full h-10 rounded-xl border border-line px-3 text-[14px] text-ink",
-                "bg-transparent outline-none cursor-pointer",
-                "transition-[border-color,background-color] duration-200 ease-out",
-                "hover:bg-surface-hover focus:border-brand focus:ring-0 focus:ring-offset-0",
-              )}>
+              <SelectTrigger className="sm:hidden h-10 focus:ring-0 focus:ring-offset-0">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent
@@ -471,12 +575,19 @@ export default function SettingsPage() {
           >
             <Toggle enabled={emailNotif} onChange={handleNotifChange} />
           </Row>
+          <Row
+            label="Mobile notifications"
+            description={mobileNotif && mobilePhone
+              ? `Active — ${mobilePhone}`
+              : "Get job alerts and deadline reminders via SMS"}
+          >
+            <Toggle enabled={mobileNotif} onChange={handleMobileToggle} />
+          </Row>
         </Section>
 
         {/* ── Data ── */}
         <Section title={t("settings.data")}>
 
-          {/* Export */}
           <Row label="Export" description="Download your data in various formats">
             <button onClick={() => setExportOpen(true)} className="btn-ghost-sm">
               <Download className="h-3.5 w-3.5" />
@@ -484,15 +595,6 @@ export default function SettingsPage() {
             </button>
           </Row>
 
-          {/* Clear Data */}
-          <Row label="Clear Data" description="Selectively remove stored data from your account">
-            <button onClick={() => setClearOpen(true)} className="btn-danger-sm">
-              <Trash2 className="h-3.5 w-3.5" />
-              Clear
-            </button>
-          </Row>
-
-          {/* Danger Zone */}
           <Row
             label={t("settings.dangerZone")}
             description={t("settings.dangerDesc")}
@@ -508,7 +610,12 @@ export default function SettingsPage() {
       </div>
 
       <ExportModal open={exportOpen} onClose={() => setExportOpen(false)} jobs={jobs} />
-      <ClearDataModal open={clearOpen} onClose={() => setClearOpen(false)} onClearJobs={() => setJobs([])} />
+      <MobileVerifyModal
+        open={mobileVerifyOpen}
+        initialPhone={mobilePhone}
+        onClose={() => setMobileVerifyOpen(false)}
+        onVerified={handleMobileVerified}
+      />
       <DeleteAccountDialog
         open={deleteDialog}
         deleting={deleting}

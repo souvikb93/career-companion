@@ -77,7 +77,7 @@ export function MobileActionsMenu({ onNew, onSave, onLibrary, onCustomize, onDow
                   type="button"
                   onClick={dec}
                   aria-label={t("common.zoomOut")}
-                  className="h-7 w-7 rounded-lg grid place-items-center text-ink-muted hover:text-ink hover:bg-black/[0.06] transition-colors duration-150"
+                  className="btn-icon-sm h-7 w-7"
                 >
                   <Minus className="h-3 w-3" />
                 </button>
@@ -88,7 +88,7 @@ export function MobileActionsMenu({ onNew, onSave, onLibrary, onCustomize, onDow
                   type="button"
                   onClick={inc}
                   aria-label={t("common.zoomIn")}
-                  className="h-7 w-7 rounded-lg grid place-items-center text-ink-muted hover:text-ink hover:bg-black/[0.06] transition-colors duration-150"
+                  className="btn-icon-sm h-7 w-7"
                 >
                   <Plus className="h-3 w-3" />
                 </button>

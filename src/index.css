@@ -240,10 +240,22 @@
     letter-spacing: 0.08em;
   }
   .input-base {
-    @apply w-full bg-transparent border border-line rounded-2xl px-4 h-11 text-[14px] text-ink placeholder:text-ink-muted/60 transition-[border-color,background-color] duration-200 ease-out outline-none focus:border-brand hover:bg-surface-hover;
+    @apply w-full bg-transparent border border-line rounded-xl px-4 h-11 text-[14px] text-ink placeholder:text-ink-muted/60 transition-[border-color,background-color] duration-200 ease-out outline-none focus:border-brand hover:bg-surface-hover;
   }
+  /* Phone input — same visual as input-base but focus-within for nested input */
+  .phone-input-wrapper {
+    @apply flex h-11 w-full rounded-xl border border-line bg-transparent overflow-hidden
+           transition-[border-color,background-color] duration-200 ease-out;
+  }
+  .phone-input-wrapper:hover { background: hsl(var(--surface-hover)); }
+  .phone-input-wrapper:focus-within { border-color: hsl(var(--brand)); }
+
   .textarea-base {
-    @apply w-full bg-transparent border border-line rounded-2xl px-4 py-3 text-[14px] text-ink placeholder:text-ink-muted/60 transition-[border-color,background-color] duration-200 ease-out outline-none focus:border-brand hover:bg-surface-hover resize-y;
+    @apply w-full bg-transparent border border-line rounded-xl px-4 py-3 text-[14px] text-ink placeholder:text-ink-muted/60 transition-[border-color,background-color] duration-200 ease-out outline-none focus:border-brand hover:bg-surface-hover resize-y;
+  }
+  /* Button-type form controls (Select trigger, DatePicker trigger) — identical visual to input-base */
+  .field-trigger {
+    @apply w-full bg-transparent border border-line rounded-xl px-4 h-11 text-[14px] text-ink transition-[border-color,background-color] duration-200 ease-out outline-none focus:border-brand hover:bg-surface-hover flex items-center justify-between gap-2 cursor-pointer;
   }
   .card-surface {
     @apply bg-surface border border-line rounded-2xl;
@@ -290,12 +302,64 @@
     background: hsl(var(--brand));
     transform: scale(0.95);
   }
+  /* Secondary destructive — white bg, red border, red text (settings danger zone rows) */
   .btn-danger {
-    @apply inline-flex items-center gap-2 h-11 px-5 rounded-full bg-white/50 backdrop-blur-md border border-red-400 text-red-500 text-[12px] font-bold uppercase tracking-[0.08em] transition-colors duration-200 ease-out hover:bg-red-50 hover:border-red-500 disabled:opacity-50;
+    @apply inline-flex items-center gap-2 h-11 px-5 rounded-full bg-white border border-red-400 text-red-500 text-[12px] font-bold uppercase tracking-[0.08em] transition-colors duration-200 ease-out hover:bg-red-50 hover:border-red-500 disabled:opacity-50;
   }
-  /* h-9 (36px) — compact danger, used in settings rows */
+  /* h-9 (36px) — compact secondary danger, used in settings rows */
   .btn-danger-sm {
-    @apply inline-flex items-center gap-1.5 h-9 px-3.5 rounded-full bg-white/50 backdrop-blur-md border border-red-400 text-red-500 text-[11px] font-bold uppercase tracking-[0.08em] transition-colors duration-200 ease-out hover:bg-red-50 hover:border-red-500 disabled:opacity-50;
+    @apply inline-flex items-center gap-1.5 h-9 px-3.5 rounded-full bg-white border border-red-400 text-red-500 text-[11px] font-bold uppercase tracking-[0.08em] transition-colors duration-200 ease-out hover:bg-red-50 hover:border-red-500 disabled:opacity-50;
+  }
+  /* Primary destructive — solid red bg, white text (confirmation dialogs only) */
+  .btn-danger-primary {
+    @apply inline-flex items-center gap-2 h-11 px-5 rounded-full bg-red-500 border border-red-500 text-white text-[12px] font-bold uppercase tracking-[0.08em] transition-all duration-200 ease-out hover:brightness-110 disabled:opacity-50 disabled:hover:brightness-100;
+  }
+  /* Tertiary destructive — text-only red, no bg, no border (inline / list-item actions) */
+  .btn-danger-tertiary {
+    @apply inline-flex items-center gap-2 text-[13px] font-medium text-red-500 hover:text-red-600 transition-colors duration-150 cursor-pointer disabled:opacity-50;
+  }
+  /* Modal / dialog typography — use inside .glass-modal */
+  .modal-heading {
+    @apply text-[22px] font-semibold text-ink mb-1;
+  }
+  .modal-body {
+    @apply text-[14px] text-ink-muted leading-relaxed mb-5;
+  }
+  /* Quick-reply / suggestion chips in chat UI */
+  .chip-suggestion {
+    @apply inline-flex items-center h-8 px-3 rounded-full border border-line bg-surface-2 text-ink text-[13px] transition-colors duration-150 cursor-pointer hover:bg-surface-hover;
+  }
+  /* Icon-only secondary — muted ghost, any size/shape set by caller */
+  .btn-icon-sm {
+    @apply grid place-items-center text-ink-muted hover:text-ink rounded-xl transition-colors duration-150;
+    background: transparent;
+  }
+  .btn-icon-sm:hover:not(:disabled) {
+    background: rgb(0 0 0 / 0.06);
+  }
+  .btn-icon-sm:active {
+    background: rgb(0 0 0 / 0.09);
+    transform: scale(0.93);
+  }
+  /* Destructive option-row — selectable item in a confirmation/clear dialog */
+  .danger-select-row {
+    @apply w-full flex items-center gap-3 rounded-xl border border-line text-left transition-colors duration-150;
+  }
+  .danger-select-row:hover:not(:disabled) {
+    border-color: rgb(248 113 113 / 0.7);
+    background: rgb(239 68 68 / 0.04);
+  }
+  .danger-select-row.is-checked {
+    border-color: rgb(248 113 113 / 0.7);
+    background: rgb(239 68 68 / 0.06);
+  }
+  /* Checkbox indicator inside danger rows */
+  .danger-checkbox {
+    @apply shrink-0 rounded border-2 flex items-center justify-center transition-colors duration-150 border-line bg-transparent;
+  }
+  .danger-checkbox.is-checked {
+    background: rgb(239 68 68);
+    border-color: rgb(239 68 68);
   }
   .btn-tertiary {
     @apply inline-flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-[0.08em] text-ink bg-transparent border-0 p-0 transition-colors duration-200 ease-out hover:text-brand hover:underline active:text-brand disabled:opacity-50 disabled:hover:text-ink disabled:hover:no-underline;
@@ -428,7 +492,7 @@
     border: 1px solid rgb(0 0 0 / 0.09);
     -webkit-backdrop-filter: blur(12px);
     backdrop-filter: blur(12px);
-    @apply w-full rounded-2xl px-4 h-11 text-[14px] text-ink outline-none transition-all duration-200 ease-out focus:border-brand;
+    @apply w-full rounded-xl px-4 h-11 text-[14px] text-ink outline-none transition-all duration-200 ease-out focus:border-brand;
   }
   .glass-input::placeholder {
     color: hsl(var(--ink) / 0.40);
@@ -1245,6 +1309,24 @@
     transform: scale(0.95);
   }
 
+  /* btn-icon-sm dark: white/10 hover instead of black/6 */
+  html.dark .btn-icon-sm:hover:not(:disabled) {
+    background: rgb(255 255 255 / 0.10);
+  }
+  html.dark .btn-icon-sm:active {
+    background: rgb(255 255 255 / 0.15);
+  }
+  /* danger-select-row dark */
+  html.dark .danger-select-row:hover:not(:disabled) {
+    border-color: rgb(239 68 68 / 0.4);
+    background: rgb(239 68 68 / 0.08);
+  }
+  html.dark .danger-select-row.is-checked {
+    border-color: rgb(239 68 68 / 0.5);
+    background: rgb(239 68 68 / 0.10);
+  }
+  /* danger-checkbox dark: same colors work fine */
+
   /* Document paper — softer warm tone in dark mode to reduce glare */
   html.dark .document-canvas {
     background: #E8E4DF;
@@ -1267,16 +1349,16 @@
     background: hsl(var(--surface));
   }
   html.dark .btn-danger {
-    background: rgb(var(--glass-tint) / 0.45);
-    border-color: rgb(239 68 68 / 0.55);
+    background: hsl(var(--surface));
+    border-color: rgb(248 113 113 / 0.45);
     color: rgb(252 165 165);
   }
   html.dark .btn-danger:hover:not(:disabled) {
-    background: rgb(239 68 68 / 0.15);
-    border-color: rgb(239 68 68 / 0.75);
+    background: rgb(239 68 68 / 0.12);
+    border-color: rgb(248 113 113 / 0.75);
   }
   html.dark .btn-danger:disabled {
-    background: rgb(var(--glass-tint) / 0.45);
+    background: hsl(var(--surface));
     opacity: 0.5;
   }
   /* Compact variants — inherit same dark tokens as full-size counterparts */
@@ -1292,17 +1374,37 @@
     background: hsl(var(--surface));
   }
   html.dark .btn-danger-sm {
-    background: rgb(var(--glass-tint) / 0.45);
-    border-color: rgb(239 68 68 / 0.55);
+    background: hsl(var(--surface));
+    border-color: rgb(248 113 113 / 0.45);
     color: rgb(252 165 165);
   }
   html.dark .btn-danger-sm:hover:not(:disabled) {
-    background: rgb(239 68 68 / 0.15);
-    border-color: rgb(239 68 68 / 0.75);
+    background: rgb(239 68 68 / 0.12);
+    border-color: rgb(248 113 113 / 0.75);
   }
   html.dark .btn-danger-sm:disabled {
-    background: rgb(var(--glass-tint) / 0.45);
+    background: hsl(var(--surface));
     opacity: 0.5;
+  }
+  html.dark .btn-danger-primary {
+    background: #dc2626;
+    border-color: #dc2626;
+  }
+  html.dark .btn-danger-primary:hover:not(:disabled) {
+    filter: brightness(1.12);
+  }
+  html.dark .btn-danger-primary:disabled {
+    background: #dc2626;
+    opacity: 0.5;
+  }
+  html.dark .btn-danger-tertiary {
+    color: rgb(248 113 113);
+  }
+  html.dark .btn-danger-tertiary:hover:not(:disabled) {
+    color: rgb(252 165 165);
+  }
+  html.dark .chip-suggestion {
+    border-color: hsl(0 0% 40%);
   }
 
   /* input-base inside glass-modal should use surface-2, not forced white */
@@ -1320,22 +1422,40 @@
     background: hsl(var(--surface-2));
   }
 
-  /* input-base / textarea-base / chat-input in dark */
+  /* phone-input-wrapper dark */
+  html.dark .phone-input-wrapper,
+  html.dark .glass-modal .phone-input-wrapper {
+    background: hsl(var(--surface-2));
+    border-color: hsl(var(--line));
+  }
+  html.dark .phone-input-wrapper:hover,
+  html.dark .glass-modal .phone-input-wrapper:hover {
+    background: hsl(var(--surface-hover));
+  }
+  html.dark .phone-input-wrapper:focus-within,
+  html.dark .glass-modal .phone-input-wrapper:focus-within {
+    border-color: hsl(var(--brand));
+  }
+
+  /* input-base / textarea-base / chat-input / field-trigger in dark */
   html.dark .input-base,
   html.dark .textarea-base,
-  html.dark .chat-input {
+  html.dark .chat-input,
+  html.dark .field-trigger {
     border-color: hsl(var(--line));
     color: hsl(var(--ink));
     background: hsl(var(--surface-2));
   }
   html.dark .input-base:hover,
   html.dark .textarea-base:hover,
-  html.dark .chat-input:hover {
+  html.dark .chat-input:hover,
+  html.dark .field-trigger:hover {
     background: hsl(var(--surface-hover));
   }
   html.dark .input-base:focus,
   html.dark .textarea-base:focus,
-  html.dark .chat-input:focus {
+  html.dark .chat-input:focus,
+  html.dark .field-trigger:focus {
     border-color: hsl(var(--brand));
     background: hsl(var(--surface-2));
   }

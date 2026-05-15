@@ -121,7 +121,7 @@ function InfoModal({ type, onClose }: { type: NonNullable<ModalType>; onClose: (
       <div className="absolute inset-0 modal-backdrop" onClick={onClose} />
       <div className="relative glass-modal w-full max-w-lg max-h-[80vh] flex flex-col">
         <div className="flex items-center justify-between px-6 py-5 border-b border-line/60">
-          <h2 className="text-[17px] font-semibold text-ink">{title}</h2>
+          <h2 className="modal-heading !mb-0">{title}</h2>
           <button
             onClick={onClose}
             aria-label="Close"
@@ -265,7 +265,7 @@ export default function AuthPage() {
                       onFocus={() => setIsTyping(true)}
                       onBlur={() => setIsTyping(false)}
                       onKeyDown={(e) => e.key === "Enter" && sendLink()}
-                      className="glass-input h-12 rounded-xl text-[15px]"
+                      className="glass-input h-12 text-[15px]"
                     />
 
                     <button
@@ -367,7 +367,7 @@ export default function AuthPage() {
                         onBlur={() => setIsTyping(false)}
                         onKeyDown={(e) => e.key === "Enter" && sendLink()}
                         autoFocus
-                        className="h-11 rounded-xl"
+                        className="h-11"
                       />
                     </div>
 

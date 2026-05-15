@@ -203,10 +203,10 @@ export function AddJobModal({ open, onClose, onJobAdded }: AddJobModalProps) {
         {/* ── INPUT ── */}
         {stage === "input" && (
           <>
-            <h2 className="text-[22px] font-semibold text-ink mb-1">
+            <h2 className="modal-heading">
               {fetchFailed ? t("addJob.fetchFailed") : t("addJob.title")}
             </h2>
-            <p className="text-[13px] text-ink-muted mb-5">
+            <p className="modal-body">
               {fetchFailed ? t("addJob.fetchFailedSubtitle") : t("addJob.subtitle")}
             </p>
 
@@ -257,8 +257,8 @@ export function AddJobModal({ open, onClose, onJobAdded }: AddJobModalProps) {
             <div className="h-14 w-14 rounded-2xl bg-surface-2 grid place-items-center mb-6">
               <Loader2 className="h-6 w-6 text-brand animate-spin" />
             </div>
-            <h2 className="text-[18px] font-semibold text-ink mb-1">{t("addJob.analysing")}</h2>
-            <p className="text-[13px] text-ink-muted">{t("addJob.analysingDesc")}</p>
+            <h2 className="modal-heading">{t("addJob.analysing")}</h2>
+            <p className="modal-body !mb-0">{t("addJob.analysingDesc")}</p>
           </div>
         )}
 
