@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Camera } from "lucide-react";
+import { Camera, X } from "lucide-react";
 import { useProfile } from "@/lib/profile-store";
 import { useAuth } from "@/hooks/useAuth";
 import { Input } from "@/components/ui/input";
@@ -73,6 +73,13 @@ export default function ProfilePage() {
       toast.error(t("profile.cantReadImage"));
     }
   };
+  const handleRemovePhoto = async () => {
+    const next = { ...localRef.current, avatarUrl: "" };
+    setLocal(next);
+    localRef.current = next;
+    try { await saveProfile(next); toast.success(t("profile.savedOk")); } catch { toast.error(t("profile.failedSave")); }
+  };
+
   const memberSince = user?.created_at
     ? new Date(user.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" })
     : null;
@@ -93,12 +100,24 @@ export default function ProfilePage() {
 
         <Section title={t("profile.photoSection")}>
           <div className="flex items-center gap-5">
-            <Avatar
-              name={local.fullName}
-              email={user?.email ?? undefined}
-              src={local.avatarUrl}
-              size={72}
-            />
+            <div className="relative shrink-0">
+              <Avatar
+                name={local.fullName}
+                email={user?.email ?? undefined}
+                src={local.avatarUrl}
+                size={72}
+              />
+              {local.avatarUrl && (
+                <button
+                  type="button"
+                  onClick={handleRemovePhoto}
+                  aria-label="Remove profile photo"
+                  className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full grid place-items-center bg-surface border border-line shadow-sm text-ink-muted hover:text-ink hover:bg-surface-hover transition-colors duration-150"
+                >
+                  <X className="h-3 w-3" strokeWidth={2.5} />
+                </button>
+              )}
+            </div>
             <div className="flex-1 min-w-0">
               <p className="text-[13px] text-ink-muted leading-relaxed mb-3">
                 {t("profile.photoDesc")}
