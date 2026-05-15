@@ -10,6 +10,13 @@ import { useT } from "@/lib/i18n";
 import { deleteAllSavedItems } from "@/lib/saved-items";
 import { clearTrackaStorage } from "@/lib/storage";
 import { applyTheme } from "@/lib/theme";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 
 const THEME_KEY = "tracka_theme";
 const NOTIF_KEY = "tracka_email_notif";
@@ -399,7 +406,7 @@ export default function SettingsPage() {
 
   return (
     <div className="w-full p-4 sm:p-8">
-      <h1 className="display-2 mb-10">{t("settings.title")}</h1>
+      <h1 className="heading-1 mb-6">{t("settings.title")}</h1>
 
       <div className="max-w-2xl space-y-5">
 
@@ -407,15 +414,34 @@ export default function SettingsPage() {
         <Section title={t("settings.appearance")}>
           <Row label={t("settings.theme")} description={t("settings.themeDesc")}>
             {/* Mobile: dropdown */}
-            <select
-              value={theme}
-              onChange={(e) => handleThemeChange(e.target.value as Theme)}
-              className="sm:hidden h-10 w-full rounded-xl border border-line bg-white px-3 text-[14px] text-ink outline-none focus:border-brand focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 transition-colors"
-            >
-              {themes.map(({ value, label }) => (
-                <option key={value} value={value}>{label}</option>
-              ))}
-            </select>
+            <Select value={theme} onValueChange={(v) => handleThemeChange(v as Theme)}>
+              <SelectTrigger className={cn(
+                "sm:hidden w-full h-10 rounded-xl border border-line px-3 text-[14px] text-ink",
+                "bg-transparent outline-none cursor-pointer",
+                "transition-[border-color,background-color] duration-200 ease-out",
+                "hover:bg-surface-hover focus:border-brand focus:ring-0 focus:ring-offset-0",
+              )}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent
+                className="z-[60] overflow-hidden rounded-2xl border border-white/60 p-1 bg-white/60 backdrop-blur-xl shadow-lg glass-popover"
+                position="popper"
+                sideOffset={6}
+              >
+                {themes.map(({ value, label, icon: Icon }) => (
+                  <SelectItem
+                    key={value}
+                    value={value}
+                    className="rounded-xl text-[14px] text-ink cursor-pointer py-2.5 pl-9 pr-3 focus:bg-black/[0.05] focus:text-ink data-[state=checked]:font-medium"
+                  >
+                    <span className="flex items-center gap-2">
+                      <Icon className="h-3.5 w-3.5 text-ink-muted" />
+                      {label}
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             {/* Desktop: segmented */}
             <div className="hidden sm:flex items-center rounded-2xl border border-line bg-surface-2 p-1 gap-0.5">
               {themes.map(({ value, label, icon: Icon }) => (

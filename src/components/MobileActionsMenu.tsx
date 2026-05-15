@@ -1,8 +1,6 @@
 import { useState } from "react";
-import { MoreVertical, Save, LayoutTemplate, Download, FolderOpen, Check, FileText, FileType, FileCode, FilePlus } from "lucide-react";
+import { MoreVertical, Save, FolderOpen, FilePlus, SlidersHorizontal, Download, Minus, Plus } from "lucide-react";
 import { useT } from "@/lib/i18n";
-import { LayoutVariant } from "@/components/LayoutMenu";
-import { ExportFormat } from "@/lib/exporters";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -14,82 +12,90 @@ import {
 interface Props {
   onNew?: () => void;
   onSave: () => void;
-  layout: LayoutVariant;
-  onLayoutChange: (v: LayoutVariant) => void;
-  onExport: (format: ExportFormat) => void;
   onLibrary: () => void;
+  onCustomize?: () => void;
+  onDownload?: () => void;
+  zoom?: number;
+  onZoom?: (z: number) => void;
 }
 
-export function MobileActionsMenu({ onNew, onSave, layout, onLayoutChange, onExport, onLibrary }: Props) {
+export function MobileActionsMenu({ onNew, onSave, onLibrary, onCustomize, onDownload, zoom, onZoom }: Props) {
   const { t } = useT();
   const [open, setOpen] = useState(false);
 
-  const LAYOUTS: { value: LayoutVariant; label: string }[] = [
-    { value: "classic", label: t("layouts.classic") },
-    { value: "modern", label: t("layouts.modern") },
-    { value: "compact", label: t("layouts.compact") },
-  ];
-
-  const EXPORTS: { f: ExportFormat; label: string; icon: typeof FileText }[] = [
-    { f: "pdf", label: t("formats.pdf"), icon: FileText },
-    { f: "docx", label: t("formats.docx"), icon: FileType },
-    { f: "txt", label: t("formats.txt"), icon: FileCode },
-  ];
+  const step = 0.1;
+  const dec = () => onZoom && zoom !== undefined && onZoom(Math.max(0.3, Math.round((zoom - step) * 100) / 100));
+  const inc = () => onZoom && zoom !== undefined && onZoom(Math.min(2.5, Math.round((zoom + step) * 100) / 100));
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger className="h-10 w-10 grid place-items-center rounded-xl text-ink hover:bg-black/5 transition-colors outline-none">
         <MoreVertical className="h-5 w-5" />
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-52">
+      <DropdownMenuContent align="end" className="w-56">
         {onNew && (
           <DropdownMenuItem onSelect={() => { onNew(); setOpen(false); }}>
-            <FilePlus className="h-4 w-4 text-ink-muted mr-2" />
+            <FilePlus className="h-4 w-4 text-ink-muted" />
             {t("common.newDoc")}
           </DropdownMenuItem>
         )}
         <DropdownMenuItem onSelect={() => { onSave(); setOpen(false); }}>
-          <Save className="h-4 w-4 text-ink-muted mr-2" />
+          <Save className="h-4 w-4 text-ink-muted" />
           {t("common.save")}
         </DropdownMenuItem>
 
-        <DropdownMenuSeparator />
-
-        <div className="px-2 py-1">
-          <p className="text-[11px] font-semibold text-ink-muted uppercase tracking-wide px-1 mb-1">{t("common.layout")}</p>
-          {LAYOUTS.map((opt) => (
-            <DropdownMenuItem
-              key={opt.value}
-              onSelect={() => { onLayoutChange(opt.value); setOpen(false); }}
-              className="flex items-center gap-2"
-            >
-              <Check className={"h-3.5 w-3.5 " + (layout === opt.value ? "opacity-100 text-brand" : "opacity-0")} />
-              {opt.label}
-            </DropdownMenuItem>
-          ))}
-        </div>
+        {onCustomize && (
+          <DropdownMenuItem onSelect={() => { onCustomize(); setOpen(false); }}>
+            <SlidersHorizontal className="h-4 w-4 text-ink-muted" />
+            Design
+          </DropdownMenuItem>
+        )}
 
         <DropdownMenuSeparator />
 
-        <div className="px-2 py-1">
-          <p className="text-[11px] font-semibold text-ink-muted uppercase tracking-wide px-1 mb-1">{t("common.export")}</p>
-          {EXPORTS.map((o) => {
-            const Icon = o.icon;
-            return (
-              <DropdownMenuItem key={o.f} onSelect={() => { onExport(o.f); setOpen(false); }}>
-                <Icon className="h-4 w-4 text-ink-muted mr-2" />
-                {o.label}
-              </DropdownMenuItem>
-            );
-          })}
-        </div>
-
-        <DropdownMenuSeparator />
-
+        {onDownload && (
+          <DropdownMenuItem onSelect={() => { onDownload(); setOpen(false); }}>
+            <Download className="h-4 w-4 text-ink-muted" />
+            Download PDF
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem onSelect={() => { onLibrary(); setOpen(false); }}>
-          <FolderOpen className="h-4 w-4 text-ink-muted mr-2" />
+          <FolderOpen className="h-4 w-4 text-ink-muted" />
           {t("common.library")}
         </DropdownMenuItem>
+
+        {onZoom && zoom !== undefined && (
+          <>
+            <DropdownMenuSeparator />
+            {/* Zoom row — plain div, does not close the dropdown */}
+            <div className="px-2 py-2">
+              <p className="text-[11px] font-semibold text-ink-muted uppercase tracking-wide px-1 mb-2">
+                Zoom
+              </p>
+              <div className="flex items-center gap-1 rounded-xl bg-surface-2 p-1">
+                <button
+                  type="button"
+                  onClick={dec}
+                  aria-label={t("common.zoomOut")}
+                  className="h-7 w-7 rounded-lg grid place-items-center text-ink-muted hover:text-ink hover:bg-black/[0.06] transition-colors duration-150"
+                >
+                  <Minus className="h-3 w-3" />
+                </button>
+                <span className="flex-1 text-center text-[12px] font-medium text-ink tabular-nums select-none">
+                  {Math.round(zoom * 100)}%
+                </span>
+                <button
+                  type="button"
+                  onClick={inc}
+                  aria-label={t("common.zoomIn")}
+                  className="h-7 w-7 rounded-lg grid place-items-center text-ink-muted hover:text-ink hover:bg-black/[0.06] transition-colors duration-150"
+                >
+                  <Plus className="h-3 w-3" />
+                </button>
+              </div>
+            </div>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

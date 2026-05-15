@@ -93,10 +93,10 @@ export default function JobsPage() {
                   type="button"
                   onClick={() => setView(v.id)}
                   className={cn(
-                    "h-10 px-4 rounded-full border text-[13px] font-medium inline-flex items-center gap-2 transition-all duration-180 backdrop-blur-md shrink-0",
+                    "h-10 px-4 rounded-2xl border text-[13px] font-medium inline-flex items-center gap-2 transition-all duration-180 tile-surface shrink-0",
                     active
-                      ? "border-brand text-brand bg-white/40 glass-chip-active"
-                      : "border-white/40 text-ink bg-white/30 hover:bg-white/50 glass-chip",
+                      ? "border-brand text-brand"
+                      : "border-transparent text-ink hover:border-brand/25",
                   )}
                 >
                   <span>{t(`pipeline.${v.id}`)}</span>

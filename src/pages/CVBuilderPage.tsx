@@ -1,16 +1,22 @@
 import { useEffect, useRef, useState } from "react";
-import { Plus, X, FolderOpen, Save, FilePlus } from "lucide-react";
+import { Plus, X, FolderOpen, Save, FilePlus, SlidersHorizontal, Download, MoreHorizontal, Minus } from "lucide-react";
+import { DocumentStyle, DocTheme, DocSize, DocDensity, DocPage, loadDocStyle, saveDocStyle, DOC_THEMES_META, DOC_SIZES_META, DOC_DENSITIES_META, DOC_PAGE_META, systemPageMode, useDocPageSync } from "@/lib/document-theme";
+import { CustomizePanel } from "@/components/CustomizePanel";
 import { cn } from "@/lib/utils";
 import { MobileActionsMenu } from "@/components/MobileActionsMenu";
 import { SegmentedControl } from "@/components/SegmentedControl";
 import { useJobs } from "@/lib/jobs-store";
-import { ZoomControls } from "@/components/ZoomControls";
-import { ExportMenu } from "@/components/ExportMenu";
 import { SavedCVsPanel } from "@/components/SavedCVsPanel";
 import { SaveModal } from "@/components/SaveModal";
-import { LayoutMenu, LayoutVariant, loadLayout } from "@/components/LayoutMenu";
 import { useSavedResumes } from "@/lib/saved-items";
-import { exportAs, ExportFormat } from "@/lib/exporters";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@/components/ui/material-ui-dropdown-menu";
+import { exportTextAsPDF } from "@/lib/exporters";
 import { supabase } from "@/integrations/supabase/client";
 import { tailorResume, scrapeJobFromUrl } from "@/lib/groq";
 import { useProfile } from "@/lib/profile-store";
@@ -187,14 +193,30 @@ export default function CVBuilderPage() {
   const [savedOpen, setSavedOpen] = useState(false);
   const [saveOpen, setSaveOpen] = useState(false);
   const [newCvId, setNewCvId] = useState<string | undefined>(undefined);
-  const [hoverPreview, setHoverPreview] = useState(false);
   const [mobileTab, setMobileTab] = useState<"editor" | "preview">("preview");
   const [showNewModal, setShowNewModal] = useState(false);
-  const [layout, setLayoutState] = useState<LayoutVariant>(() => loadLayout("cv_layout"));
-  const setLayout = (v: LayoutVariant) => {
-    setLayoutState(v);
-    try { window.localStorage.setItem("cv_layout", v); } catch { /* ignore */ }
+  const [docStyle, setDocStyle] = useState<DocumentStyle>(() => {
+    const stored = loadDocStyle();
+    // If no page preference was ever saved, default to system colour scheme
+    const hasStoredPage = (() => {
+      try { const raw = localStorage.getItem("tracka_doc_style"); return raw ? "page" in JSON.parse(raw) : false; } catch { return false; }
+    })();
+    return hasStoredPage ? stored : { ...stored, page: systemPageMode() };
+  });
+  const [customizeOpen, setCustomizeOpen] = useState(false);
+
+  const handleDocStyleChange = (style: DocumentStyle) => {
+    setDocStyle(style);
+    saveDocStyle(style);
   };
+
+  useDocPageSync((page) => {
+    setDocStyle((prev) => {
+      const next = { ...prev, page };
+      saveDocStyle(next);
+      return next;
+    });
+  });
   const { getJob, targetJobId, setTargetJobId } = useJobs();
   const { list: savedCVs, save: saveCV, remove: removeCV } = useSavedResumes<CV>();
   const targetJob = targetJobId ? getJob(targetJobId) : null;
@@ -219,10 +241,10 @@ export default function CVBuilderPage() {
     setShowNewModal(false);
   };
 
-  const handleExport = (format: ExportFormat) => {
-    const body = renderCvAsText(cv, t);
-    const filename = targetJob ? `cv-${targetJob.company}` : `cv-${cv.fullName.replace(/\s+/g, "-")}`;
-    exportAs(format, cv.fullName || "CV", body, filename);
+  const handleDownloadCV = (data: CV, name: string) => {
+    const body = renderCvAsText(data, t);
+    const filename = `cv-${(data.fullName || name).replace(/\s+/g, "-")}`;
+    exportTextAsPDF(data.fullName || name, body, filename);
   };
 
   const buildFromJD = async (input: string) => {
@@ -263,10 +285,11 @@ export default function CVBuilderPage() {
         <MobileActionsMenu
           onNew={handleNew}
           onSave={() => setSaveOpen(true)}
-          layout={layout}
-          onLayoutChange={setLayout}
-          onExport={handleExport}
           onLibrary={() => setSavedOpen(true)}
+          onCustomize={() => setCustomizeOpen(true)}
+          onDownload={() => handleDownloadCV(cv, cv.fullName || t("resume.defaultSaveName"))}
+          zoom={zoom}
+          onZoom={setZoom}
         />
       </div>
 
@@ -294,6 +317,7 @@ export default function CVBuilderPage() {
           toast({ title: t("resume.loaded"), description: item.name });
         }}
         onDelete={(id) => removeCV(id)}
+        onDownload={(item) => handleDownloadCV(item.data, item.name)}
       />
 
       <SaveModal
@@ -312,7 +336,13 @@ export default function CVBuilderPage() {
         }}
       />
 
-      <div className="flex-1 min-h-0 flex flex-col lg:grid lg:grid-cols-2 lg:h-[calc(100vh-64px)]">
+      <div
+        className="flex-1 min-h-0 flex flex-col lg:grid lg:h-[calc(100vh-64px)]"
+        style={{
+          gridTemplateColumns: customizeOpen ? "1fr 1.5fr 280px" : "1fr 1fr 0px",
+          transition: "grid-template-columns 320ms cubic-bezier(0.22, 1, 0.36, 1)",
+        }}
+      >
         {/* Editor column — single glass-editor surface */}
         <div
           className={cn(
@@ -323,18 +353,30 @@ export default function CVBuilderPage() {
           {/* Desktop fixed header — title + actions */}
           <div className="hidden lg:block shrink-0 px-8 pt-8 pb-6 border-b glass-rule">
             <h1 className="heading-1 mb-6">{t("resume.pageTitle")}</h1>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <button type="button" onClick={handleNew} className="btn-ghost">
                 <FilePlus className="h-4 w-4" /> {t("common.newDoc")}
               </button>
               <button type="button" onClick={() => setSaveOpen(true)} className="btn-ghost">
                 <Save className="h-4 w-4" /> {t("common.save")}
               </button>
-              <LayoutMenu value={layout} onChange={setLayout} />
-              <button type="button" onClick={() => setSavedOpen(true)} className="btn-ghost">
-                <FolderOpen className="h-4 w-4" /> {t("common.library")}
-              </button>
-              <ExportMenu onExport={handleExport} />
+              {!customizeOpen && (
+                <button
+                  type="button"
+                  onClick={() => setCustomizeOpen(true)}
+                  className="btn-ghost"
+                >
+                  <SlidersHorizontal className="h-4 w-4" /> Design
+                </button>
+              )}
+              <CvMoreMenu
+                customizeOpen={customizeOpen}
+                onDesign={() => setCustomizeOpen((v) => !v)}
+                onDownload={() => handleDownloadCV(cv, cv.fullName || t("resume.defaultSaveName"))}
+                onLibrary={() => setSavedOpen(true)}
+                zoom={zoom}
+                onZoom={setZoom}
+              />
             </div>
           </div>
 
@@ -476,40 +518,61 @@ export default function CVBuilderPage() {
             "relative lg:h-[calc(100vh-64px)]",
             mobileTab !== "preview" ? "hidden lg:block" : "flex-1 min-h-0"
           )}
-          onMouseEnter={() => setHoverPreview(true)}
-          onMouseLeave={() => setHoverPreview(false)}
         >
-        <section
-          className="bg-transparent overflow-auto h-full flex justify-center px-4 pt-6 pb-24 lg:px-6"
-        >
-          <div
-            className="mx-auto"
-            style={{ width: `${794 * zoom}px`, height: `${1123 * zoom}px` }}
-          >
-            <article
-              className="document-canvas bg-white text-ink shadow-2xl origin-top-left"
-              style={{
-                width: "794px",
-                minHeight: "1123px",
-                padding: layout === "compact" ? "40px" : "64px",
-                transform: `scale(${zoom})`,
-              }}
+          <section className="bg-transparent overflow-auto h-full flex justify-center px-4 pt-6 pb-24 lg:px-6">
+            <div
+              className="mx-auto"
+              style={{ width: `${794 * zoom}px`, height: `${1123 * zoom}px` }}
             >
-              <CvPreview cv={cv} layout={layout} />
-            </article>
-          </div>
-        </section>
+              <article
+                className="document-canvas bg-white text-ink shadow-2xl origin-top-left"
+                data-doc-theme={docStyle.theme}
+                data-doc-size={docStyle.size}
+                data-doc-density={docStyle.density}
+                data-doc-page={docStyle.page}
+                style={{
+                  width: "794px",
+                  minHeight: "1123px",
+                  padding: "64px",
+                  transform: `scale(${zoom})`,
+                }}
+              >
+                <CvPreview cv={cv} />
+              </article>
+            </div>
+          </section>
+        </div>
 
-          {/* Floating zoom controls — only on hover, desktop only */}
+        {/* ── Design panel — 3rd grid column, desktop only ── */}
+        <div className={cn(
+          "hidden lg:flex lg:flex-col h-[calc(100vh-64px)] overflow-hidden glass-editor",
+          customizeOpen && "border-l glass-rule"
+        )}>
+          {/* Panel header with close button */}
+          <div className={cn(
+            "shrink-0 flex items-center justify-between px-6 pt-5 pb-4 border-b glass-rule transition-opacity duration-150",
+            customizeOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+          )}>
+            <p className="text-[15px] font-semibold text-ink">{t("design.panelTitle")}</p>
+            <button
+              type="button"
+              onClick={() => setCustomizeOpen(false)}
+              aria-label="Close design panel"
+              className="h-8 w-8 rounded-full grid place-items-center text-ink-muted hover:text-ink hover:bg-surface-2 transition-colors duration-150"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
           <div
-            className={
-              "hidden lg:block absolute bottom-8 right-6 z-10 transition-all duration-200 " +
-              (hoverPreview ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1 pointer-events-none")
-            }
+            className={cn(
+              "flex-1 overflow-y-auto scrollbar-minimal transition-opacity duration-150",
+              customizeOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+            )}
           >
-            <ZoomControls zoom={zoom} onChange={setZoom} floating />
+            <DesignPanelContent style={docStyle} onChange={handleDocStyleChange} />
           </div>
         </div>
+
       </div>
     </div>
 
@@ -547,6 +610,15 @@ export default function CVBuilderPage() {
         </div>
       </div>
     )}
+    {/* Mobile only — fixed overlay */}
+    <div className="lg:hidden">
+      <CustomizePanel
+        open={customizeOpen}
+        onClose={() => setCustomizeOpen(false)}
+        style={docStyle}
+        onChange={handleDocStyleChange}
+      />
+    </div>
     </>
   );
 }
@@ -622,111 +694,295 @@ function RemoveBtn({ onClick }: { onClick: () => void }) {
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+interface CvMoreMenuProps {
+  customizeOpen: boolean;
+  onDesign: () => void;
+  onDownload: () => void;
+  onLibrary: () => void;
+  zoom: number;
+  onZoom: (z: number) => void;
+}
+
+function CvMoreMenu({ customizeOpen, onDesign, onDownload, onLibrary, zoom, onZoom }: CvMoreMenuProps) {
+  const { t } = useT();
+  const [open, setOpen] = useState(false);
+  const step = 0.1;
+  const dec = () => onZoom(Math.max(0.3, Math.round((zoom - step) * 100) / 100));
+  const inc = () => onZoom(Math.min(2.5, Math.round((zoom + step) * 100) / 100));
+  const fit = () => onZoom(0.6);
+
   return (
-    <section className="mb-6">
-      <h3 className="text-[16px] font-semibold text-ink border-b border-line pb-1.5 mb-3">{title}</h3>
-      {children}
-    </section>
+    <DropdownMenu open={open} onOpenChange={setOpen}>
+      <DropdownMenuTrigger className="btn-ghost">
+        <MoreHorizontal className="h-4 w-4" /> More
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="w-56">
+        {customizeOpen && (
+          <>
+            <DropdownMenuItem onSelect={() => { onDesign(); setOpen(false); }}>
+              <SlidersHorizontal className="h-4 w-4 text-ink-muted" />
+              Design
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+          </>
+        )}
+        <DropdownMenuItem onSelect={() => { onDownload(); setOpen(false); }}>
+          <Download className="h-4 w-4 text-ink-muted" />
+          Download PDF
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => { onLibrary(); setOpen(false); }}>
+          <FolderOpen className="h-4 w-4 text-ink-muted" />
+          {t("common.library")}
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        {/* Zoom row — plain div, does not close the dropdown on click */}
+        <div className="px-2 py-2">
+          <p className="text-[11px] font-semibold text-ink-muted uppercase tracking-wide px-1 mb-2">
+            Zoom
+          </p>
+          <div className="flex items-center gap-1 rounded-xl bg-surface-2 p-1">
+            <button
+              type="button"
+              onClick={dec}
+              aria-label={t("common.zoomOut")}
+              className="h-7 w-7 rounded-lg grid place-items-center text-ink-muted hover:text-ink hover:bg-black/[0.06] transition-colors duration-150"
+            >
+              <Minus className="h-3 w-3" />
+            </button>
+            <span className="flex-1 text-center text-[12px] font-medium text-ink tabular-nums select-none">
+              {Math.round(zoom * 100)}%
+            </span>
+            <button
+              type="button"
+              onClick={inc}
+              aria-label={t("common.zoomIn")}
+              className="h-7 w-7 rounded-lg grid place-items-center text-ink-muted hover:text-ink hover:bg-black/[0.06] transition-colors duration-150"
+            >
+              <Plus className="h-3 w-3" />
+            </button>
+            <div className="w-px h-4 bg-line" />
+            <button
+              type="button"
+              onClick={fit}
+              className="px-2 h-7 rounded-lg text-[11px] font-medium text-ink-muted hover:text-ink hover:bg-black/[0.06] transition-colors duration-150"
+            >
+              Fit
+            </button>
+          </div>
+        </div>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
-function CvPreview({ cv, layout }: { cv: CV; layout: LayoutVariant }) {
+function DesignPanelContent({ style, onChange }: { style: DocumentStyle; onChange: (s: DocumentStyle) => void }) {
+  const { t } = useT();
+  const set = <K extends keyof DocumentStyle>(key: K, val: DocumentStyle[K]) =>
+    onChange({ ...style, [key]: val });
+
+  const THEME_LABELS: Record<DocTheme, { name: string; desc: string }> = {
+    classic:   { name: t("design.classic"),   desc: t("design.classicDesc") },
+    editorial: { name: t("design.editorial"), desc: t("design.editorialDesc") },
+    modern:    { name: t("design.modern"),    desc: t("design.modernDesc") },
+    minimal:   { name: t("design.minimal"),   desc: t("design.minimalDesc") },
+  };
+
+  const SIZE_LABELS: Record<string, string> = {
+    s: t("design.sizeS"),
+    m: t("design.sizeM"),
+    l: t("design.sizeL"),
+  };
+
+  const DENSITY_LABELS: Record<string, string> = {
+    compact: t("design.compact"),
+    normal:  t("design.normal"),
+    relaxed: t("design.relaxed"),
+  };
+
+  const PAGE_LABELS: Record<DocPage, string> = {
+    light: t("design.light"),
+    dark:  t("design.dark"),
+  };
+
+  return (
+    <div className="p-6 space-y-8">
+
+      {/* Theme */}
+      <div>
+        <p className="text-[11px] font-semibold text-ink-muted uppercase tracking-wide mb-3">{t("design.theme")}</p>
+        <div className="grid grid-cols-2 gap-2">
+          {DOC_THEMES_META.map((th) => {
+            const active = style.theme === th.id;
+            const { name, desc } = THEME_LABELS[th.id];
+            return (
+              <button
+                key={th.id}
+                type="button"
+                onClick={() => set("theme", th.id as DocTheme)}
+                className={cn(
+                  "p-3 rounded-2xl border text-left transition-all duration-180 tile-surface",
+                  active
+                    ? "border-brand text-brand"
+                    : "border-transparent text-ink hover:border-brand/25"
+                )}
+              >
+                <div
+                  className="text-[18px] leading-tight mb-1.5"
+                  style={{ fontFamily: th.fontPreview, color: "inherit" }}
+                >
+                  Aa
+                </div>
+                <p className="text-[12px] font-semibold">{name}</p>
+                <p className={cn("text-[12px]", active ? "text-brand" : "text-ink-muted")}>{desc}</p>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Size */}
+      <div>
+        <p className="text-[11px] font-semibold text-ink-muted uppercase tracking-wide mb-3">{t("design.size")}</p>
+        <div className="flex gap-2">
+          {DOC_SIZES_META.map((s) => {
+            const active = style.size === s.id;
+            return (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => set("size", s.id as DocSize)}
+                className={cn(
+                  "flex-1 h-10 rounded-xl border text-[13px] font-medium transition-all duration-180 tile-surface",
+                  active
+                    ? "border-brand text-brand"
+                    : "border-transparent text-ink-muted hover:border-brand/25 hover:text-ink"
+                )}
+              >
+                {SIZE_LABELS[s.id]}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Density */}
+      <div>
+        <p className="text-[11px] font-semibold text-ink-muted uppercase tracking-wide mb-3">{t("design.density")}</p>
+        <div className="flex gap-2">
+          {DOC_DENSITIES_META.map((d) => {
+            const active = style.density === d.id;
+            return (
+              <button
+                key={d.id}
+                type="button"
+                onClick={() => set("density", d.id as DocDensity)}
+                className={cn(
+                  "flex-1 h-10 rounded-xl border text-[13px] font-medium transition-all duration-180 tile-surface",
+                  active
+                    ? "border-brand text-brand"
+                    : "border-transparent text-ink-muted hover:border-brand/25 hover:text-ink"
+                )}
+              >
+                {DENSITY_LABELS[d.id]}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Page Mode */}
+      <div>
+        <p className="text-[11px] font-semibold text-ink-muted uppercase tracking-wide mb-3">{t("design.pageMode")}</p>
+        <div className="grid grid-cols-2 gap-2">
+          {DOC_PAGE_META.map((pg) => {
+            const active = style.page === pg.id;
+            const isLight = pg.id === "light";
+            return (
+              <button
+                key={pg.id}
+                type="button"
+                onClick={() => set("page", pg.id as DocPage)}
+                className={cn(
+                  "flex flex-col items-center justify-center h-[76px] rounded-2xl border-2 transition-all duration-180",
+                  isLight ? "bg-white" : "bg-[#1c1a18]",
+                  active
+                    ? "border-brand"
+                    : isLight ? "border-black/[0.08] hover:border-black/20" : "border-white/[0.08] hover:border-white/20"
+                )}
+              >
+                <span
+                  className="text-[22px] font-semibold leading-none tracking-tight"
+                  style={{ color: isLight ? "#1a1818" : "#f0ebe4" }}
+                >
+                  Tt
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+    </div>
+  );
+}
+
+function CvPreview({ cv }: { cv: CV }) {
   const { t } = useT();
   const contactLine = [cv.email, cv.phone, cv.linkedin, cv.location].filter(Boolean).join(" · ");
 
-  if (layout === "modern") {
-    return (
-      <div className="grid grid-cols-3 gap-8">
-        <aside className="col-span-1 border-r border-line pr-6 space-y-6">
-          <div>
-            <h2 className="text-[22px] font-semibold text-ink leading-tight">{cv.fullName}</h2>
-            {cv.title && <p className="text-[13px] text-ink-muted mt-1">{cv.title}</p>}
-          </div>
-          <div className="space-y-1 text-[12px] text-ink-muted">
-            {cv.email && <div>{cv.email}</div>}
-            {cv.phone && <div>{cv.phone}</div>}
-            {cv.linkedin && <div>{cv.linkedin}</div>}
-            {cv.location && <div>{cv.location}</div>}
-          </div>
-          {cv.skills.length > 0 && (
-            <div>
-              <h3 className="text-[13px] font-semibold text-ink uppercase tracking-wide mb-2">{t("resume.sectionSkills")}</h3>
-              <ul className="space-y-1 text-[13px] text-ink-muted">
-                {cv.skills.map((s) => <li key={s}>{s}</li>)}
-              </ul>
-            </div>
-          )}
-        </aside>
-        <div className="col-span-2 space-y-6">
-          {cv.summary && (
-            <Section title={t("resume.sectionSummary")}>
-              <p className="text-[14px] text-ink-muted leading-relaxed whitespace-pre-line">{cv.summary}</p>
-            </Section>
-          )}
-          {cv.experiences.length > 0 && (
-            <Section title={t("resume.sectionExperience")}>
-              {cv.experiences.map((e) => <ExpItem key={e.id} e={e} />)}
-            </Section>
-          )}
-          {cv.education.length > 0 && (
-            <Section title={t("resume.sectionEducation")}>
-              {cv.education.map((e) => <EduItem key={e.id} e={e} />)}
-            </Section>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  const compact = layout === "compact";
   return (
-    <div className={compact ? "text-[13px] leading-snug" : ""}>
+    <div>
       <header className="text-center mb-6">
-        <h2 className={compact ? "text-[22px] font-semibold text-ink" : "text-[28px] font-semibold text-ink"}>
-          {cv.fullName}
-        </h2>
-        {cv.title && <p className="text-[13px] text-ink-muted mt-1">{cv.title}</p>}
-        <p className="text-[12px] text-ink-muted mt-2">{contactLine}</p>
+        <h2 className="cv-name">{cv.fullName}</h2>
+        {cv.title && <p className="cv-role">{cv.title}</p>}
+        <p className="cv-contact">{contactLine}</p>
       </header>
 
       {cv.summary && (
-        <Section title={t("resume.sectionSummary")}>
-          <p className="text-[14px] text-ink-muted leading-relaxed whitespace-pre-line">{cv.summary}</p>
-        </Section>
+        <CvSection title={t("resume.sectionSummary")}>
+          <p className="cv-body whitespace-pre-line">{cv.summary}</p>
+        </CvSection>
       )}
-
       {cv.experiences.length > 0 && (
-        <Section title={t("resume.sectionExperience")}>
+        <CvSection title={t("resume.sectionExperience")}>
           {cv.experiences.map((e) => <ExpItem key={e.id} e={e} />)}
-        </Section>
+        </CvSection>
       )}
-
       {cv.education.length > 0 && (
-        <Section title={t("resume.sectionEducation")}>
+        <CvSection title={t("resume.sectionEducation")}>
           {cv.education.map((e) => <EduItem key={e.id} e={e} />)}
-        </Section>
+        </CvSection>
       )}
-
       {cv.skills.length > 0 && (
-        <Section title={t("resume.sectionSkills")}>
-          <p className="text-[14px] text-ink-muted">{cv.skills.join(" · ")}</p>
-        </Section>
+        <CvSection title={t("resume.sectionSkills")}>
+          <p className="cv-body">{cv.skills.join(" · ")}</p>
+        </CvSection>
       )}
     </div>
   );
 }
 
+function CvSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="cv-section">
+      <h3 className="cv-section-title">{title}</h3>
+      {children}
+    </section>
+  );
+}
+
 function ExpItem({ e }: { e: Experience }) {
   return (
-    <div className="mb-4">
+    <div className="cv-item">
       <div className="flex items-baseline justify-between gap-3">
-        <p className="text-[15px] font-semibold text-ink">{e.title}{e.company && ` – ${e.company}`}</p>
-        <p className="text-[12px] text-ink-muted whitespace-nowrap">{[e.start, e.end].filter(Boolean).join(" – ")}</p>
+        <p className="cv-item-heading">{e.title}{e.company && ` – ${e.company}`}</p>
+        <p className="cv-item-meta">{[e.start, e.end].filter(Boolean).join(" – ")}</p>
       </div>
       {e.description && (
-        <ul className="mt-1 list-disc pl-5 space-y-0.5 text-[14px] text-ink-muted leading-relaxed">
-          {e.description.split("\n").filter(Boolean).map((line, i) => <li key={i}>{line}</li>)}
+        <ul className="mt-1 list-disc pl-5 space-y-0.5">
+          {e.description.split("\n").filter(Boolean).map((line, i) => (
+            <li key={i} className="cv-body">{line}</li>
+          ))}
         </ul>
       )}
     </div>
@@ -735,12 +991,12 @@ function ExpItem({ e }: { e: Experience }) {
 
 function EduItem({ e }: { e: Education }) {
   return (
-    <div className="mb-3">
+    <div className="cv-item">
       <div className="flex items-baseline justify-between gap-3">
-        <p className="text-[15px] font-semibold text-ink">{e.degree}{e.school && ` – ${e.school}`}</p>
-        <p className="text-[12px] text-ink-muted">{e.date}</p>
+        <p className="cv-item-heading">{e.degree}{e.school && ` – ${e.school}`}</p>
+        <p className="cv-item-meta">{e.date}</p>
       </div>
-      {e.field && <p className="text-[14px] text-ink-muted">{e.field}</p>}
+      {e.field && <p className="cv-body">{e.field}</p>}
     </div>
   );
 }

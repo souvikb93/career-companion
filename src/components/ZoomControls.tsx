@@ -10,7 +10,7 @@ export function ZoomControls({ zoom, onChange, min = 0.4, max = 2, step = 0.1, f
   return (
     <div
       className={
-        "inline-flex items-center gap-0.5 rounded-full border border-white/50 bg-white/40 backdrop-blur-md p-0.5 " +
+        "inline-flex items-center gap-0.5 rounded-full glass-zoom-pill p-0.5 " +
         (floating ? "shadow-md" : "")
       }
     >

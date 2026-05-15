@@ -189,6 +189,13 @@
 }
 
 @layer utilities {
+  /* Kill all browser/Radix focus rings on Select triggers globally */
+  [role="combobox"]:focus,
+  [role="combobox"]:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -261,11 +268,11 @@
   }
   /* h-11 (44px) — standard size, used in tab bars (Save, Library, etc.) */
   .btn-ghost {
-    @apply inline-flex items-center gap-2 h-11 px-5 rounded-full bg-white/50 backdrop-blur-md border border-line text-ink text-[12px] font-bold uppercase tracking-[0.08em] transition-colors duration-200 ease-out hover:bg-surface-2 disabled:opacity-50 disabled:hover:bg-white/50;
+    @apply inline-flex items-center gap-2 h-11 px-5 rounded-full bg-white border border-line text-ink text-[12px] font-bold uppercase tracking-[0.08em] transition-colors duration-200 ease-out hover:bg-surface-2 disabled:opacity-50 disabled:hover:bg-white;
   }
   /* h-9 (36px) — compact size, used in settings rows and inline actions */
   .btn-ghost-sm {
-    @apply inline-flex items-center gap-1.5 h-9 px-3.5 rounded-full bg-white/50 backdrop-blur-md border border-line text-ink text-[11px] font-bold uppercase tracking-[0.08em] transition-colors duration-200 ease-out hover:bg-surface-2 disabled:opacity-50 disabled:hover:bg-white/50;
+    @apply inline-flex items-center gap-1.5 h-9 px-3.5 rounded-full bg-white border border-line text-ink text-[11px] font-bold uppercase tracking-[0.08em] transition-colors duration-200 ease-out hover:bg-surface-2 disabled:opacity-50 disabled:hover:bg-white;
   }
   .btn-primary {
     @apply inline-flex items-center gap-2 h-11 px-5 rounded-full bg-ink text-white text-[12px] font-bold uppercase tracking-[0.08em] transition-colors duration-200 ease-out hover:bg-brand active:bg-brand disabled:opacity-50 disabled:hover:bg-ink;
@@ -334,11 +341,18 @@
     backdrop-filter: blur(20px);
   }
 
-  /* Scrim behind modals, panels, and drawers — always pure black at 30% */
+  /* Scrim behind modals, panels, and drawers */
   .modal-backdrop {
     background: rgb(0 0 0 / 0.30);
     -webkit-backdrop-filter: blur(4px);
     backdrop-filter: blur(4px);
+  }
+
+  /* Dark mode: warm charcoal tint — lets background show through, modal pops clearly */
+  html.dark .modal-backdrop {
+    background: rgb(38 35 32 / 0.45);
+    -webkit-backdrop-filter: blur(8px) saturate(130%) brightness(1.08);
+    backdrop-filter: blur(8px) saturate(130%) brightness(1.08);
   }
 
   /* Level 2.5 — slide-in side panel (full-height sheet) */
@@ -386,6 +400,11 @@
   }
 
   /* Level 1 light — filter chip, secondary surface */
+  /* Selectable tile fill — matches glass-modal background, no border/radius/shadow */
+  .tile-surface {
+    background: rgb(var(--glass-tint) / 0.78);
+  }
+
   .glass-chip {
     background: rgb(var(--glass-tint) / 0.30);
     border: 1px solid rgb(var(--glass-border) / 0.40);
@@ -475,7 +494,6 @@
      See DESIGN_SYSTEM.md §5.5 for full guidelines.
      ───────────────────────────────────────────── */
   .letter-page {
-    /* 80 top / 72 sides / 96 bottom */
     padding: 80px 72px 96px;
   }
   .letter-page-compact {
@@ -489,32 +507,60 @@
     @apply space-y-1;
   }
   .letter-recipient-name {
-    @apply text-[14px] font-medium text-ink leading-[1.5];
+    font-family: var(--doc-font-body);
+    font-size: var(--doc-meta-size);
+    font-weight: 500;
+    color: hsl(var(--ink));
+    line-height: 1.5;
   }
   .letter-sender-block {
     @apply space-y-1 text-right;
   }
   .letter-sender-name {
-    @apply text-[26px] font-semibold text-ink leading-[1.2] mb-1;
+    font-family: var(--doc-font-heading);
+    font-size: var(--doc-name-size);
+    font-weight: var(--doc-name-weight);
+    color: hsl(var(--ink));
+    line-height: 1.2;
+    margin-bottom: 4px;
   }
   .letter-meta {
-    @apply text-[12px] font-normal text-ink-muted leading-[1.6];
+    font-family: var(--doc-font-body);
+    font-size: var(--doc-meta-size);
+    font-weight: 400;
+    color: hsl(var(--ink-muted));
+    line-height: 1.6;
   }
   .letter-date {
-    @apply text-[13px] font-normal text-ink-muted leading-[1.5];
+    font-family: var(--doc-font-body);
+    font-size: var(--doc-meta-size);
+    font-weight: 400;
+    color: hsl(var(--ink-muted));
+    line-height: 1.5;
     margin-bottom: 24px;
   }
   .letter-subject {
-    @apply text-[15px] font-semibold text-ink leading-[1.5];
+    font-family: var(--doc-font-heading);
+    font-size: var(--doc-body-size);
+    font-weight: 600;
+    color: hsl(var(--ink));
+    line-height: 1.5;
     margin-bottom: 28px;
   }
   .letter-salutation {
-    @apply text-[14px] font-normal text-ink leading-[1.6];
+    font-family: var(--doc-font-body);
+    font-size: var(--doc-body-size);
+    font-weight: 400;
+    color: hsl(var(--ink));
+    line-height: 1.6;
     margin-bottom: 20px;
   }
   .letter-body {
-    @apply text-[14px] font-normal text-ink;
-    line-height: 1.7;
+    font-family: var(--doc-font-body);
+    font-size: var(--doc-body-size);
+    font-weight: 400;
+    color: hsl(var(--ink));
+    line-height: var(--doc-body-lh);
     margin-bottom: 14px;
     text-align: justify;
     hyphens: auto;
@@ -523,11 +569,19 @@
     margin-bottom: 28px;
   }
   .letter-signoff {
-    @apply text-[14px] font-normal text-ink leading-[1.5];
+    font-family: var(--doc-font-body);
+    font-size: var(--doc-body-size);
+    font-weight: 400;
+    color: hsl(var(--ink));
+    line-height: 1.5;
     margin-bottom: 40px;
   }
   .letter-signature {
-    @apply text-[15px] font-semibold text-ink leading-[1.2];
+    font-family: var(--doc-font-heading);
+    font-size: var(--doc-body-size);
+    font-weight: 600;
+    color: hsl(var(--ink));
+    line-height: 1.2;
   }
 
   /* Edit-mode field inside the document canvas — bare input that inherits letter typography.
@@ -551,6 +605,67 @@
     color: hsl(0 0% 0% / 0.22);
   }
 
+  /* CV document typography — all reference CSS vars set on .document-canvas */
+  .cv-name {
+    font-family: var(--doc-font-heading);
+    font-size: var(--doc-name-size);
+    font-weight: var(--doc-name-weight);
+    color: hsl(var(--ink));
+    line-height: 1.2;
+  }
+  .cv-role {
+    font-family: var(--doc-font-body);
+    font-size: var(--doc-meta-size);
+    font-weight: 400;
+    color: hsl(var(--ink-muted));
+    margin-top: 4px;
+  }
+  .cv-contact {
+    font-family: var(--doc-font-body);
+    font-size: var(--doc-meta-size);
+    font-weight: 400;
+    color: hsl(var(--ink-muted));
+    margin-top: 6px;
+  }
+  .cv-section-title {
+    font-family: var(--doc-font-heading);
+    font-size: var(--doc-section-size);
+    font-weight: var(--doc-section-weight);
+    text-transform: var(--doc-section-transform);
+    letter-spacing: var(--doc-section-tracking);
+    color: hsl(var(--ink));
+    border-bottom: var(--doc-section-border-style);
+    padding-bottom: 5px;
+    margin-bottom: 12px;
+  }
+  .cv-body {
+    font-family: var(--doc-font-body);
+    font-size: var(--doc-body-size);
+    font-weight: 400;
+    color: hsl(var(--ink-muted));
+    line-height: var(--doc-body-lh);
+  }
+  .cv-item-heading {
+    font-family: var(--doc-font-heading);
+    font-size: var(--doc-body-size);
+    font-weight: 600;
+    color: hsl(var(--ink));
+    line-height: 1.3;
+  }
+  .cv-item-meta {
+    font-family: var(--doc-font-body);
+    font-size: var(--doc-meta-size);
+    font-weight: 400;
+    color: hsl(var(--ink-muted));
+    white-space: nowrap;
+  }
+  .cv-section {
+    margin-bottom: var(--doc-section-mb);
+  }
+  .cv-item {
+    margin-bottom: var(--doc-item-mb);
+  }
+
   /* Document canvas — always renders in light-mode ink regardless of app theme.
      CV and letter previews are white paper; their text must stay dark in dark mode. */
   .document-canvas {
@@ -558,6 +673,98 @@
     --ink-2: 0 0% 16%;
     --ink-muted: 0 0% 29%;
     color-scheme: light;
+    /* Document typography tokens */
+    --doc-font-heading: 'Satoshi', 'Helvetica Neue', sans-serif;
+    --doc-font-body: 'Satoshi', 'Helvetica Neue', sans-serif;
+    --doc-name-size: 26px;
+    --doc-name-weight: 600;
+    --doc-section-size: 11px;
+    --doc-section-weight: 700;
+    --doc-section-transform: uppercase;
+    --doc-section-tracking: 0.1em;
+    --doc-section-border-style: 1px solid rgb(0 0 0 / 0.15);
+    --doc-section-border-position: bottom;
+    --doc-body-size: 14px;
+    --doc-body-lh: 1.7;
+    --doc-meta-size: 12px;
+    --doc-section-mb: 24px;
+    --doc-item-mb: 16px;
+  }
+
+  /* Editorial: Lora serif, sentence-case headings */
+  .document-canvas[data-doc-theme="editorial"] {
+    --doc-font-heading: 'Lora', 'Georgia', serif;
+    --doc-font-body: 'Lora', 'Georgia', serif;
+    --doc-name-size: 28px;
+    --doc-name-weight: 600;
+    --doc-section-size: 13px;
+    --doc-section-weight: 600;
+    --doc-section-transform: none;
+    --doc-section-tracking: 0em;
+    --doc-section-border-style: 1px solid rgb(0 0 0 / 0.18);
+  }
+
+  /* Modern: Satoshi, heavy uppercase, thick top rule on sections */
+  .document-canvas[data-doc-theme="modern"] {
+    --doc-name-weight: 700;
+    --doc-section-size: 10px;
+    --doc-section-weight: 700;
+    --doc-section-transform: uppercase;
+    --doc-section-tracking: 0.16em;
+    --doc-section-border-style: 2px solid rgb(0 0 0 / 0.85);
+  }
+
+  /* Minimal: Satoshi, light name, sentence-case, no section rule */
+  .document-canvas[data-doc-theme="minimal"] {
+    --doc-name-size: 24px;
+    --doc-name-weight: 400;
+    --doc-section-size: 12px;
+    --doc-section-weight: 500;
+    --doc-section-transform: none;
+    --doc-section-tracking: 0.02em;
+    --doc-section-border-style: 1px solid rgb(0 0 0 / 0.07);
+    --doc-section-mb: 32px;
+  }
+
+  /* Size variants — scale key text sizes */
+  .document-canvas[data-doc-size="s"] {
+    --doc-body-size: 12.5px;
+    --doc-name-size: 22px;
+    --doc-meta-size: 10.5px;
+    --doc-section-size: 10px;
+  }
+  .document-canvas[data-doc-size="l"] {
+    --doc-body-size: 15px;
+    --doc-name-size: 30px;
+    --doc-meta-size: 13px;
+    --doc-section-size: 12px;
+  }
+
+  /* Density variants — section/item spacing */
+  .document-canvas[data-doc-density="compact"] {
+    --doc-section-mb: 14px;
+    --doc-item-mb: 10px;
+  }
+  .document-canvas[data-doc-density="relaxed"] {
+    --doc-section-mb: 36px;
+    --doc-item-mb: 24px;
+  }
+
+  /* Page mode — dark page overrides all ink tokens + background */
+  .document-canvas[data-doc-page="dark"] {
+    --ink: 30 20% 95%;
+    --ink-muted: 30 14% 80%;
+    --doc-section-border-style: 1px solid rgb(240 235 228 / 0.20);
+    background-color: #1c1a18;
+    color-scheme: dark;
+  }
+  /* Modern theme: restore the thick rule in warm white */
+  .document-canvas[data-doc-page="dark"][data-doc-theme="modern"] {
+    --doc-section-border-style: 2px solid rgb(240 235 228 / 0.80);
+  }
+  /* Editorial theme: slightly softer border */
+  .document-canvas[data-doc-page="dark"][data-doc-theme="editorial"] {
+    --doc-section-border-style: 1px solid rgb(240 235 228 / 0.22);
   }
 
   /* Chat typing indicator — three bouncing dots */
@@ -1042,19 +1249,22 @@
   html.dark .document-canvas {
     background: #E8E4DF;
   }
+  /* Dark page mode: keep the dark background even when app is in light mode */
+  html.dark .document-canvas[data-doc-page="dark"] {
+    background-color: #1c1a18;
+  }
 
   /* Buttons */
   html.dark .btn-ghost {
-    background: rgb(var(--glass-tint) / 0.45);
-    border-color: rgb(var(--glass-border) / 0.14);
+    background: hsl(var(--surface));
+    border-color: hsl(var(--line));
     color: hsl(var(--ink));
   }
   html.dark .btn-ghost:hover:not(:disabled) {
-    background: rgb(var(--glass-tint) / 0.62);
-    border-color: rgb(var(--glass-border) / 0.20);
+    background: hsl(var(--surface-hover));
   }
   html.dark .btn-ghost:disabled {
-    background: rgb(var(--glass-tint) / 0.35);
+    background: hsl(var(--surface));
   }
   html.dark .btn-danger {
     background: rgb(var(--glass-tint) / 0.45);
@@ -1071,16 +1281,15 @@
   }
   /* Compact variants — inherit same dark tokens as full-size counterparts */
   html.dark .btn-ghost-sm {
-    background: rgb(var(--glass-tint) / 0.45);
-    border-color: rgb(var(--glass-border) / 0.14);
+    background: hsl(var(--surface));
+    border-color: hsl(var(--line));
     color: hsl(var(--ink));
   }
   html.dark .btn-ghost-sm:hover:not(:disabled) {
-    background: rgb(var(--glass-tint) / 0.62);
-    border-color: rgb(var(--glass-border) / 0.20);
+    background: hsl(var(--surface-hover));
   }
   html.dark .btn-ghost-sm:disabled {
-    background: rgb(var(--glass-tint) / 0.35);
+    background: hsl(var(--surface));
   }
   html.dark .btn-danger-sm {
     background: rgb(var(--glass-tint) / 0.45);

@@ -17,7 +17,7 @@ export function AccountLayout() {
     <div className="flex flex-col md:flex-row w-full" style={{ minHeight: "calc(100vh - 64px)" }}>
       {/* Desktop: vertical sidebar */}
       <aside
-        className="hidden md:block w-60 shrink-0 border-r border-line/60 bg-white/40 backdrop-blur-xl px-4 py-8 sticky top-16 account-sidebar"
+        className="hidden md:block w-60 shrink-0 border-r nav-hairline bg-white/40 backdrop-blur-xl px-4 py-8 sticky top-16 account-sidebar"
         style={{ height: "calc(100vh - 64px)" }}
       >
         <nav className="space-y-0.5">

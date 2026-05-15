@@ -1,16 +1,22 @@
 import { useEffect, useRef, useState } from "react";
-import { Send, Loader2, Save, FolderOpen, Pencil, Check, FilePlus, X } from "lucide-react";
+import { Send, Loader2, Save, FolderOpen, Pencil, Check, FilePlus, X, SlidersHorizontal, Download, MoreHorizontal, Minus, Plus } from "lucide-react";
+import { DocumentStyle, DocTheme, DocSize, DocDensity, DocPage, loadDocStyle, saveDocStyle, DOC_THEMES_META, DOC_SIZES_META, DOC_DENSITIES_META, DOC_PAGE_META, systemPageMode, useDocPageSync } from "@/lib/document-theme";
+import { CustomizePanel } from "@/components/CustomizePanel";
 import { cn } from "@/lib/utils";
 import { MobileActionsMenu } from "@/components/MobileActionsMenu";
 import { SegmentedControl } from "@/components/SegmentedControl";
 import { useJobs } from "@/lib/jobs-store";
-import { ZoomControls } from "@/components/ZoomControls";
-import { ExportMenu } from "@/components/ExportMenu";
 import { SavedCVsPanel } from "@/components/SavedCVsPanel";
 import { SaveModal } from "@/components/SaveModal";
-import { LayoutMenu, LayoutVariant, loadLayout } from "@/components/LayoutMenu";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@/components/ui/material-ui-dropdown-menu";
 import { useSavedLetters } from "@/lib/saved-items";
-import { exportAs, ExportFormat } from "@/lib/exporters";
+import { exportTextAsPDF } from "@/lib/exporters";
 import { generateCoverLetter, editCoverLetter, scrapeJobFromUrl, lookupCompanyAddress, letterContentToText, type LetterContent } from "@/lib/groq";
 import { useProfile } from "@/lib/profile-store";
 import { useToast } from "@/hooks/use-toast";
@@ -139,10 +145,33 @@ export default function CoverLetterPage() {
   const [saveOpen, setSaveOpen] = useState(false);
   const [newLetterId, setNewLetterId] = useState<string | undefined>(undefined);
   const [showNewModal, setShowNewModal] = useState(false);
-  const [layout, setLayoutState] = useState<LayoutVariant>(() => loadLayout("letter_layout"));
-  const setLayout = (v: LayoutVariant) => {
-    setLayoutState(v);
-    try { window.localStorage.setItem("letter_layout", v); } catch { /* ignore */ }
+  const [docStyle, setDocStyle] = useState<DocumentStyle>(() => {
+    const stored = loadDocStyle();
+    const hasStoredPage = (() => {
+      try { const raw = localStorage.getItem("tracka_doc_style"); return raw ? "page" in JSON.parse(raw) : false; } catch { return false; }
+    })();
+    return hasStoredPage ? stored : { ...stored, page: systemPageMode() };
+  });
+  const [customizeOpen, setCustomizeOpen] = useState(false);
+
+  const handleDocStyleChange = (style: DocumentStyle) => {
+    setDocStyle(style);
+    saveDocStyle(style);
+  };
+
+  useDocPageSync((page) => {
+    setDocStyle((prev) => {
+      const next = { ...prev, page };
+      saveDocStyle(next);
+      return next;
+    });
+  });
+
+  const handleDownloadCurrentLetter = () => {
+    const body = letter ? letterContentToText(letter) : "";
+    const company = letter?.companyName || "cover-letter";
+    const filename = `cover-letter-${company.replace(/\s+/g, "-")}`;
+    exportTextAsPDF("Cover Letter", body, filename);
   };
 
   const { list: savedLetters, save: saveLetter, remove: removeLetter } = useSavedLetters<LetterDoc>();
@@ -222,9 +251,10 @@ export default function CoverLetterPage() {
     if (textareaRef.current) textareaRef.current.style.height = "auto";
   };
 
-  const handleExport = (format: ExportFormat) => {
-    const filename = targetJob ? `cover-letter-${targetJob.company}` : "cover-letter";
-    exportAs(format, "Cover Letter", letter ? letterContentToText(letter) : "", filename);
+  const handleDownloadLetter = (doc: LetterDoc, name: string) => {
+    const body = doc.letter ? letterContentToText(doc.letter) : "";
+    const filename = doc.jobLabel ? `cover-letter-${doc.jobLabel.replace(/\s+/g, "-")}` : name.replace(/\s+/g, "-") || "cover-letter";
+    exportTextAsPDF("Cover Letter", body, filename);
   };
 
   const hasLetterContent = () => letter !== null || messages.length > 0;
@@ -353,10 +383,11 @@ export default function CoverLetterPage() {
         <MobileActionsMenu
           onNew={handleNew}
           onSave={() => setSaveOpen(true)}
-          layout={layout}
-          onLayoutChange={setLayout}
-          onExport={handleExport}
           onLibrary={() => setSavedOpen(true)}
+          onCustomize={() => setCustomizeOpen(true)}
+          onDownload={handleDownloadCurrentLetter}
+          zoom={zoom}
+          onZoom={setZoom}
         />
       </div>
 
@@ -436,44 +467,45 @@ export default function CoverLetterPage() {
           <div className="h-full overflow-y-auto overscroll-contain flex justify-center px-4 pt-6 pb-8 bg-white/10">
             <div style={{ width: `${794 * zoom}px`, height: `${1123 * zoom}px` }}>
               <article
-                className={"document-canvas bg-white text-ink font-sans shadow-xl origin-top-left relative overflow-hidden " + (layout === "compact" ? "letter-page-compact" : "letter-page")}
+                className="document-canvas bg-white text-ink font-sans shadow-xl origin-top-left relative overflow-hidden letter-page"
+                data-doc-theme={docStyle.theme}
+                data-doc-size={docStyle.size}
+                data-doc-density={docStyle.density}
+                data-doc-page={docStyle.page}
                 style={{ width: "794px", minHeight: "1123px", transform: `scale(${zoom})` }}
               >
-                {layout === "modern" && <div className="absolute left-0 top-0 bottom-0 w-3 bg-brand" />}
-                <div style={{ paddingLeft: layout === "modern" ? "20px" : undefined }}>
-                  {letter === null ? (
-                    <>
-                      <div className="letter-head-row"><div className="letter-recipient"><div className="letter-recipient-name">{t("letter.ph_companyName")}</div><div className="letter-meta">{t("letter.ph_companyStreet")}</div><div className="letter-meta">{t("letter.ph_companyCity")}</div></div><div className="letter-sender-block"><div className="letter-sender-name">{t("letter.ph_yourName")}</div><div className="letter-meta">{t("letter.ph_yourEmail")}</div><div className="letter-meta">{t("letter.ph_yourPhone")}</div><div className="letter-meta">{t("letter.ph_yourCity")}</div></div></div>
-                      <div className="letter-date">{t("letter.ph_date")}</div>
-                      <div className="letter-subject">{t("letter.ph_subject")}</div>
-                      <div className="letter-salutation">{t("letter.ph_dear")}</div>
-                      <p className="letter-body">{LOREM}</p><p className="letter-body">{LOREM}</p><p className="letter-body">{LOREM}</p>
-                      <div className="letter-signoff">{t("letter.ph_sincerely")}</div>
-                      <div className="letter-signature">{t("letter.ph_yourName")}</div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="letter-head-row">
-                        <div className="letter-recipient">
-                          {letter.companyName && <div className="letter-recipient-name">{letter.companyName}</div>}
-                          {letter.companyAddress.filter(Boolean).map((line, i) => <div key={i} className="letter-meta">{line}</div>)}
-                        </div>
-                        <div className="letter-sender-block">
-                          {letter.senderName && <div className="letter-sender-name">{letter.senderName}</div>}
-                          {letter.senderEmail && <div className="letter-meta">{letter.senderEmail}</div>}
-                          {letter.senderPhone && <div className="letter-meta">{letter.senderPhone}</div>}
-                          {letter.senderAddress.filter(Boolean).map((line, i) => <div key={i} className="letter-meta">{line}</div>)}
-                        </div>
+                {letter === null ? (
+                  <>
+                    <div className="letter-head-row"><div className="letter-recipient"><div className="letter-recipient-name">{t("letter.ph_companyName")}</div><div className="letter-meta">{t("letter.ph_companyStreet")}</div><div className="letter-meta">{t("letter.ph_companyCity")}</div></div><div className="letter-sender-block"><div className="letter-sender-name">{t("letter.ph_yourName")}</div><div className="letter-meta">{t("letter.ph_yourEmail")}</div><div className="letter-meta">{t("letter.ph_yourPhone")}</div><div className="letter-meta">{t("letter.ph_yourCity")}</div></div></div>
+                    <div className="letter-date">{t("letter.ph_date")}</div>
+                    <div className="letter-subject">{t("letter.ph_subject")}</div>
+                    <div className="letter-salutation">{t("letter.ph_dear")}</div>
+                    <p className="letter-body">{LOREM}</p><p className="letter-body">{LOREM}</p><p className="letter-body">{LOREM}</p>
+                    <div className="letter-signoff">{t("letter.ph_sincerely")}</div>
+                    <div className="letter-signature">{t("letter.ph_yourName")}</div>
+                  </>
+                ) : (
+                  <>
+                    <div className="letter-head-row">
+                      <div className="letter-recipient">
+                        {letter.companyName && <div className="letter-recipient-name">{letter.companyName}</div>}
+                        {letter.companyAddress.filter(Boolean).map((line, i) => <div key={i} className="letter-meta">{line}</div>)}
                       </div>
-                      {letter.date && <div className="letter-date">{letter.date}</div>}
-                      {letter.subject && <div className="letter-subject">{letter.subject}</div>}
-                      {letter.salutation && <div className="letter-salutation">{letter.salutation}</div>}
-                      {letter.body.filter(Boolean).map((p, i) => <p key={i} className="letter-body">{p}</p>)}
-                      {letter.signoff && <div className="letter-signoff">{letter.signoff}</div>}
-                      {letter.senderName && <div className="letter-signature">{letter.senderName}</div>}
-                    </>
-                  )}
-                </div>
+                      <div className="letter-sender-block">
+                        {letter.senderName && <div className="letter-sender-name">{letter.senderName}</div>}
+                        {letter.senderEmail && <div className="letter-meta">{letter.senderEmail}</div>}
+                        {letter.senderPhone && <div className="letter-meta">{letter.senderPhone}</div>}
+                        {letter.senderAddress.filter(Boolean).map((line, i) => <div key={i} className="letter-meta">{line}</div>)}
+                      </div>
+                    </div>
+                    {letter.date && <div className="letter-date">{letter.date}</div>}
+                    {letter.subject && <div className="letter-subject">{letter.subject}</div>}
+                    {letter.salutation && <div className="letter-salutation">{letter.salutation}</div>}
+                    {letter.body.filter(Boolean).map((p, i) => <p key={i} className="letter-body">{p}</p>)}
+                    {letter.signoff && <div className="letter-signoff">{letter.signoff}</div>}
+                    {letter.senderName && <div className="letter-signature">{letter.senderName}</div>}
+                  </>
+                )}
               </article>
             </div>
           </div>
@@ -511,6 +543,7 @@ export default function CoverLetterPage() {
           toast({ title: t("letter.loaded"), description: item.name });
         }}
         onDelete={(id) => removeLetter(id)}
+        onDownload={(item) => handleDownloadLetter(item.data, item.name)}
       />
 
       <SaveModal
@@ -529,9 +562,16 @@ export default function CoverLetterPage() {
         }}
       />
 
-      <div className="hidden lg:grid lg:grid-cols-2 lg:h-[calc(100vh-64px)]">
+      {/* ── Desktop 3-column layout ── */}
+      <div
+        className="hidden lg:grid lg:h-[calc(100vh-64px)]"
+        style={{
+          gridTemplateColumns: customizeOpen ? "1fr 1.5fr 280px" : "1fr 1fr 0px",
+          transition: "grid-template-columns 320ms cubic-bezier(0.22, 1, 0.36, 1)",
+        }}
+      >
 
-        {/* ── Chat column — single glass-editor surface ─── */}
+        {/* ── Chat column ─── */}
         <div className="glass-editor flex flex-col h-[calc(100vh-64px)] border-r glass-rule">
           {/* Desktop fixed header — title + actions */}
           <div className="shrink-0 px-8 pt-8 pb-6 border-b glass-rule">
@@ -539,18 +579,30 @@ export default function CoverLetterPage() {
             {targetJob && (
               <p className="text-[13px] text-ink-muted -mt-4 mb-6">{t("letter.forJob", { label: `${targetJob.company} — ${targetJob.role}` })}</p>
             )}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <button type="button" onClick={handleNew} className="btn-ghost">
                 <FilePlus className="h-4 w-4" /> {t("common.newDoc")}
               </button>
               <button type="button" onClick={() => setSaveOpen(true)} className="btn-ghost">
                 <Save className="h-4 w-4" /> {t("common.save")}
               </button>
-              <LayoutMenu value={layout} onChange={setLayout} />
-              <button type="button" onClick={() => setSavedOpen(true)} className="btn-ghost">
-                <FolderOpen className="h-4 w-4" /> {t("common.library")}
-              </button>
-              <ExportMenu onExport={handleExport} />
+              {!customizeOpen && (
+                <button
+                  type="button"
+                  onClick={() => setCustomizeOpen(true)}
+                  className="btn-ghost"
+                >
+                  <SlidersHorizontal className="h-4 w-4" /> Design
+                </button>
+              )}
+              <LetterMoreMenu
+                customizeOpen={customizeOpen}
+                onDesign={() => setCustomizeOpen((v) => !v)}
+                onDownload={handleDownloadCurrentLetter}
+                onLibrary={() => setSavedOpen(true)}
+                zoom={zoom}
+                onZoom={setZoom}
+              />
             </div>
           </div>
 
@@ -693,56 +745,46 @@ export default function CoverLetterPage() {
               >
                 <article
                   ref={articleRef}
-                  className={cn(
-                    "document-canvas bg-white text-ink font-sans shadow-2xl origin-top-left relative overflow-hidden select-none pointer-events-none",
-                    layout === "compact" ? "letter-page-compact" : "letter-page",
-                  )}
+                  className="document-canvas bg-white text-ink font-sans shadow-2xl origin-top-left relative overflow-hidden select-none pointer-events-none letter-page"
+                  data-doc-theme={docStyle.theme}
+                  data-doc-size={docStyle.size}
+                  data-doc-density={docStyle.density}
+                  data-doc-page={docStyle.page}
                   style={{ width: "794px", minHeight: "1123px", transform: `scale(${zoom})` }}
                 >
-                  {layout === "modern" && <div className="absolute left-0 top-0 bottom-0 w-3 bg-brand" />}
-                  <div style={{ paddingLeft: layout === "modern" ? "20px" : undefined }}>
-                    {letter === null ? (
-                      <>
-                        <div className="letter-head-row"><div className="letter-recipient"><div className="letter-recipient-name">{t("letter.ph_companyName")}</div><div className="letter-meta">{t("letter.ph_companyStreet")}</div><div className="letter-meta">{t("letter.ph_companyCity")}</div></div><div className="letter-sender-block"><div className="letter-sender-name">{t("letter.ph_yourName")}</div><div className="letter-meta">{t("letter.ph_yourEmail")}</div><div className="letter-meta">{t("letter.ph_yourPhone")}</div><div className="letter-meta">{t("letter.ph_yourCity")}</div></div></div>
-                        <div className="letter-date">{t("letter.ph_date")}</div>
-                        <div className="letter-subject">{t("letter.ph_subject")}</div>
-                        <div className="letter-salutation">{t("letter.ph_dear")}</div>
-                        <p className="letter-body">{LOREM}</p><p className="letter-body">{LOREM}</p><p className="letter-body">{LOREM}</p>
-                        <div className="letter-signoff">{t("letter.ph_sincerely")}</div>
-                        <div className="letter-signature">{t("letter.ph_yourName")}</div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="letter-head-row">
-                          <div className="letter-recipient">
-                            {letter.companyName && <div className="letter-recipient-name">{letter.companyName}</div>}
-                            {letter.companyAddress.filter(Boolean).map((line, i) => <div key={i} className="letter-meta">{line}</div>)}
-                          </div>
-                          <div className="letter-sender-block">
-                            {letter.senderName && <div className="letter-sender-name">{letter.senderName}</div>}
-                            {letter.senderEmail && <div className="letter-meta">{letter.senderEmail}</div>}
-                            {letter.senderPhone && <div className="letter-meta">{letter.senderPhone}</div>}
-                            {letter.senderAddress.filter(Boolean).map((line, i) => <div key={i} className="letter-meta">{line}</div>)}
-                          </div>
+                  {letter === null ? (
+                    <>
+                      <div className="letter-head-row"><div className="letter-recipient"><div className="letter-recipient-name">{t("letter.ph_companyName")}</div><div className="letter-meta">{t("letter.ph_companyStreet")}</div><div className="letter-meta">{t("letter.ph_companyCity")}</div></div><div className="letter-sender-block"><div className="letter-sender-name">{t("letter.ph_yourName")}</div><div className="letter-meta">{t("letter.ph_yourEmail")}</div><div className="letter-meta">{t("letter.ph_yourPhone")}</div><div className="letter-meta">{t("letter.ph_yourCity")}</div></div></div>
+                      <div className="letter-date">{t("letter.ph_date")}</div>
+                      <div className="letter-subject">{t("letter.ph_subject")}</div>
+                      <div className="letter-salutation">{t("letter.ph_dear")}</div>
+                      <p className="letter-body">{LOREM}</p><p className="letter-body">{LOREM}</p><p className="letter-body">{LOREM}</p>
+                      <div className="letter-signoff">{t("letter.ph_sincerely")}</div>
+                      <div className="letter-signature">{t("letter.ph_yourName")}</div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="letter-head-row">
+                        <div className="letter-recipient">
+                          {letter.companyName && <div className="letter-recipient-name">{letter.companyName}</div>}
+                          {letter.companyAddress.filter(Boolean).map((line, i) => <div key={i} className="letter-meta">{line}</div>)}
                         </div>
-                        {letter.date && <div className="letter-date">{letter.date}</div>}
-                        {letter.subject && <div className="letter-subject">{letter.subject}</div>}
-                        {letter.salutation && <div className="letter-salutation">{letter.salutation}</div>}
-                        {letter.body.filter(Boolean).map((p, i) => <p key={i} className="letter-body">{p}</p>)}
-                        {letter.signoff && <div className="letter-signoff">{letter.signoff}</div>}
-                        {letter.senderName && <div className="letter-signature">{letter.senderName}</div>}
-                      </>
-                    )}
-                  </div>
+                        <div className="letter-sender-block">
+                          {letter.senderName && <div className="letter-sender-name">{letter.senderName}</div>}
+                          {letter.senderEmail && <div className="letter-meta">{letter.senderEmail}</div>}
+                          {letter.senderPhone && <div className="letter-meta">{letter.senderPhone}</div>}
+                          {letter.senderAddress.filter(Boolean).map((line, i) => <div key={i} className="letter-meta">{line}</div>)}
+                        </div>
+                      </div>
+                      {letter.date && <div className="letter-date">{letter.date}</div>}
+                      {letter.subject && <div className="letter-subject">{letter.subject}</div>}
+                      {letter.salutation && <div className="letter-salutation">{letter.salutation}</div>}
+                      {letter.body.filter(Boolean).map((p, i) => <p key={i} className="letter-body">{p}</p>)}
+                      {letter.signoff && <div className="letter-signoff">{letter.signoff}</div>}
+                      {letter.senderName && <div className="letter-signature">{letter.senderName}</div>}
+                    </>
+                  )}
                 </article>
-              </div>
-
-              {/* Zoom controls */}
-              <div className={cn(
-                "hidden lg:block absolute bottom-8 right-6 z-10 transition-all duration-200",
-                hoverPreview ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1 pointer-events-none",
-              )}>
-                <ZoomControls zoom={zoom} onChange={setZoom} floating />
               </div>
             </section>
           )}
@@ -751,12 +793,12 @@ export default function CoverLetterPage() {
           {letterEditing && letter && (
             <section className="overflow-auto h-full px-6 pt-6 pb-24">
               <div className="document-canvas bg-white rounded-2xl shadow-2xl mx-auto font-sans text-ink"
-                style={{ maxWidth: "680px", padding: layout === "compact" ? "40px 48px 56px" : "56px 56px 72px" }}
+                data-doc-theme={docStyle.theme}
+                data-doc-size={docStyle.size}
+                data-doc-density={docStyle.density}
+                data-doc-page={docStyle.page}
+                style={{ maxWidth: "680px", padding: "56px 56px 72px" }}
               >
-                {layout === "modern" && (
-                  <div className="h-1.5 w-full bg-brand rounded-full mb-8 -mt-2" />
-                )}
-
                 {/* Header: recipient + sender */}
                 <div className="flex justify-between gap-8 mb-8">
                   <div className="space-y-1 flex-1 min-w-0">
@@ -871,6 +913,37 @@ export default function CoverLetterPage() {
             </section>
           )}
         </div>
+
+        {/* ── Design panel — 3rd grid column, desktop only ── */}
+        <div className={cn(
+          "hidden lg:flex lg:flex-col h-[calc(100vh-64px)] overflow-hidden glass-editor",
+          customizeOpen && "border-l glass-rule"
+        )}>
+          {/* Panel header with close button */}
+          <div className={cn(
+            "shrink-0 flex items-center justify-between px-6 pt-5 pb-4 border-b glass-rule transition-opacity duration-150",
+            customizeOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+          )}>
+            <p className="text-[15px] font-semibold text-ink">{t("design.panelTitle")}</p>
+            <button
+              type="button"
+              onClick={() => setCustomizeOpen(false)}
+              aria-label="Close design panel"
+              className="h-8 w-8 rounded-full grid place-items-center text-ink-muted hover:text-ink hover:bg-surface-2 transition-colors duration-150"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <div
+            className={cn(
+              "flex-1 overflow-y-auto scrollbar-minimal transition-opacity duration-150",
+              customizeOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+            )}
+          >
+            <DesignPanelContent style={docStyle} onChange={handleDocStyleChange} />
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -908,6 +981,242 @@ export default function CoverLetterPage() {
         </div>
       </div>
     )}
+    {/* Mobile only — fixed overlay */}
+    <div className="lg:hidden">
+      <CustomizePanel
+        open={customizeOpen}
+        onClose={() => setCustomizeOpen(false)}
+        style={docStyle}
+        onChange={handleDocStyleChange}
+      />
+    </div>
     </>
+  );
+}
+
+interface LetterMoreMenuProps {
+  customizeOpen: boolean;
+  onDesign: () => void;
+  onDownload: () => void;
+  onLibrary: () => void;
+  zoom: number;
+  onZoom: (z: number) => void;
+}
+
+function LetterMoreMenu({ customizeOpen, onDesign, onDownload, onLibrary, zoom, onZoom }: LetterMoreMenuProps) {
+  const { t } = useT();
+  const [open, setOpen] = useState(false);
+  const step = 0.1;
+  const dec = () => onZoom(Math.max(0.3, Math.round((zoom - step) * 100) / 100));
+  const inc = () => onZoom(Math.min(2.5, Math.round((zoom + step) * 100) / 100));
+  const fit = () => onZoom(0.6);
+
+  return (
+    <DropdownMenu open={open} onOpenChange={setOpen}>
+      <DropdownMenuTrigger className="btn-ghost">
+        <MoreHorizontal className="h-4 w-4" /> More
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="w-56">
+        {customizeOpen && (
+          <>
+            <DropdownMenuItem onSelect={() => { onDesign(); setOpen(false); }}>
+              <SlidersHorizontal className="h-4 w-4 text-ink-muted" />
+              Design
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+          </>
+        )}
+        <DropdownMenuItem onSelect={() => { onDownload(); setOpen(false); }}>
+          <Download className="h-4 w-4 text-ink-muted" />
+          Download PDF
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => { onLibrary(); setOpen(false); }}>
+          <FolderOpen className="h-4 w-4 text-ink-muted" />
+          {t("common.library")}
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        {/* Zoom row — plain div, does not close the dropdown on click */}
+        <div className="px-2 py-2">
+          <p className="text-[11px] font-semibold text-ink-muted uppercase tracking-wide px-1 mb-2">
+            Zoom
+          </p>
+          <div className="flex items-center gap-1 rounded-xl bg-surface-2 p-1">
+            <button
+              type="button"
+              onClick={dec}
+              aria-label={t("common.zoomOut")}
+              className="h-7 w-7 rounded-lg grid place-items-center text-ink-muted hover:text-ink hover:bg-black/[0.06] transition-colors duration-150"
+            >
+              <Minus className="h-3 w-3" />
+            </button>
+            <span className="flex-1 text-center text-[12px] font-medium text-ink tabular-nums select-none">
+              {Math.round(zoom * 100)}%
+            </span>
+            <button
+              type="button"
+              onClick={inc}
+              aria-label={t("common.zoomIn")}
+              className="h-7 w-7 rounded-lg grid place-items-center text-ink-muted hover:text-ink hover:bg-black/[0.06] transition-colors duration-150"
+            >
+              <Plus className="h-3 w-3" />
+            </button>
+            <div className="w-px h-4 bg-line" />
+            <button
+              type="button"
+              onClick={fit}
+              className="px-2 h-7 rounded-lg text-[11px] font-medium text-ink-muted hover:text-ink hover:bg-black/[0.06] transition-colors duration-150"
+            >
+              Fit
+            </button>
+          </div>
+        </div>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+function DesignPanelContent({ style, onChange }: { style: DocumentStyle; onChange: (s: DocumentStyle) => void }) {
+  const { t } = useT();
+  const set = <K extends keyof DocumentStyle>(key: K, val: DocumentStyle[K]) =>
+    onChange({ ...style, [key]: val });
+
+  const THEME_LABELS: Record<DocTheme, { name: string; desc: string }> = {
+    classic:   { name: t("design.classic"),   desc: t("design.classicDesc") },
+    editorial: { name: t("design.editorial"), desc: t("design.editorialDesc") },
+    modern:    { name: t("design.modern"),    desc: t("design.modernDesc") },
+    minimal:   { name: t("design.minimal"),   desc: t("design.minimalDesc") },
+  };
+
+  const SIZE_LABELS: Record<string, string> = {
+    s: t("design.sizeS"),
+    m: t("design.sizeM"),
+    l: t("design.sizeL"),
+  };
+
+  const DENSITY_LABELS: Record<string, string> = {
+    compact: t("design.compact"),
+    normal:  t("design.normal"),
+    relaxed: t("design.relaxed"),
+  };
+
+  return (
+    <div className="p-6 space-y-8">
+
+      {/* Theme */}
+      <div>
+        <p className="text-[11px] font-semibold text-ink-muted uppercase tracking-wide mb-3">{t("design.theme")}</p>
+        <div className="grid grid-cols-2 gap-2">
+          {DOC_THEMES_META.map((th) => {
+            const active = style.theme === th.id;
+            const { name, desc } = THEME_LABELS[th.id];
+            return (
+              <button
+                key={th.id}
+                type="button"
+                onClick={() => set("theme", th.id as DocTheme)}
+                className={cn(
+                  "p-3 rounded-2xl border text-left transition-all duration-180 tile-surface",
+                  active
+                    ? "border-brand text-brand"
+                    : "border-transparent text-ink hover:border-brand/25"
+                )}
+              >
+                <div
+                  className="text-[18px] leading-tight mb-1.5"
+                  style={{ fontFamily: th.fontPreview, color: "inherit" }}
+                >
+                  Aa
+                </div>
+                <p className="text-[12px] font-semibold">{name}</p>
+                <p className={cn("text-[12px]", active ? "text-brand" : "text-ink-muted")}>{desc}</p>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Size */}
+      <div>
+        <p className="text-[11px] font-semibold text-ink-muted uppercase tracking-wide mb-3">{t("design.size")}</p>
+        <div className="flex gap-2">
+          {DOC_SIZES_META.map((s) => {
+            const active = style.size === s.id;
+            return (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => set("size", s.id as DocSize)}
+                className={cn(
+                  "flex-1 h-10 rounded-xl border text-[13px] font-medium transition-all duration-180 tile-surface",
+                  active
+                    ? "border-brand text-brand"
+                    : "border-transparent text-ink-muted hover:border-brand/25 hover:text-ink"
+                )}
+              >
+                {SIZE_LABELS[s.id]}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Density */}
+      <div>
+        <p className="text-[11px] font-semibold text-ink-muted uppercase tracking-wide mb-3">{t("design.density")}</p>
+        <div className="flex gap-2">
+          {DOC_DENSITIES_META.map((d) => {
+            const active = style.density === d.id;
+            return (
+              <button
+                key={d.id}
+                type="button"
+                onClick={() => set("density", d.id as DocDensity)}
+                className={cn(
+                  "flex-1 h-10 rounded-xl border text-[13px] font-medium transition-all duration-180 tile-surface",
+                  active
+                    ? "border-brand text-brand"
+                    : "border-transparent text-ink-muted hover:border-brand/25 hover:text-ink"
+                )}
+              >
+                {DENSITY_LABELS[d.id]}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Page Mode */}
+      <div>
+        <p className="text-[11px] font-semibold text-ink-muted uppercase tracking-wide mb-3">{t("design.pageMode")}</p>
+        <div className="grid grid-cols-2 gap-2">
+          {DOC_PAGE_META.map((pg) => {
+            const active = style.page === pg.id;
+            const isLight = pg.id === "light";
+            return (
+              <button
+                key={pg.id}
+                type="button"
+                onClick={() => set("page", pg.id as DocPage)}
+                className={cn(
+                  "flex flex-col items-center justify-center h-[76px] rounded-2xl border-2 transition-all duration-180",
+                  isLight ? "bg-white" : "bg-[#1c1a18]",
+                  active
+                    ? "border-brand"
+                    : isLight ? "border-black/[0.08] hover:border-black/20" : "border-white/[0.08] hover:border-white/20"
+                )}
+              >
+                <span
+                  className="text-[22px] font-semibold leading-none tracking-tight"
+                  style={{ color: isLight ? "#1a1818" : "#f0ebe4" }}
+                >
+                  Tt
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+    </div>
   );
 }

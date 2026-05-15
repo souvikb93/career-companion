@@ -1,10 +1,11 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/lib/profile-store";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useT } from "@/lib/i18n";
+import { Sparkles } from "lucide-react";
 
 const STORAGE_KEY = "tracka_ai_model";
 const DEFAULT_MODEL = "llama-3.3-70b-versatile";
@@ -16,6 +17,9 @@ export default function AIModelPage() {
   const [selected, setSelected] = useState(DEFAULT_MODEL);
   const [modelLoading, setModelLoading] = useState(true);
   const [instructions, setInstructions] = useState("");
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [instructionsError, setInstructionsError] = useState("");
   const instructionsRef = useRef(instructions);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -53,20 +57,30 @@ export default function AIModelPage() {
     }
   }, [profile.customInstructions]);
 
-  const debouncedSaveInstructions = useCallback(() => {
-    if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(async () => {
-      try {
-        await saveProfile({ ...profile, customInstructions: instructionsRef.current });
-      } catch {
-        toast.error(t("aiModel.failedSave"));
-      }
-    }, 800);
-  }, [saveProfile, profile, t]);
+  const handleRemove = async () => {
+    setSaving(true);
+    try {
+      await saveProfile({ ...profile, customInstructions: "" });
+      setInstructions("");
+      toast.success(t("aiModel.instructionsRemoved"));
+    } catch {
+      toast.error(t("aiModel.failedSave"));
+    } finally {
+      setSaving(false);
+    }
+  };
 
-  const handleInstructionsChange = (val: string) => {
-    setInstructions(val);
-    debouncedSaveInstructions();
+  const handleConfirmSave = async () => {
+    setSaving(true);
+    try {
+      await saveProfile({ ...profile, customInstructions: instructions });
+      toast.success(t("aiModel.instructionsSaved"));
+      setConfirmOpen(false);
+    } catch {
+      toast.error(t("aiModel.failedSave"));
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleModelSelect = async (id: string) => {
@@ -88,7 +102,7 @@ export default function AIModelPage() {
 
   return (
     <div className="w-full p-4 sm:p-8">
-      <h1 className="display-2 mb-10">{t("aiModel.title")}</h1>
+      <h1 className="heading-1 mb-6">{t("aiModel.title")}</h1>
 
       <div className="max-w-2xl space-y-5">
 
@@ -99,10 +113,38 @@ export default function AIModelPage() {
             className="textarea-base"
             rows={5}
             value={instructions}
-            onChange={(e) => handleInstructionsChange(e.target.value)}
+            onChange={(e) => { setInstructions(e.target.value); if (instructionsError) setInstructionsError(""); }}
             placeholder={t("aiModel.instructionsPlaceholder")}
           />
-          <p className="text-[12px] text-ink-muted mt-2">{t("aiModel.instructionsFooter")}</p>
+          {instructionsError && (
+            <p className="mt-2 text-[12px] text-red-500">{instructionsError}</p>
+          )}
+          <div className="mt-3 flex items-center justify-end gap-2">
+            {profile.customInstructions && (
+              <button
+                type="button"
+                onClick={handleRemove}
+                disabled={saving}
+                className="btn-ghost h-9 px-4 text-[13px]"
+              >
+                {t("aiModel.instructionsRemove")}
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                if (!instructions.trim()) {
+                  setInstructionsError(t("aiModel.instructionsError"));
+                  return;
+                }
+                setInstructionsError("");
+                setConfirmOpen(true);
+              }}
+              className="btn-primary h-9 px-5 text-[13px]"
+            >
+              {t("aiModel.instructionsSave")}
+            </button>
+          </div>
         </div>
 
         <div className="glass-card p-5">
@@ -145,6 +187,38 @@ export default function AIModelPage() {
         </div>
 
       </div>
+
+      {/* Confirmation modal — outside glass-card to avoid backdrop-filter stacking context */}
+      {confirmOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
+          <div className="absolute inset-0 modal-backdrop" onClick={() => !saving && setConfirmOpen(false)} />
+          <div className="relative glass-modal w-full max-w-[400px] p-6 animate-modal-in">
+            <div className="h-11 w-11 rounded-2xl glass-chip flex items-center justify-center mb-4">
+              <Sparkles className="h-5 w-5 text-brand" />
+            </div>
+            <h3 className="text-[17px] font-semibold text-ink mb-1">{t("aiModel.instructionsConfirmTitle")}</h3>
+            <p className="text-[13px] text-ink-muted leading-relaxed mb-6">{t("aiModel.instructionsConfirmBody")}</p>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setConfirmOpen(false)}
+                disabled={saving}
+                className="btn-ghost flex-1 h-10 justify-center text-[12px]"
+              >
+                {t("aiModel.instructionsCancel")}
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmSave}
+                disabled={saving}
+                className="btn-primary flex-1 h-10 justify-center text-[12px]"
+              >
+                {saving ? "…" : t("aiModel.instructionsConfirm")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

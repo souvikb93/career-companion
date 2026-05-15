@@ -58,21 +58,23 @@ All tokens are HSL custom properties in `:root`. Use the semantic Tailwind class
 | `.field-label` | 11px, uppercase, tracking `0.08em` | Form input labels |
 | Body | 14–16px | Default body, descriptions |
 | `.heading-2` | 22px | Card section headings |
-| `.heading-1` | 28→32px | Page titles on solid pages |
-| `.display-2` | 40→48px | Section heroes |
-| `.display-1` | 56→72px | Empty-state headlines, landing hero |
+| `.heading-1` | 28→32px | **Primary page header — ALL pages** |
+| `.display-2` | 40→48px | Section heroes, landing hero (NOT page headers) |
+| `.display-1` | 56→72px | Empty-state headlines |
 
 > **Minimum body size on mobile is 16px** — avoids iOS auto-zoom. (UX rule `readable-font-size`.)
 
 ### 2.3 Spacing & radius
 
 - 4 / 8 / 12 / 16 / 20 / 24 / 32 / 40 / 48 / 64 — stick to Tailwind's 4pt scale.
-- **Page header spacing**: Every main page MUST use `heading-1 mb-6` (24px) below the page title before any content or controls. This is the canonical header-to-content gap across Tracker, Resume, and Letter pages.
+- **Page header**: Every primary page header MUST use `<h1 className="heading-1 mb-6">`. Applies to all pages: Tracker, Resume Builder, Letter Builder, Profile, Settings, AI Model, FAQ. MUST NOT use `display-2` for page-level h1 — that scale is reserved for section heroes only.
 - **Radius**:
-  - Buttons: `rounded-full` (pills) for primary/ghost CTAs; `rounded-xl` for inline icon buttons.
-  - Inputs / chips: `rounded-2xl` (16px).
-  - Cards: `rounded-2xl`.
+  - Primary/ghost CTA buttons: `rounded-full` only — these are pills.
+  - Icon buttons (square): `rounded-xl`.
+  - **Filter chips, selectable tiles, inputs, cards**: `rounded-2xl` (16px) — the standard interactive / container radius.
+  - Short single-row size/density tiles (h-10): `rounded-xl` exception — visually lighter at that height.
   - Modals / sheets: `rounded-3xl` (24px).
+  - `rounded-full` is NOT for chips or tiles — it is reserved for CTA pills only.
 - **Borders**: 1px hairline only. `border-line` on solid surfaces, `border-white/50` on glass.
 - **Dividers on glass surfaces**: Always use `.glass-rule` — never `border-line`. It resolves to `rgb(0 0 0 / 0.07)` in light and `rgb(255 255 255 / 0.08)` in dark, matching the glass component family (`glass-card`, `glass-nav`, etc.). Applies to all structural dividers: vertical split (`border-r glass-rule`), horizontal header/content (`border-b glass-rule`), and panel edges. MUST NOT use `border-line` on glass pages — it renders too heavy in both modes.
 
@@ -91,7 +93,7 @@ All tokens are HSL custom properties in `:root`. Use the semantic Tailwind class
 - **Exit animations** should be 60–70% of the enter duration (feel faster to dismiss): enter 240ms → exit ~150ms.
 - Use `ease-out` for entering elements, `ease-in` for exiting.
 
-**Canonical scrim opacity:** `bg-ink/40` for modals and dialogs. `bg-ink/20` for lightweight panels (e.g. side panel). Do not use `bg-ink/30` — the codebase has legacy instances at this value; standardise to 40 when touching those components.
+**Canonical scrim:** always `.modal-backdrop` — never `bg-ink/*` or raw `bg-black/*`. See §2.3 Backdrop/scrim for the full spec including dark mode values.
 
 ---
 
@@ -110,15 +112,18 @@ Inputs follow the same split:
 - Solid pages → `.input-base`
 - Glass pages → `.glass-input`
 
-Chips/filter pills:
-- Solid → `border border-line bg-surface-2`
-- Glass → `.glass-chip` / `.glass-chip-active`
+Chips/filter pills / selectable tiles:
+- All contexts → `.tile-surface` base + `border-brand text-brand` active state (see §4.5 and §4.9)
+- `.glass-chip` / `.glass-chip-active` are retired for interactive selection — use `.tile-surface` instead
 
 **Don't mix.** A page is either glass or solid — never half.
 
 ### Backdrop / scrim
 
-Every modal, panel, drawer, and sheet MUST use `.modal-backdrop` for the dimming layer behind it — never `bg-ink/40`, `bg-ink/30`, `bg-black/80`, or any ad-hoc opacity. `.modal-backdrop` resolves to `rgb(0 0 0 / 0.30)` with a 4px blur — identical in light and dark, because it is pure black (not `--ink` which flips to white in dark mode). MUST NOT use `bg-ink/*` for scrims — `--ink` is near-white in dark mode and produces a bright overlay.
+Every modal, panel, drawer, and sheet MUST use `.modal-backdrop` for the dimming layer behind it — never `bg-ink/40`, `bg-ink/30`, `bg-black/80`, or any ad-hoc opacity. MUST NOT use `bg-ink/*` for scrims — `--ink` is near-white in dark mode and produces a bright overlay.
+
+**Light mode:** `rgb(0 0 0 / 0.30)` + `blur(4px)` — pure black at 30%.  
+**Dark mode:** `rgb(38 35 32 / 0.45)` + `blur(8px) saturate(130%) brightness(1.08)` — warm charcoal tint at 45%. Lets the background show through so the modal card pops clearly without a heavy black void. Do not override per-modal — this is the standard for all popups.
 
 ---
 
@@ -128,12 +133,19 @@ All recipes live as classes in `index.css`. The Tailwind combinations below are 
 
 ### 4.1 Buttons
 
-| Recipe | Class | Markup |
-|---|---|---|
-| Primary CTA | `.btn-primary` | `<button className="btn-primary">…</button>` |
-| Ghost | `.btn-ghost` | Surface-2 background, same shape |
-| Tertiary | `.btn-tertiary` | Text-only, hover underlines |
-| Icon (40–48px square) | `rounded-xl bg-ink text-white hover:bg-brand` | Square, never pill |
+| Recipe | Class | Size | Use |
+|---|---|---|---|
+| Primary CTA | `.btn-primary` | h-11 | One per screen — ink bg → brand on hover |
+| Ghost | `.btn-ghost` | h-11 | Secondary actions — solid white bg + border, hover fills `surface-2` |
+| Ghost compact | `.btn-ghost-sm` | h-9 | Settings rows, inline actions — same visual as ghost, smaller |
+| Tertiary | `.btn-tertiary` | auto | Text-only, hover underlines |
+| Icon primary | `.btn-icon-primary` | caller sets | Round/square send/FAB — ink → brand on hover |
+| Icon (40–48px square) | `rounded-xl bg-ink text-white hover:bg-brand` | h-10/h-12 | Square icon-only, never pill |
+
+**Ghost button visual spec** — matches `split-panel-btn` (Google sign-in button) exactly:
+- Light: `background: white` (solid, **no** frosted glass / backdrop-blur), `border: 1px solid var(--line)`, hover → `surface-2`
+- Dark: `background: surface`, `border: line`, hover → `surface-hover`
+- MUST NOT add `backdrop-blur` or `bg-white/50` — ghost buttons are always opaque
 
 Rules:
 - Exactly **one primary CTA per screen**. Everything else is ghost / tertiary.
@@ -233,12 +245,97 @@ Glass modal recipe — use `.glass-modal` for the panel. **Always separate the b
 
 ### 4.5 Filter chip
 
+Filter chips (pipeline view buttons, category tabs, tag filters) use the **tile-surface + border-brand** pattern. `.glass-chip` / `.glass-chip-active` are retired.
+
 ```tsx
-<button className={cn("h-10 px-4 rounded-full inline-flex items-center gap-2 text-[13px] font-medium glass-chip", active && "glass-chip-active")}>
+<button
+  type="button"
+  onClick={() => setView(v.id)}
+  className={cn(
+    "h-10 px-4 rounded-2xl border text-[13px] font-medium inline-flex items-center gap-2 transition-all duration-180 tile-surface shrink-0",
+    active
+      ? "border-brand text-brand"
+      : "border-transparent text-ink hover:border-brand/25",
+  )}
+>
   <span>{label}</span>
   <span className={cn("text-[12px]", active ? "text-brand" : "text-ink-muted")}>{count}</span>
 </button>
 ```
+
+Rules:
+- `rounded-2xl` always — chips are **not** pills (`rounded-full` is reserved for primary/ghost CTAs).
+- Active: `border-brand text-brand` — orange stroke + orange text, no filled background.
+- Inactive: `border-transparent` so the tile-surface fill reads as the selected affordance on activation.
+- Count badge inherits the active colour (`text-brand`) or mutes (`text-ink-muted`) — always rendered as a second `<span>` inline.
+- Works on both glass pages (mesh background) and solid pages — `tile-surface` adapts via `--glass-tint`.
+
+### 4.9 Selectable tile (2-D card variant)
+
+Used for Design panel options: Theme, Size, Density, Page Mode. Same interaction contract as filter chips but with a two-dimensional, card-shaped layout.
+
+**Theme tile (tall, 2-column grid):**
+```tsx
+<button
+  type="button"
+  onClick={() => set("theme", th.id)}
+  className={cn(
+    "p-3 rounded-2xl border text-left transition-all duration-180 tile-surface",
+    active
+      ? "border-brand text-brand"
+      : "border-transparent text-ink hover:border-brand/25"
+  )}
+>
+  <div className="text-[18px] leading-tight mb-1.5" style={{ fontFamily: th.fontPreview, color: "inherit" }}>
+    Aa
+  </div>
+  <p className="text-[12px] font-semibold">{name}</p>
+  <p className={cn("text-[12px]", active ? "text-brand" : "text-ink-muted")}>{desc}</p>
+</button>
+```
+
+**Size / Density tile (short, flex row):**
+```tsx
+<button
+  type="button"
+  onClick={() => set("size", s.id)}
+  className={cn(
+    "flex-1 h-10 rounded-xl border text-[13px] font-medium transition-all duration-180 tile-surface",
+    active
+      ? "border-brand text-brand"
+      : "border-transparent text-ink-muted hover:border-brand/25 hover:text-ink"
+  )}
+>
+  {label}
+</button>
+```
+
+**Page Mode tile (visual contrast preview):**
+```tsx
+<button
+  type="button"
+  onClick={() => set("page", pg.id)}
+  className={cn(
+    "flex flex-col items-center justify-center h-[76px] rounded-2xl border-2 transition-all duration-180",
+    isLight ? "bg-white" : "bg-[#1c1a18]",
+    active
+      ? "border-brand"
+      : isLight ? "border-black/[0.08] hover:border-black/20" : "border-white/[0.08] hover:border-white/20"
+  )}
+>
+  <span className="text-[22px] font-semibold leading-none tracking-tight" style={{ color: isLight ? "#1a1818" : "#f0ebe4" }}>
+    Tt
+  </span>
+</button>
+```
+
+Rules (all selectable tile variants):
+- Base fill: `.tile-surface` — `rgb(var(--glass-tint) / 0.78)`, same formula as `.glass-modal`. Adapts automatically to dark mode.
+- Active stroke: `border-brand` (orange) — **no filled background change**. Orange border + orange text is the complete selected signal.
+- Inactive: `border-transparent` so the tile fill reads as a coherent surface, not a button.
+- `rounded-2xl` for tall/wide tiles; `rounded-xl` only for the short single-row (h-10) size/density buttons.
+- Page Mode tile is the exception: uses literal `bg-white` / `bg-[#1c1a18]` to demonstrate actual document page colour — `tile-surface` would incorrectly tint it.
+- All body text inside a tile (desc, label) inherits `text-brand` when active — never leave subordinate text in `text-ink-muted` while the parent is active.
 
 ### 4.6 Empty state
 
@@ -379,21 +476,43 @@ Rules:
 
 ### 4.15 Custom Select (Radix / glass)
 
-The Radix `<Select>` on glass pages (e.g. status field in Job Detail).
+MUST use Radix `<Select>` for ALL dropdowns — never a native `<select>`. Native select detaches on mobile, can't be styled for dark mode, and triggers unexpected browser focus rings.
+
+**Full recipe** (status field, theme picker, any dropdown):
 
 ```tsx
-<SelectContent
-  className="z-[55] overflow-hidden rounded-2xl border border-white/60 p-1 bg-white/60 backdrop-blur-xl shadow-lg"
-  position="popper"
-  sideOffset={6}
->
+<Select value={value} onValueChange={onChange}>
+  <SelectTrigger className={cn(
+    "w-full h-10 rounded-xl border border-line px-3 text-[14px] text-ink",
+    "bg-transparent outline-none cursor-pointer",
+    "transition-[border-color,background-color] duration-200 ease-out",
+    "hover:bg-surface-hover focus:border-brand focus:ring-0 focus:ring-offset-0",
+  )}>
+    <SelectValue />
+  </SelectTrigger>
+  <SelectContent
+    className="z-[55] overflow-hidden rounded-2xl border border-white/60 p-1 glass-popover shadow-lg"
+    position="popper"
+    sideOffset={6}
+  >
+    <SelectItem
+      value={val}
+      className="rounded-xl text-[14px] text-ink cursor-pointer py-2.5 pl-9 pr-3 focus:bg-black/[0.05] focus:text-ink data-[state=checked]:font-medium"
+    >
+      {label}
+    </SelectItem>
+  </SelectContent>
+</Select>
 ```
 
 Rules:
-- Always `position="popper"` — avoids layout-shift on open.
-- Background: `bg-white/60 backdrop-blur-xl` on glass pages. On solid pages: `bg-surface border-line`.
-- `z-[55]` — sits above panels (z-50) but below modals (z-[60]+).
-- `sideOffset={6}` — 6px gap between trigger and dropdown.
+- **MUST NOT** use native `<select>` — detaches on mobile, white bg breaks dark mode, adds red browser ring.
+- Trigger: `bg-transparent` always — never `bg-white` or `bg-surface`.
+- Trigger: `focus:ring-0 focus:ring-offset-0` always — kills the `--ring` glow (`--ring` is brand orange, looks red-ish on dark).
+- Content: `glass-popover` class handles light/dark background — never hardcode `bg-white`.
+- Always `position="popper" sideOffset={6}` — anchors directly below trigger, no detach.
+- `z-[55]` — above panels (z-50), below modals (z-[60]+).
+- Desktop segmented control is fine for ≤3 options when space allows — use `sm:hidden` on Select + `hidden sm:flex` on segments for responsive split.
 
 ### 4.16 Tooltip
 
@@ -662,7 +781,7 @@ A checklist to run through before considering a UI change "done". This expands a
 - [ ] Errors live **below** the field, not in a summary at top (unless multiple errors in a long form).
 - [ ] Error messages use `role="alert"` or `aria-describedby` — not just a red border.
 - [ ] Modal button row: secondary LEFT (`btn-ghost`), primary RIGHT (`btn-primary`), both `flex-1`.
-- [ ] Modal scrim: `bg-ink/40` on its own `absolute` div — never merged with the centering container.
+- [ ] Modal scrim: `.modal-backdrop` on its own `absolute inset-0` div — never `bg-ink/40` or any ad-hoc opacity, never merged with the centering container.
 - [ ] Use `focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2` on all interactive elements.
 - [ ] Disabled buttons/inputs use `disabled` attribute + `opacity-50 cursor-not-allowed`.
 - [ ] Use `h-[calc(100dvh-…)]` not `100vh` for full-screen mobile layouts.
@@ -678,12 +797,13 @@ A checklist to run through before considering a UI change "done". This expands a
 - [ ] Don't animate layout properties (`width`, `height`, `top`, `left`).
 - [ ] Don't remove `focus-visible` outlines.
 - [ ] Don't add the gradient mesh to dense form pages.
-- [ ] Don't `rounded-2xl` something that should be a pill — pills (`rounded-full`) are reserved for primary/ghost CTAs.
+- [ ] Don't `rounded-full` something that should be a tile or chip — `rounded-full` is reserved for primary/ghost CTA pills only. Filter chips, selectable tiles, inputs, and cards all use `rounded-2xl`.
 - [ ] Don't use blue-hued dark surfaces — dark palette MUST be neutral gray (§7b).
 - [ ] Don't add inline `dark:` Tailwind for input states — use `input-base` / `textarea-base` tokens (§7b).
 - [ ] Don't merge the modal scrim and centering container — always separate layers (§4.4).
 - [ ] Don't stack modal buttons vertically — always a horizontal `flex gap-3` row (§4.4).
 - [ ] Don't reference `.btn-action` — it is not defined.
+- [ ] Don't add `backdrop-blur` or `bg-white/50` to ghost buttons — `.btn-ghost` / `.btn-ghost-sm` are solid opaque (same as the Google sign-in button). Frosted glass is for nav, modals, and cards only.
 
 ### When in doubt
 

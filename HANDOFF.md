@@ -138,3 +138,82 @@ Nothing was explicitly committed this session. Possible things to do next:
 - Review `JobsPage` mobile on small screens
 - Commit all changes with a descriptive message
 - Any further pages that need mobile treatment
+
+---
+
+## 7. Session 3 — Berlin Glass token work (completed)
+
+### Tokens added to `src/index.css`
+| Token | Purpose |
+|---|---|
+| `.glass-bar` | Full-width structural header bar — bottom border only, no radius |
+| `.glass-float-badge` | Floating Edit/Done pill over previews |
+| `.glass-zoom-pill` | Zoom –/%/+ control overlay |
+| `.glass-rule` | Vertical panel divider (light: `rgb(0 0 0 / 0.07)`, dark: `rgb(255 255 255 / 0.50)`) |
+| `.btn-icon-primary` | Icon-only round/square primary buttons (send, FAB) — dark: brand + brightness hover |
+| `.split-panel-btn-primary` | Full-width primary on auth/onboarding — now bakes `border-radius: 9999px` |
+| `.split-panel-btn` | Secondary on auth/onboarding — now bakes `border-radius: 9999px` + light hover |
+| `.letter-edit-field` | Bare input inside letter document canvas |
+
+### Files updated
+- `src/pages/CVBuilderPage.tsx` — `glass-bar`, `glass-rule`, `btn-icon-primary`
+- `src/pages/CoverLetterPage.tsx` — `glass-bar`, `glass-rule`, two-mode letter editing (view/edit), `glass-float-badge`
+- `src/components/ZoomControls.tsx` — `glass-zoom-pill`
+- `src/pages/JobsPage.tsx` — `btn-icon-primary` on desktop button + mobile FAB
+- `src/pages/AuthPage.tsx` — all buttons now `split-panel-btn` / `split-panel-btn-primary`, `Button` import removed
+- `src/pages/OnboardingPage.tsx` — all buttons now `split-panel-btn` / `split-panel-btn-primary`
+- `src/lib/translations.ts` — delete dialog button renamed to "Delete" / "Löschen" in all states
+
+### Button radius fix (session 3 end)
+`split-panel-btn` and `split-panel-btn-primary` were missing border-radius in the token. Fixed: `border-radius: 9999px` baked in. `split-panel-btn` also got a missing light-mode hover (`hsl(var(--surface-2))`). All `rounded-xl` removed from call sites.
+
+---
+
+## 8. Open bug — dark mode lost on Onboarding page
+
+### Symptom
+User is in dark mode on `/auth`. Logs in as a new/first-time user. `/onboarding` renders in **light mode**.
+
+### Cause
+`initTheme()` in `main.tsx` runs once on page load. It reads `localStorage["tracka_theme"]`, falling back to `"auto"` (OS preference). The **only** code that ever writes `"dark"` to localStorage is `ThemeDevToggle` inside `TopNav` — which only mounts on authenticated main-app routes. A brand-new user who has never reached the main app has nothing saved.
+
+After a magic-link or OAuth **full-page reload**, `initTheme()` runs again:
+- If localStorage has `"dark"` → dark applied ✓  
+- If localStorage is empty → `"auto"` → depends on OS. If user opened the magic link in a different browser/tab (common — email clients use the default browser), that browser has no localStorage → `"auto"` → OS light → **light mode** ✗
+
+Additionally `ThemeDevToggle` writes `"dark"` or `"light"` (never `"auto"`), which corrupts the user's OS-based preference when it first mounts.
+
+### Fix (not yet applied)
+
+**1. `src/pages/OnboardingPage.tsx` — re-apply theme on mount**
+```ts
+import { applyTheme } from "@/lib/theme";
+
+// inside OnboardingPage component, at the top:
+useEffect(() => {
+  const stored = (localStorage.getItem("tracka_theme") as "light"|"dark"|"auto") || "auto";
+  applyTheme(stored);
+}, []);
+```
+Do the same in `src/pages/AuthPage.tsx` for symmetry.
+
+**2. `src/components/TopNav.tsx` — fix ThemeDevToggle**
+
+Replace the useState initializer and useEffect so it reads from localStorage (not DOM), and preserves `"auto"`:
+```ts
+import { applyTheme } from "@/lib/theme";
+
+function ThemeDevToggle() {
+  const [dark, setDark] = useState(() => {
+    const stored = localStorage.getItem("tracka_theme");
+    if (stored === "dark") return true;
+    if (stored === "light") return false;
+    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+  });
+  useEffect(() => {
+    localStorage.setItem("tracka_theme", dark ? "dark" : "light");
+    applyTheme(dark ? "dark" : "light");
+  }, [dark]);
+  // ...rest of JSX unchanged
+}
+```

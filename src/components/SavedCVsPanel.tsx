@@ -1,4 +1,4 @@
-import { X, FileText, Trash2 } from "lucide-react";
+import { X, FileText, Trash2, Download } from "lucide-react";
 import { SavedCV } from "@/lib/saved-cvs";
 import { useT } from "@/lib/i18n";
 
@@ -9,10 +9,11 @@ interface Props<T> {
   list: SavedCV<T>[];
   onLoad: (item: SavedCV<T>) => void;
   onDelete: (id: string) => void;
+  onDownload?: (item: SavedCV<T>) => void;
   newItemId?: string;
 }
 
-export function SavedCVsPanel<T>({ open, onClose, title, list, onLoad, onDelete, newItemId }: Props<T>) {
+export function SavedCVsPanel<T>({ open, onClose, title, list, onLoad, onDelete, onDownload, newItemId }: Props<T>) {
   const { t } = useT();
   if (!open) return null;
   return (
@@ -55,18 +56,31 @@ export function SavedCVsPanel<T>({ open, onClose, title, list, onLoad, onDelete,
                     <p className="text-[12px] text-ink-muted mt-0.5">
                       {new Date(item.savedAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}
                     </p>
-                    <div className="mt-3 flex gap-2">
+                    <div className="mt-3 flex items-center justify-between">
                       <button type="button" onClick={() => onLoad(item)} className="btn-tertiary">
                         {t("common.open")}
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => onDelete(item.id)}
-                        aria-label={t("common.delete")}
-                        className="h-8 w-8 rounded-full grid place-items-center text-ink-muted hover:text-ink hover:bg-surface-2 transition-colors duration-200"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
+                      <div className="flex items-center gap-1">
+                        {onDownload && (
+                          <button
+                            type="button"
+                            onClick={() => onDownload(item)}
+                            aria-label="Download PDF"
+                            title="Download PDF"
+                            className="h-8 w-8 rounded-full grid place-items-center text-ink-muted hover:text-ink hover:bg-surface-2 transition-colors duration-200"
+                          >
+                            <Download className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => onDelete(item.id)}
+                          aria-label={t("common.delete")}
+                          className="h-8 w-8 rounded-full grid place-items-center text-ink-muted hover:text-red-500 hover:bg-red-500/10 transition-colors duration-200"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </li>
