@@ -177,7 +177,7 @@ export function AddJobModal({ open, onClose, onJobAdded }: AddJobModalProps) {
       }
     },
     className: cn(
-      "input-base !bg-white transition-colors",
+      "input-base",
       fieldErrors.has(k) && "!border-red-500 focus:!border-red-500"
     ),
   });
@@ -188,10 +188,10 @@ export function AddJobModal({ open, onClose, onJobAdded }: AddJobModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
       <div
-        className="absolute inset-0 bg-ink/40 backdrop-blur-sm"
+        className="absolute inset-0 modal-backdrop animate-panel-in"
         onClick={() => { if (!justFocused.current) close(); }}
       />
-      <div className="relative w-full max-w-[500px] glass-modal p-5 sm:p-8 max-h-[90dvh] overflow-y-auto">
+      <div className="relative w-full max-w-[500px] glass-modal p-5 sm:p-8 max-h-[90dvh] overflow-y-auto overscroll-contain scroll-smooth animate-modal-in">
         <button
           type="button"
           onClick={close}

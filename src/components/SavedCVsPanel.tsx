@@ -17,8 +17,8 @@ export function SavedCVsPanel<T>({ open, onClose, title, list, onLoad, onDelete,
   if (!open) return null;
   return (
     <>
-      <div className="fixed inset-0 z-40 bg-ink/20 backdrop-blur-sm animate-panel-in" onClick={onClose} />
-      <aside className="fixed top-0 right-0 z-50 h-screen w-full max-w-[440px] bg-white/70 backdrop-blur-2xl border-l border-white/50 overflow-y-auto animate-slide-in-right side-panel">
+      <div className="fixed inset-0 z-40 modal-backdrop animate-panel-in" onClick={onClose} />
+      <aside className="fixed top-0 right-0 z-50 h-screen w-full max-w-[440px] backdrop-blur-2xl overflow-y-auto overscroll-contain scroll-smooth animate-slide-in-right side-panel">
         <div className="p-8">
           <div className="flex items-start justify-between gap-4 mb-6">
             <div>

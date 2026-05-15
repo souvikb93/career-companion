@@ -50,7 +50,7 @@ function Modal({ open, onClose, children }: {
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-ink/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 modal-backdrop" onClick={onClose} />
       <div className="relative glass-modal p-6 w-full max-w-sm mx-4">
         <button
           onClick={onClose}
@@ -299,7 +299,7 @@ function DeleteAccountDialog({ open, deleting, onConfirm, onCancel }: {
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-ink/40 backdrop-blur-sm" onClick={() => !deleting && onCancel()} />
+      <div className="absolute inset-0 modal-backdrop" onClick={() => !deleting && onCancel()} />
       <div className="relative glass-modal p-6 w-full max-w-sm mx-4">
         <button onClick={onCancel} disabled={deleting}
           className="absolute top-4 right-4 h-7 w-7 rounded-full grid place-items-center text-ink-muted hover:bg-surface-2 transition-colors disabled:opacity-40">

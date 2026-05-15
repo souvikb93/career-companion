@@ -1,6 +1,7 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Upload, ArrowRight, ArrowLeft, Plus, X, Check, Loader2, PenLine } from "lucide-react";
+import { applyTheme } from "@/lib/theme";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
@@ -31,6 +32,11 @@ export default function OnboardingPage() {
   const { t } = useT();
   const { saveProfile, completeOnboarding } = useProfile();
   const fileRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const stored = (localStorage.getItem("tracka_theme") as "light" | "dark" | "auto") || "auto";
+    applyTheme(stored);
+  }, []);
 
   const [step, setStep] = useState<Step>("upload");
   const [profile, setProfile] = useState<ParsedProfile>({ ...EMPTY_PROFILE });
@@ -100,7 +106,7 @@ export default function OnboardingPage() {
     navigate("/", { replace: true });
   };
 
-  const secondaryBtnClass = "w-full h-12 rounded-xl border border-line bg-white hover:bg-surface split-panel-btn transition-colors flex items-center justify-center gap-2 text-[14px] font-medium text-ink";
+  const secondaryBtnClass = "split-panel-btn w-full h-12 flex items-center justify-center gap-2 text-[14px] font-medium text-ink";
 
   return (
     <div className="relative min-h-screen lg:h-screen lg:overflow-hidden grid lg:grid-cols-2">
@@ -475,7 +481,7 @@ export default function OnboardingPage() {
                     )}
                     <button
                       onClick={() => setStep(manualStepIndex === MANUAL_STEPS.length - 1 ? "review" : MANUAL_STEPS[manualStepIndex + 1])}
-                      className="h-10 px-5 rounded-xl bg-ink text-white active-fill text-[13px] font-medium hover:bg-brand transition-colors flex items-center gap-2"
+                      className="split-panel-btn-primary h-10 px-5 text-[13px] flex items-center gap-2"
                     >
                       {manualStepIndex === MANUAL_STEPS.length - 1 ? t("onboarding.review") : t("onboarding.next")} <ArrowRight className="h-3.5 w-3.5" />
                     </button>
@@ -542,7 +548,7 @@ export default function OnboardingPage() {
                 <button
                   onClick={confirm}
                   disabled={saving}
-                  className="w-full h-12 rounded-xl bg-ink text-white active-fill font-medium hover:bg-brand transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
+                  className="split-panel-btn-primary w-full h-12 flex items-center justify-center gap-2 disabled:opacity-60"
                 >
                   {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                   {saving ? t("onboarding.saving") : t("onboarding.confirm")}

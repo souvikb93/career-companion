@@ -17,9 +17,9 @@ export function SaveModal({ open, onClose, title, defaultName = "", onSave }: Pr
   if (!open) return null;
   return (
     <>
-      <div className="fixed inset-0 z-50 bg-ink/40 backdrop-blur-sm animate-panel-in" onClick={onClose} />
+      <div className="fixed inset-0 z-50 modal-backdrop animate-panel-in" onClick={onClose} />
       <div className="fixed inset-0 z-50 grid place-items-center p-4 pointer-events-none">
-        <div className="relative pointer-events-auto w-full max-w-md glass-modal p-6">
+        <div className="relative pointer-events-auto w-full max-w-md glass-modal p-6 animate-modal-in">
           <button
             type="button"
             onClick={onClose}

@@ -52,6 +52,7 @@
     --radius: 1rem;
 
     /* Tracka extended */
+    --nav-surface: 0 0% 99%;
     --surface: 45 10% 95%;
     --surface-2: 60 6% 93%;
     --surface-hover: 60 14% 98%;
@@ -98,13 +99,13 @@
 
   /* ── Dark mode token overrides ── */
   html.dark {
-    --background: 220 15% 8%;
+    --background: 0 0% 7%;
     --foreground: 0 0% 93%;
 
-    --card: 220 13% 11%;
+    --card: 0 0% 10%;
     --card-foreground: 0 0% 93%;
 
-    --popover: 220 15% 10%;
+    --popover: 0 0% 9%;
     --popover-foreground: 0 0% 93%;
 
     --primary: 13 100% 59%;
@@ -113,7 +114,7 @@
     --secondary: 0 0% 85%;
     --secondary-foreground: 0 0% 8%;
 
-    --muted: 220 12% 14%;
+    --muted: 0 0% 13%;
     --muted-foreground: 0 0% 55%;
 
     --accent: 13 100% 59%;
@@ -122,40 +123,41 @@
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 13% 22%;
-    --input: 220 13% 22%;
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
     --ring: 13 100% 59%;
 
     /* Tracka extended */
-    --surface: 220 13% 11%;
-    --surface-2: 220 12% 14%;
-    --surface-hover: 220 12% 17%;
+    --nav-surface: 0 0% 8%;
+    --surface: 0 0% 10%;
+    --surface-2: 0 0% 13%;
+    --surface-hover: 0 0% 16%;
     --ink: 0 0% 93%;
     --ink-2: 0 0% 78%;
     --ink-muted: 0 0% 62%;
-    --line: 220 13% 22%;
+    --line: 0 0% 20%;
     --brand: 13 100% 59%;
     --success: 160 84% 42%;
-    --chip-grey: 220 13% 24%;
-    --chip-grey-fg: 220 13% 72%;
+    --chip-grey: 0 0% 22%;
+    --chip-grey-fg: 0 0% 70%;
 
     /* Dark panel backgrounds (RGB channels) */
-    --panel-bg: 14 16 21;
+    --panel-bg: 18 18 18;
 
-    --sidebar-background: 220 13% 11%;
+    --sidebar-background: 0 0% 10%;
     --sidebar-foreground: 0 0% 93%;
-    --sidebar-accent: 220 12% 14%;
+    --sidebar-accent: 0 0% 13%;
     --sidebar-accent-foreground: 0 0% 93%;
-    --sidebar-border: 220 13% 22%;
+    --sidebar-border: 0 0% 20%;
 
-    /* Dark Berlin Glass — dark navy tint, white hairlines */
-    --glass-tint: 18 22 34;
+    /* Dark Berlin Glass — neutral dark tint, white hairlines */
+    --glass-tint: 24 24 24;
     --glass-border: 255 255 255;
     --glass-shadow: 0 0 0;
 
     /* Dark mesh background */
-    --mesh-bg-start: #080a0f;
-    --mesh-bg-end: #0c0f18;
+    --mesh-bg-start: #0a0a0a;
+    --mesh-bg-end: #111111;
   }
 }
 
@@ -193,6 +195,27 @@
   }
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
+  }
+  /* Minimal scrollbar — thin thumb only, transparent track */
+  .scrollbar-minimal {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(0 0 0 / 0.25) transparent;
+  }
+  .scrollbar-minimal::-webkit-scrollbar {
+    width: 4px;
+  }
+  .scrollbar-minimal::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-minimal::-webkit-scrollbar-thumb {
+    background: rgb(0 0 0 / 0.25);
+    border-radius: 9999px;
+  }
+  html.dark .scrollbar-minimal {
+    scrollbar-color: rgb(255 255 255 / 0.20) transparent;
+  }
+  html.dark .scrollbar-minimal::-webkit-scrollbar-thumb {
+    background: rgb(255 255 255 / 0.20);
   }
   /* Keyboard-aware bottom padding for mobile chat input */
   .pb-safe {
@@ -247,6 +270,19 @@
   .btn-primary {
     @apply inline-flex items-center gap-2 h-11 px-5 rounded-full bg-ink text-white text-[12px] font-bold uppercase tracking-[0.08em] transition-colors duration-200 ease-out hover:bg-brand active:bg-brand disabled:opacity-50 disabled:hover:bg-ink;
   }
+  /* Icon-only primary action button — round send button, square FAB, etc.
+     No fixed size/shape: caller sets h-* w-* rounded-* to match context.
+     Always visually active (no disabled fade). Dark: brand orange + brightness on hover. */
+  .btn-icon-primary {
+    @apply grid place-items-center bg-ink text-white transition-colors duration-200 ease-out;
+  }
+  .btn-icon-primary:hover:not(:disabled) {
+    background: hsl(var(--brand));
+  }
+  .btn-icon-primary:active {
+    background: hsl(var(--brand));
+    transform: scale(0.95);
+  }
   .btn-danger {
     @apply inline-flex items-center gap-2 h-11 px-5 rounded-full bg-white/50 backdrop-blur-md border border-red-400 text-red-500 text-[12px] font-bold uppercase tracking-[0.08em] transition-colors duration-200 ease-out hover:bg-red-50 hover:border-red-500 disabled:opacity-50;
   }
@@ -289,12 +325,31 @@
     box-shadow: 0 4px 24px -4px rgb(var(--glass-shadow) / 0.06);
     @apply rounded-2xl;
   }
+  /* Level 2.25 — full-width structural bar (tab/header bars spanning viewport width)
+     No side borders, no corner radius — only a bottom hairline. */
+  .glass-bar {
+    background: rgb(var(--glass-tint) / 0.82);
+    border-bottom: 1px solid rgb(0 0 0 / 0.07);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+  }
+
+  /* Scrim behind modals, panels, and drawers — always pure black at 30% */
+  .modal-backdrop {
+    background: rgb(0 0 0 / 0.30);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+  }
+
   /* Level 2.5 — slide-in side panel (full-height sheet) */
   .side-panel {
-    background: rgb(var(--glass-tint) / 0.82);
-    border-left: 1px solid rgb(var(--glass-border) / 0.50);
+    background: rgb(var(--glass-tint) / 0.96);
+    border-left: 1px solid rgb(0 0 0 / 0.08);
+    box-shadow: -8px 0 32px -4px rgb(0 0 0 / 0.10);
     -webkit-backdrop-filter: blur(40px);
     backdrop-filter: blur(40px);
+    -webkit-overflow-scrolling: touch;
+    will-change: transform;
   }
   /* Level 3 — dialog / sheet */
   .glass-modal {
@@ -305,6 +360,31 @@
     box-shadow: 0 24px 64px -16px rgb(var(--glass-shadow) / 0.22);
     @apply rounded-3xl;
   }
+  /* Floating overlay badge — Edit / Done pill that sits above the preview.
+     Light: white-glass with ink-muted text. Dark: matches btn-ghost token. */
+  .glass-float-badge {
+    background: rgb(255 255 255 / 0.80);
+    border: 1px solid rgb(255 255 255 / 0.50);
+    color: hsl(var(--ink-muted));
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    transition: border-color 150ms ease, color 150ms ease, background 150ms ease;
+  }
+  .glass-float-badge:hover {
+    border-color: hsl(var(--brand) / 0.45);
+    color: hsl(var(--ink));
+    background: rgb(255 255 255 / 0.92);
+  }
+
+  /* Floating zoom pill — –/% /+ control that hovers over previews.
+     Light: white-glass. Dark: matches btn-ghost token. */
+  .glass-zoom-pill {
+    background: rgb(255 255 255 / 0.40);
+    border: 1px solid rgb(255 255 255 / 0.50);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+  }
+
   /* Level 1 light — filter chip, secondary surface */
   .glass-chip {
     background: rgb(var(--glass-tint) / 0.30);
@@ -325,18 +405,22 @@
   }
   /* Glass input */
   .glass-input {
-    background: rgb(var(--glass-tint) / 0.40);
-    border: 1px solid rgb(var(--glass-border) / 0.50);
+    background: rgb(var(--glass-tint) / 0.82);
+    border: 1px solid rgb(0 0 0 / 0.09);
     -webkit-backdrop-filter: blur(12px);
     backdrop-filter: blur(12px);
     @apply w-full rounded-2xl px-4 h-11 text-[14px] text-ink outline-none transition-all duration-200 ease-out focus:border-brand;
   }
   .glass-input::placeholder {
-    color: hsl(var(--ink) / 0.45);
-    font-style: italic;
+    color: hsl(var(--ink) / 0.40);
+    font-style: normal;
+  }
+  .glass-input:hover {
+    background: rgb(var(--glass-tint) / 0.92);
   }
   .glass-input:focus {
-    background: rgb(var(--glass-tint) / 0.60);
+    background: rgb(var(--glass-tint) / 1.0);
+    border-color: hsl(var(--brand));
   }
   /* Interactive glass button — heavier frost than glass-input */
   .glass-btn {
@@ -352,10 +436,10 @@
   .glass-btn:active {
     background: rgb(var(--glass-tint) / 0.75);
   }
-  /* Optional sticky frosted nav — only when nav sits over the mesh */
+  /* Level 2 — sticky frosted nav bar (whiter light / darker dark than glass-bar) */
   .glass-nav {
-    background: rgb(var(--glass-tint) / 0.55);
-    border-bottom: 1px solid rgb(var(--glass-border) / 0.50);
+    background: rgb(var(--glass-tint) / 0.88);
+    border-bottom: 1px solid rgb(0 0 0 / 0.07);
     -webkit-backdrop-filter: blur(20px) saturate(140%);
     backdrop-filter: blur(20px) saturate(140%);
   }
@@ -444,6 +528,27 @@
   }
   .letter-signature {
     @apply text-[15px] font-semibold text-ink leading-[1.2];
+  }
+
+  /* Edit-mode field inside the document canvas — bare input that inherits letter typography.
+     No border, no background; shows a subtle underline only on focus. */
+  .letter-edit-field {
+    display: block;
+    background: transparent;
+    border: none;
+    outline: none;
+    border-bottom: 1.5px solid transparent;
+    transition: border-color 150ms ease;
+    padding: 1px 0;
+    color: inherit;
+    font: inherit;
+    width: auto;
+  }
+  .letter-edit-field:focus {
+    border-bottom-color: hsl(var(--brand) / 0.5);
+  }
+  .letter-edit-field::placeholder {
+    color: hsl(0 0% 0% / 0.22);
   }
 
   /* Document canvas — always renders in light-mode ink regardless of app theme.
@@ -597,12 +702,22 @@
     backdrop-filter: blur(40px);
   }
   html.dark .glass-page-panel {
-    background: rgb(var(--panel-bg) / 0.72);
+    background: rgb(var(--panel-bg) / 0.55);
   }
   @media (min-width: 1024px) {
     html.dark .glass-page-panel {
-      background: rgb(var(--panel-bg) / 0.92);
+      background: rgb(var(--panel-bg) / 0.58);
     }
+  }
+
+  /* Left-side subtle dark-only veil — light mode: invisible */
+  .auth-left-veil {
+    pointer-events: none;
+  }
+  html.dark .auth-left-veil {
+    background: rgb(0 0 0 / 0.18);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
   }
 
   /* Sticky top bar on split pages (mobile only) */
@@ -635,6 +750,7 @@
     border-left: 1px solid rgb(255 255 255 / 0.40);
     -webkit-backdrop-filter: blur(48px);
     backdrop-filter: blur(48px);
+    will-change: transform;
   }
   html.dark .nav-drawer {
     background: rgb(var(--glass-tint) / 0.92);
@@ -653,19 +769,9 @@
     border-right-color: rgb(255 255 255 / 0.07);
   }
 
-  /* Nav item active state — dark mode only overrides.
-     Light mode: drawer items keep their Tailwind bg-ink text-white classes.
-     Top-bar items: no fill in either mode, only the ::after orange underline. */
-  html.dark .nav-item-active {
-    background: rgb(255 255 255 / 0.12);
-    color: hsl(var(--ink));
-  }
-  /* Top-bar tabs in dark: transparent background + orange underline indicator */
-  html.dark .nav-item.nav-item-active {
-    background: transparent;
-    color: hsl(var(--ink));
-  }
-  html.dark .nav-item.nav-item-active::after {
+  /* Nav item active state — drawer items use Tailwind bg-ink text-white.
+     Top-bar .nav-item tabs: orange underline indicator in both modes. */
+  .nav-item.nav-item-active::after {
     content: "";
     position: absolute;
     left: 0; right: 0;
@@ -673,6 +779,14 @@
     height: 2px;
     background: hsl(var(--brand));
     border-radius: 9999px;
+  }
+  html.dark .nav-item-active {
+    background: rgb(255 255 255 / 0.12);
+    color: hsl(var(--ink));
+  }
+  html.dark .nav-item.nav-item-active {
+    background: transparent;
+    color: hsl(var(--ink));
   }
 
   /* Nav item hover (inactive) */
@@ -693,10 +807,36 @@
 
   /* Nav hairline border — use as border-color token on bordered elements */
   .nav-hairline {
-    border-color: rgb(0 0 0 / 0.06);
+    border-color: rgb(0 0 0 / 0.07);
   }
   html.dark .nav-hairline {
     border-color: rgb(255 255 255 / 0.07);
+  }
+
+  /* Builder structural rule — vertical panel divider between editor/chat and preview.
+     Light: same ink-based hairline as nav-hairline and glass-bar (unified family).
+     Dark: user-confirmed current value is fine — preserve white/50 for clear panel separation. */
+  .glass-rule {
+    border-color: rgb(0 0 0 / 0.07);
+  }
+  html.dark .glass-rule {
+    border-color: rgb(var(--glass-border) / 0.08);
+  }
+
+  /* Table / list row dividers
+     Light: visible dark ink line; Dark: keep current white/40 (user confirmed perfect) */
+  .row-divider > * + * {
+    border-color: rgb(0 0 0 / 0.07);
+  }
+  html.dark .row-divider > * + * {
+    border-color: rgb(255 255 255 / 0.40);
+  }
+  /* Single border rule on an element (e.g. table header border-b) */
+  .table-rule {
+    border-color: rgb(0 0 0 / 0.07);
+  }
+  html.dark .table-rule {
+    border-color: rgb(255 255 255 / 0.40);
   }
 
   /* Active fill: bg-ink in light → bg-brand in dark
@@ -716,17 +856,57 @@
     border-color: hsl(var(--brand));
   }
 
-  /* Secondary button on split-page panels (Auth / Onboarding "Fill manually" etc.) */
+  /* Secondary action on auth/onboarding split-panel pages (Google, Fill manually).
+     Pill radius baked in — callers must NOT add rounded-* classes. */
   .split-panel-btn {
     background: white;
     border: 1px solid hsl(var(--line));
+    border-radius: 9999px;
+    transition: background 200ms ease-out;
+  }
+  .split-panel-btn:hover:not(:disabled) {
+    background: hsl(var(--surface-2));
   }
   html.dark .split-panel-btn {
     background: hsl(var(--surface));
     border-color: hsl(var(--line));
   }
-  html.dark .split-panel-btn:hover {
+  html.dark .split-panel-btn:hover:not(:disabled) {
     background: hsl(var(--surface-hover));
+  }
+
+  /* Primary action on auth/onboarding split-panel pages (Continue, Confirm, Next).
+     Pill radius baked in — callers must NOT add rounded-* classes.
+     Dark: brand orange default + brightness on hover, matching btn-primary behaviour. */
+  .split-panel-btn-primary {
+    @apply flex items-center justify-center gap-2 bg-ink text-white text-[14px] font-medium transition-colors duration-200 ease-out;
+    border-radius: 9999px;
+  }
+  .split-panel-btn-primary:hover:not(:disabled) {
+    background: hsl(var(--brand));
+  }
+  .split-panel-btn-primary:active {
+    background: hsl(var(--brand));
+  }
+  .split-panel-btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  html.dark .split-panel-btn-primary {
+    background: hsl(var(--brand));
+    color: white;
+  }
+  html.dark .split-panel-btn-primary:hover:not(:disabled) {
+    background: hsl(var(--brand));
+    filter: brightness(1.12);
+  }
+  html.dark .split-panel-btn-primary:active {
+    background: hsl(var(--brand));
+    filter: brightness(1.18);
+  }
+  html.dark .split-panel-btn-primary:disabled {
+    filter: none;
+    opacity: 0.6;
   }
 
   /* Segmented control track and thumb */
@@ -771,14 +951,36 @@
     border-color: rgb(var(--glass-border) / 0.10);
     box-shadow: 0 4px 24px -4px rgb(var(--glass-shadow) / 0.40);
   }
+  html.dark .glass-bar {
+    background: rgb(var(--glass-tint) / 0.88);
+    border-bottom-color: rgb(var(--glass-border) / 0.10);
+  }
+  html.dark .glass-nav {
+    background: rgb(var(--glass-tint) / 0.92);
+    border-bottom-color: rgb(var(--glass-border) / 0.10);
+  }
   html.dark .side-panel {
     background: rgb(var(--glass-tint) / 0.94);
     border-left-color: rgb(var(--glass-border) / 0.07);
   }
   html.dark .glass-modal {
-    background: rgb(var(--glass-tint) / 0.90);
+    background: rgb(var(--glass-tint) / 0.82);
     border-color: rgb(var(--glass-border) / 0.09);
-    box-shadow: 0 24px 64px -16px rgb(var(--glass-shadow) / 0.70);
+    box-shadow: 0 24px 64px -16px rgb(var(--glass-shadow) / 0.60);
+  }
+  html.dark .glass-float-badge {
+    background: rgb(var(--glass-tint) / 0.45);
+    border-color: rgb(var(--glass-border) / 0.14);
+    color: hsl(var(--ink));
+  }
+  html.dark .glass-float-badge:hover {
+    background: rgb(var(--glass-tint) / 0.62);
+    border-color: rgb(var(--glass-border) / 0.22);
+    color: hsl(var(--ink));
+  }
+  html.dark .glass-zoom-pill {
+    background: rgb(var(--glass-tint) / 0.45);
+    border-color: rgb(var(--glass-border) / 0.14);
   }
   html.dark .glass-chip {
     background: rgb(var(--glass-tint) / 0.40);
@@ -788,12 +990,16 @@
     background: rgb(255 255 255 / 0.06);
   }
   html.dark .glass-input {
-    background: rgb(var(--glass-tint) / 0.50);
-    border-color: rgb(var(--glass-border) / 0.10);
+    background: rgb(var(--glass-tint) / 0.88);
+    border-color: rgb(var(--glass-border) / 0.12);
     color: hsl(var(--ink));
   }
+  html.dark .glass-input:hover {
+    background: rgb(var(--glass-tint) / 0.94);
+  }
   html.dark .glass-input:focus {
-    background: rgb(var(--glass-tint) / 0.65);
+    background: rgb(var(--glass-tint) / 1.0);
+    border-color: hsl(var(--brand));
   }
   html.dark .glass-btn {
     background: rgb(var(--glass-tint) / 0.45);
@@ -816,6 +1022,20 @@
   html.dark .btn-primary:disabled {
     background: hsl(var(--brand));
     filter: none;
+  }
+  /* btn-icon-primary dark: always brand orange; hover brightens like btn-primary */
+  html.dark .btn-icon-primary {
+    background: hsl(var(--brand));
+    color: white;
+  }
+  html.dark .btn-icon-primary:hover:not(:disabled) {
+    background: hsl(var(--brand));
+    filter: brightness(1.12);
+  }
+  html.dark .btn-icon-primary:active {
+    background: hsl(var(--brand));
+    filter: brightness(1.18);
+    transform: scale(0.95);
   }
 
   /* Document paper — softer warm tone in dark mode to reduce glare */
@@ -881,6 +1101,15 @@
   html.dark .glass-modal .textarea-base {
     background: hsl(var(--surface-2));
   }
+  html.dark .glass-modal .input-base:hover,
+  html.dark .glass-modal .textarea-base:hover {
+    background: hsl(var(--surface-hover));
+  }
+  html.dark .glass-modal .input-base:focus,
+  html.dark .glass-modal .textarea-base:focus {
+    border-color: hsl(var(--brand));
+    background: hsl(var(--surface-2));
+  }
 
   /* input-base / textarea-base / chat-input in dark */
   html.dark .input-base,
@@ -888,6 +1117,17 @@
   html.dark .chat-input {
     border-color: hsl(var(--line));
     color: hsl(var(--ink));
+    background: hsl(var(--surface-2));
+  }
+  html.dark .input-base:hover,
+  html.dark .textarea-base:hover,
+  html.dark .chat-input:hover {
+    background: hsl(var(--surface-hover));
+  }
+  html.dark .input-base:focus,
+  html.dark .textarea-base:focus,
+  html.dark .chat-input:focus {
+    border-color: hsl(var(--brand));
     background: hsl(var(--surface-2));
   }
 

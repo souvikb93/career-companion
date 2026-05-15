@@ -119,6 +119,18 @@ export default function CoverLetterPage() {
   );
   const [hoverPreview, setHoverPreview] = useState(false);
   const [letterEditing, setLetterEditing] = useState(false);
+  const articleRef = useRef<HTMLElement>(null);
+  const firstEditRef = useRef<HTMLTextAreaElement>(null);
+
+  const enterEditMode = () => {
+    setLetterEditing(true);
+    // Focus the first editable field after the DOM switches to edit view
+    setTimeout(() => firstEditRef.current?.focus(), 50);
+  };
+
+  const exitEditMode = () => {
+    setLetterEditing(false);
+  };
 
   const patchLetter = (patch: Partial<LetterContent>) =>
     setLetter((prev) => prev ? { ...prev, ...patch } : prev);
@@ -329,9 +341,9 @@ export default function CoverLetterPage() {
 
   return (
     <>
-    <div className="w-full flex flex-col h-[calc(100dvh-64px)] lg:h-auto lg:block">
+    <div className="w-full flex flex-col h-[calc(100dvh-64px)] lg:h-[calc(100vh-64px)] lg:overflow-hidden">
       {/* Mobile header */}
-      <div className="lg:hidden shrink-0 px-4 py-4 flex items-center justify-between border-b border-white/50 bg-white/30 backdrop-blur-md glass-card">
+      <div className="lg:hidden shrink-0 px-4 py-4 flex items-center justify-between glass-bar">
         <div className="min-w-0 flex-1">
           <h1 className="heading-1">{t("letter.pageTitle")}</h1>
           {targetJob && (
@@ -349,7 +361,7 @@ export default function CoverLetterPage() {
       </div>
 
       {/* Mobile segmented control */}
-      <div className="lg:hidden shrink-0 px-4 py-3 bg-white/30 backdrop-blur-md glass-card border-b border-white/50">
+      <div className="lg:hidden shrink-0 px-4 py-3 glass-bar">
         <SegmentedControl
           options={[
             { value: "chat", label: t("letter.tabChat") },
@@ -411,7 +423,7 @@ export default function CoverLetterPage() {
                   className="chat-input flex-1"
                   style={{ touchAction: "manipulation" }}
                 />
-                <button type="button" onClick={send} disabled={generating || !draft.trim()} aria-label={t("common.send")} className="h-11 w-11 shrink-0 rounded-full bg-ink text-white active-fill grid place-items-center transition-colors duration-200 ease-out hover:bg-brand active:bg-brand disabled:opacity-40 disabled:cursor-not-allowed">
+                <button type="button" onClick={send} disabled={generating} aria-label={t("common.send")} className="h-11 w-11 shrink-0 rounded-full btn-icon-primary shadow-sm shadow-ink/10">
                   {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                 </button>
               </div>
@@ -468,29 +480,6 @@ export default function CoverLetterPage() {
         )}
       </div>
 
-      {/* Desktop header */}
-      <div className="hidden lg:flex px-8 py-5 items-center justify-between border-b border-white/50 flex-wrap gap-3 bg-white/30 backdrop-blur-md glass-card">
-        <div>
-          <h1 className="heading-1">{t("letter.pageTitle")}</h1>
-          {targetJob && (
-            <p className="text-[13px] text-ink-muted mt-0.5">{t("letter.forJob", { label: `${targetJob.company} — ${targetJob.role}` })}</p>
-          )}
-        </div>
-        <div className="flex items-center gap-3">
-          <button type="button" onClick={handleNew} className="btn-ghost">
-            <FilePlus className="h-4 w-4" /> {t("common.newDoc")}
-          </button>
-          <button type="button" onClick={() => setSaveOpen(true)} className="btn-ghost">
-            <Save className="h-4 w-4" /> {t("common.save")}
-          </button>
-          <LayoutMenu value={layout} onChange={setLayout} />
-          <button type="button" onClick={() => setSavedOpen(true)} className="btn-ghost">
-            <FolderOpen className="h-4 w-4" /> {t("common.library")}
-          </button>
-          <ExportMenu onExport={handleExport} />
-        </div>
-      </div>
-
       <SavedCVsPanel
         open={savedOpen}
         onClose={() => { setSavedOpen(false); setNewLetterId(undefined); }}
@@ -540,10 +529,33 @@ export default function CoverLetterPage() {
         }}
       />
 
-      <div className="hidden lg:grid lg:grid-cols-2 lg:min-h-[calc(100vh-64px-81px)]">
+      <div className="hidden lg:grid lg:grid-cols-2 lg:h-[calc(100vh-64px)]">
 
-        {/* ── Chat panel ─────────────────────────────────── */}
-        <section className="border-r border-white/50 flex flex-col bg-white/20 backdrop-blur-md glass-editor lg:max-h-[calc(100vh-64px-81px)]">
+        {/* ── Chat column — single glass-editor surface ─── */}
+        <div className="glass-editor flex flex-col h-[calc(100vh-64px)] border-r glass-rule">
+          {/* Desktop fixed header — title + actions */}
+          <div className="shrink-0 px-8 pt-8 pb-6 border-b glass-rule">
+            <h1 className="heading-1 mb-6">{t("letter.pageTitle")}</h1>
+            {targetJob && (
+              <p className="text-[13px] text-ink-muted -mt-4 mb-6">{t("letter.forJob", { label: `${targetJob.company} — ${targetJob.role}` })}</p>
+            )}
+            <div className="flex items-center gap-3">
+              <button type="button" onClick={handleNew} className="btn-ghost">
+                <FilePlus className="h-4 w-4" /> {t("common.newDoc")}
+              </button>
+              <button type="button" onClick={() => setSaveOpen(true)} className="btn-ghost">
+                <Save className="h-4 w-4" /> {t("common.save")}
+              </button>
+              <LayoutMenu value={layout} onChange={setLayout} />
+              <button type="button" onClick={() => setSavedOpen(true)} className="btn-ghost">
+                <FolderOpen className="h-4 w-4" /> {t("common.library")}
+              </button>
+              <ExportMenu onExport={handleExport} />
+            </div>
+          </div>
+
+          {/* Scrollable chat section */}
+          <section className="flex-1 min-h-0 flex flex-col">
           {/* Messages */}
           <div ref={desktopScrollRef} className="flex-1 overflow-y-auto px-6 pt-6 pb-4 space-y-5">
 
@@ -625,9 +637,9 @@ export default function CoverLetterPage() {
               <button
                 type="button"
                 onClick={send}
-                disabled={generating || !draft.trim()}
+                disabled={generating}
                 aria-label={t("common.send")}
-                className="h-11 w-11 shrink-0 rounded-full bg-ink text-white active-fill grid place-items-center transition-colors duration-200 ease-out hover:bg-brand active:bg-brand disabled:opacity-40 disabled:cursor-not-allowed"
+                className="h-11 w-11 shrink-0 rounded-full btn-icon-primary shadow-sm shadow-ink/10"
               >
                 {generating
                   ? <Loader2 className="h-4 w-4 animate-spin" />
@@ -636,26 +648,25 @@ export default function CoverLetterPage() {
             </div>
           </div>
         </section>
+        </div>
 
         {/* ── Preview panel ───────────────────────────────── */}
-        <div
-          className="relative lg:max-h-[calc(100vh-64px-81px)]"
-          onMouseEnter={() => setHoverPreview(true)}
-          onMouseLeave={() => setHoverPreview(false)}
-        >
-          {/* Edit affordance badge */}
+        <div className="relative lg:h-[calc(100vh-64px)] overflow-hidden">
+
+          {/* ── Done / Edit badge ── */}
           {letter && (
             <button
               type="button"
-              onClick={() => (document.activeElement as HTMLElement)?.blur()}
+              onClick={() => letterEditing ? exitEditMode() : enterEditMode()}
               className={cn(
-                "absolute top-5 right-6 z-10 flex items-center gap-1.5 h-7 px-3 rounded-full text-[12px] font-medium transition-all duration-200 cursor-default",
+                "absolute top-5 right-6 z-10 flex items-center gap-1.5 h-7 px-3 rounded-full text-[12px] font-medium",
                 letterEditing
-                  ? "bg-brand text-white opacity-100 cursor-pointer"
+                  ? "bg-brand text-white cursor-pointer shadow-sm"
                   : hoverPreview
-                    ? "bg-white/80 backdrop-blur-sm border border-white/50 text-ink-muted opacity-100"
+                    ? "glass-float-badge cursor-pointer"
                     : "opacity-0 pointer-events-none",
               )}
+              onMouseEnter={() => setHoverPreview(true)}
             >
               {letterEditing
                 ? <><Check className="h-3 w-3" /> Done</>
@@ -664,183 +675,201 @@ export default function CoverLetterPage() {
             </button>
           )}
 
-          <section
-            className="bg-transparent px-6 pt-6 pb-24 overflow-auto h-full flex justify-center lg:max-h-[calc(100vh-64px-81px)]"
-          >
-            <div
-              className={cn(
-                "transition-[box-shadow] duration-200 rounded-sm",
-                letterEditing
-                  ? "shadow-[0_0_0_2px_hsl(var(--brand)/0.5)]"
-                  : hoverPreview && letter
-                    ? "shadow-[0_0_0_1px_hsl(var(--brand)/0.25)]"
-                    : "",
-              )}
-              style={{ width: `${794 * zoom}px`, height: `${1123 * zoom}px` }}
+          {/* ── VIEW mode — scaled read-only preview ── */}
+          {!letterEditing && (
+            <section
+              className="bg-transparent px-6 pt-6 pb-24 overflow-auto h-full flex justify-center"
+              onMouseEnter={() => setHoverPreview(true)}
+              onMouseLeave={() => setHoverPreview(false)}
             >
-              <article
+              <div
                 className={cn(
-                  "document-canvas bg-white text-ink font-sans shadow-2xl origin-top-left relative overflow-hidden outline-none",
-                  layout === "compact" ? "letter-page-compact" : "letter-page",
+                  "transition-[box-shadow] duration-200 rounded-sm",
+                  hoverPreview && letter ? "shadow-[0_0_0_1px_hsl(var(--brand)/0.25)] cursor-text" : "",
                 )}
-                style={{ width: "794px", minHeight: "1123px", transform: `scale(${zoom})` }}
-                onFocus={() => letter && setLetterEditing(true)}
-                onBlur={(e) => {
-                  if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-                    setLetterEditing(false);
-                  }
-                }}
+                style={{ width: `${794 * zoom}px`, height: `${1123 * zoom}px` }}
+                onClick={() => letter && enterEditMode()}
+                title={letter ? "Click to edit" : undefined}
+              >
+                <article
+                  ref={articleRef}
+                  className={cn(
+                    "document-canvas bg-white text-ink font-sans shadow-2xl origin-top-left relative overflow-hidden select-none pointer-events-none",
+                    layout === "compact" ? "letter-page-compact" : "letter-page",
+                  )}
+                  style={{ width: "794px", minHeight: "1123px", transform: `scale(${zoom})` }}
+                >
+                  {layout === "modern" && <div className="absolute left-0 top-0 bottom-0 w-3 bg-brand" />}
+                  <div style={{ paddingLeft: layout === "modern" ? "20px" : undefined }}>
+                    {letter === null ? (
+                      <>
+                        <div className="letter-head-row"><div className="letter-recipient"><div className="letter-recipient-name">{t("letter.ph_companyName")}</div><div className="letter-meta">{t("letter.ph_companyStreet")}</div><div className="letter-meta">{t("letter.ph_companyCity")}</div></div><div className="letter-sender-block"><div className="letter-sender-name">{t("letter.ph_yourName")}</div><div className="letter-meta">{t("letter.ph_yourEmail")}</div><div className="letter-meta">{t("letter.ph_yourPhone")}</div><div className="letter-meta">{t("letter.ph_yourCity")}</div></div></div>
+                        <div className="letter-date">{t("letter.ph_date")}</div>
+                        <div className="letter-subject">{t("letter.ph_subject")}</div>
+                        <div className="letter-salutation">{t("letter.ph_dear")}</div>
+                        <p className="letter-body">{LOREM}</p><p className="letter-body">{LOREM}</p><p className="letter-body">{LOREM}</p>
+                        <div className="letter-signoff">{t("letter.ph_sincerely")}</div>
+                        <div className="letter-signature">{t("letter.ph_yourName")}</div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="letter-head-row">
+                          <div className="letter-recipient">
+                            {letter.companyName && <div className="letter-recipient-name">{letter.companyName}</div>}
+                            {letter.companyAddress.filter(Boolean).map((line, i) => <div key={i} className="letter-meta">{line}</div>)}
+                          </div>
+                          <div className="letter-sender-block">
+                            {letter.senderName && <div className="letter-sender-name">{letter.senderName}</div>}
+                            {letter.senderEmail && <div className="letter-meta">{letter.senderEmail}</div>}
+                            {letter.senderPhone && <div className="letter-meta">{letter.senderPhone}</div>}
+                            {letter.senderAddress.filter(Boolean).map((line, i) => <div key={i} className="letter-meta">{line}</div>)}
+                          </div>
+                        </div>
+                        {letter.date && <div className="letter-date">{letter.date}</div>}
+                        {letter.subject && <div className="letter-subject">{letter.subject}</div>}
+                        {letter.salutation && <div className="letter-salutation">{letter.salutation}</div>}
+                        {letter.body.filter(Boolean).map((p, i) => <p key={i} className="letter-body">{p}</p>)}
+                        {letter.signoff && <div className="letter-signoff">{letter.signoff}</div>}
+                        {letter.senderName && <div className="letter-signature">{letter.senderName}</div>}
+                      </>
+                    )}
+                  </div>
+                </article>
+              </div>
+
+              {/* Zoom controls */}
+              <div className={cn(
+                "hidden lg:block absolute bottom-8 right-6 z-10 transition-all duration-200",
+                hoverPreview ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1 pointer-events-none",
+              )}>
+                <ZoomControls zoom={zoom} onChange={setZoom} floating />
+              </div>
+            </section>
+          )}
+
+          {/* ── EDIT mode — full-size editable letter form ── */}
+          {letterEditing && letter && (
+            <section className="overflow-auto h-full px-6 pt-6 pb-24">
+              <div className="document-canvas bg-white rounded-2xl shadow-2xl mx-auto font-sans text-ink"
+                style={{ maxWidth: "680px", padding: layout === "compact" ? "40px 48px 56px" : "56px 56px 72px" }}
               >
                 {layout === "modern" && (
-                  <div className="absolute left-0 top-0 bottom-0 w-3 bg-brand" />
+                  <div className="h-1.5 w-full bg-brand rounded-full mb-8 -mt-2" />
                 )}
-                <div style={{ paddingLeft: layout === "modern" ? "20px" : undefined }}>
-                  {letter === null ? (
-                    <>
-                      <div className="letter-head-row">
-                        <div className="letter-recipient">
-                          <div className="letter-recipient-name">{t("letter.ph_companyName")}</div>
-                          <div className="letter-meta">{t("letter.ph_companyStreet")}</div>
-                          <div className="letter-meta">{t("letter.ph_companyCity")}</div>
-                        </div>
-                        <div className="letter-sender-block">
-                          <div className="letter-sender-name">{t("letter.ph_yourName")}</div>
-                          <div className="letter-meta">{t("letter.ph_yourEmail")}</div>
-                          <div className="letter-meta">{t("letter.ph_yourPhone")}</div>
-                          <div className="letter-meta">{t("letter.ph_yourCity")}</div>
-                        </div>
-                      </div>
-                      <div className="letter-date">{t("letter.ph_date")}</div>
-                      <div className="letter-subject">{t("letter.ph_subject")}</div>
-                      <div className="letter-salutation">{t("letter.ph_dear")}</div>
-                      <p className="letter-body">{LOREM}</p>
-                      <p className="letter-body">{LOREM}</p>
-                      <p className="letter-body">{LOREM}</p>
-                      <div className="letter-signoff">{t("letter.ph_sincerely")}</div>
-                      <div className="letter-signature">{t("letter.ph_yourName")}</div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="letter-head-row">
-                        <div className="letter-recipient">
-                          {letter.companyName && (
-                            <div
-                              className="letter-recipient-name outline-none"
-                              contentEditable suppressContentEditableWarning
-                              onBlur={(e) => patchLetter({ companyName: e.currentTarget.innerText })}
-                            >{letter.companyName}</div>
-                          )}
-                          {letter.companyAddress.filter(Boolean).map((line, i) => (
-                            <div
-                              key={i}
-                              className="letter-meta outline-none"
-                              contentEditable suppressContentEditableWarning
-                              onBlur={(e) => {
-                                const addr = [...letter.companyAddress];
-                                addr[i] = e.currentTarget.innerText;
-                                patchLetter({ companyAddress: addr });
-                              }}
-                            >{line}</div>
-                          ))}
-                        </div>
-                        <div className="letter-sender-block">
-                          {letter.senderName && (
-                            <div
-                              className="letter-sender-name outline-none"
-                              contentEditable suppressContentEditableWarning
-                              onBlur={(e) => patchLetter({ senderName: e.currentTarget.innerText })}
-                            >{letter.senderName}</div>
-                          )}
-                          {letter.senderEmail && (
-                            <div
-                              className="letter-meta outline-none"
-                              contentEditable suppressContentEditableWarning
-                              onBlur={(e) => patchLetter({ senderEmail: e.currentTarget.innerText })}
-                            >{letter.senderEmail}</div>
-                          )}
-                          {letter.senderPhone && (
-                            <div
-                              className="letter-meta outline-none"
-                              contentEditable suppressContentEditableWarning
-                              onBlur={(e) => patchLetter({ senderPhone: e.currentTarget.innerText })}
-                            >{letter.senderPhone}</div>
-                          )}
-                          {letter.senderAddress.filter(Boolean).map((line, i) => (
-                            <div
-                              key={i}
-                              className="letter-meta outline-none"
-                              contentEditable suppressContentEditableWarning
-                              onBlur={(e) => {
-                                const addr = [...letter.senderAddress];
-                                addr[i] = e.currentTarget.innerText;
-                                patchLetter({ senderAddress: addr });
-                              }}
-                            >{line}</div>
-                          ))}
-                        </div>
-                      </div>
-                      {letter.date && (
-                        <div
-                          className="letter-date outline-none"
-                          contentEditable suppressContentEditableWarning
-                          onBlur={(e) => patchLetter({ date: e.currentTarget.innerText })}
-                        >{letter.date}</div>
-                      )}
-                      {letter.subject && (
-                        <div
-                          className="letter-subject outline-none"
-                          contentEditable suppressContentEditableWarning
-                          onBlur={(e) => patchLetter({ subject: e.currentTarget.innerText })}
-                        >{letter.subject}</div>
-                      )}
-                      {letter.salutation && (
-                        <div
-                          className="letter-salutation outline-none"
-                          contentEditable suppressContentEditableWarning
-                          onBlur={(e) => patchLetter({ salutation: e.currentTarget.innerText })}
-                        >{letter.salutation}</div>
-                      )}
-                      {letter.body.filter(Boolean).map((p, i) => (
-                        <p
-                          key={i}
-                          className="letter-body outline-none"
-                          contentEditable suppressContentEditableWarning
-                          onBlur={(e) => {
-                            const body = [...letter.body];
-                            body[i] = e.currentTarget.innerText;
-                            patchLetter({ body });
-                          }}
-                        >{p}</p>
-                      ))}
-                      {letter.signoff && (
-                        <div
-                          className="letter-signoff outline-none"
-                          contentEditable suppressContentEditableWarning
-                          onBlur={(e) => patchLetter({ signoff: e.currentTarget.innerText })}
-                        >{letter.signoff}</div>
-                      )}
-                      {letter.senderName && (
-                        <div
-                          className="letter-signature outline-none"
-                          contentEditable suppressContentEditableWarning
-                          onBlur={(e) => patchLetter({ senderName: e.currentTarget.innerText })}
-                        >{letter.senderName}</div>
-                      )}
-                    </>
-                  )}
-                </div>
-              </article>
-            </div>
-          </section>
 
-          <div
-            className={
-              "hidden lg:block absolute bottom-8 right-6 z-10 transition-all duration-200 " +
-              (hoverPreview ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1 pointer-events-none")
-            }
-          >
-            <ZoomControls zoom={zoom} onChange={setZoom} floating />
-          </div>
+                {/* Header: recipient + sender */}
+                <div className="flex justify-between gap-8 mb-8">
+                  <div className="space-y-1 flex-1 min-w-0">
+                    <p className="text-[10px] font-medium text-ink-muted uppercase tracking-wide mb-1.5">Recipient</p>
+                    <input
+                      className="letter-edit-field w-full letter-recipient-name"
+                      value={letter.companyName}
+                      onChange={(e) => patchLetter({ companyName: e.target.value })}
+                      placeholder="Company name"
+                    />
+                    {letter.companyAddress.map((line, i) => (
+                      <input
+                        key={i}
+                        className="letter-edit-field w-full letter-meta"
+                        value={line}
+                        onChange={(e) => {
+                          const addr = [...letter.companyAddress];
+                          addr[i] = e.target.value;
+                          patchLetter({ companyAddress: addr });
+                        }}
+                        placeholder={`Address line ${i + 1}`}
+                      />
+                    ))}
+                  </div>
+                  <div className="space-y-1 text-right flex-1 min-w-0">
+                    <p className="text-[10px] font-medium text-ink-muted uppercase tracking-wide mb-1.5">Sender</p>
+                    <input
+                      ref={firstEditRef}
+                      className="letter-edit-field w-full letter-sender-name text-right"
+                      value={letter.senderName}
+                      onChange={(e) => patchLetter({ senderName: e.target.value })}
+                      placeholder="Your name"
+                    />
+                    <input
+                      className="letter-edit-field w-full letter-meta text-right"
+                      value={letter.senderEmail}
+                      onChange={(e) => patchLetter({ senderEmail: e.target.value })}
+                      placeholder="Email"
+                    />
+                    <input
+                      className="letter-edit-field w-full letter-meta text-right"
+                      value={letter.senderPhone}
+                      onChange={(e) => patchLetter({ senderPhone: e.target.value })}
+                      placeholder="Phone"
+                    />
+                    {letter.senderAddress.map((line, i) => (
+                      <input
+                        key={i}
+                        className="letter-edit-field w-full letter-meta text-right"
+                        value={line}
+                        onChange={(e) => {
+                          const addr = [...letter.senderAddress];
+                          addr[i] = e.target.value;
+                          patchLetter({ senderAddress: addr });
+                        }}
+                        placeholder={`Address line ${i + 1}`}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Date */}
+                <input
+                  className="letter-edit-field letter-date mb-6"
+                  value={letter.date}
+                  onChange={(e) => patchLetter({ date: e.target.value })}
+                  placeholder="Date"
+                />
+
+                {/* Subject */}
+                <input
+                  className="letter-edit-field w-full letter-subject mb-7"
+                  value={letter.subject}
+                  onChange={(e) => patchLetter({ subject: e.target.value })}
+                  placeholder="Subject line"
+                />
+
+                {/* Salutation */}
+                <input
+                  className="letter-edit-field w-full letter-salutation mb-5"
+                  value={letter.salutation}
+                  onChange={(e) => patchLetter({ salutation: e.target.value })}
+                  placeholder="Dear …,"
+                />
+
+                {/* Body paragraphs */}
+                <textarea
+                  className="letter-edit-field w-full letter-body resize-none"
+                  rows={12}
+                  value={letter.body.join("\n\n")}
+                  onChange={(e) => patchLetter({ body: e.target.value.split(/\n{2,}/) })}
+                  placeholder="Letter body…"
+                  style={{ lineHeight: "1.7" }}
+                />
+
+                {/* Signoff */}
+                <input
+                  className="letter-edit-field letter-signoff mt-7"
+                  value={letter.signoff}
+                  onChange={(e) => patchLetter({ signoff: e.target.value })}
+                  placeholder="Sincerely,"
+                />
+
+                {/* Signature */}
+                <input
+                  className="letter-edit-field letter-signature mt-10"
+                  value={letter.senderName}
+                  onChange={(e) => patchLetter({ senderName: e.target.value })}
+                  placeholder="Your name"
+                />
+              </div>
+            </section>
+          )}
         </div>
       </div>
     </div>
@@ -848,7 +877,7 @@ export default function CoverLetterPage() {
     {/* Unsaved-changes modal */}
     {showNewModal && (
       <div className="fixed inset-0 z-[70] flex items-center justify-center px-4">
-        <div className="absolute inset-0 bg-ink/40 backdrop-blur-sm" onClick={() => setShowNewModal(false)} />
+        <div className="absolute inset-0 modal-backdrop" onClick={() => setShowNewModal(false)} />
         <div className="relative glass-modal w-full max-w-[380px] p-6 animate-in fade-in zoom-in-95 duration-200">
           <button
             type="button"

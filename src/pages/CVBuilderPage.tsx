@@ -256,9 +256,9 @@ export default function CVBuilderPage() {
 
   return (
     <>
-    <div className="w-full flex flex-col h-[calc(100dvh-64px)] lg:h-auto lg:block">
+    <div className="w-full flex flex-col h-[calc(100dvh-64px)] lg:h-[calc(100vh-64px)] lg:overflow-hidden">
       {/* Mobile header */}
-      <div className="lg:hidden shrink-0 px-4 py-4 flex items-center justify-between border-b border-white/50 bg-white/30 backdrop-blur-md glass-card">
+      <div className="lg:hidden shrink-0 px-4 py-4 flex items-center justify-between glass-bar">
         <h1 className="heading-1">{t("resume.pageTitle")}</h1>
         <MobileActionsMenu
           onNew={handleNew}
@@ -271,7 +271,7 @@ export default function CVBuilderPage() {
       </div>
 
       {/* Mobile segmented control */}
-      <div className="lg:hidden shrink-0 px-4 py-3 bg-white/30 backdrop-blur-md glass-card border-b border-white/50">
+      <div className="lg:hidden shrink-0 px-4 py-3 glass-bar">
         <SegmentedControl
           options={[
             { value: "editor", label: t("resume.tabEditor") },
@@ -280,26 +280,6 @@ export default function CVBuilderPage() {
           value={mobileTab}
           onChange={setMobileTab}
         />
-      </div>
-
-      {/* Desktop header */}
-      <div className="hidden lg:flex px-8 py-5 items-center justify-between border-b border-white/50 flex-wrap gap-3 bg-white/30 backdrop-blur-md glass-card">
-        <div>
-          <h1 className="heading-1">{t("resume.pageTitle")}</h1>
-        </div>
-        <div className="flex items-center gap-3">
-          <button type="button" onClick={handleNew} className="btn-ghost">
-            <FilePlus className="h-4 w-4" /> {t("common.newDoc")}
-          </button>
-          <button type="button" onClick={() => setSaveOpen(true)} className="btn-ghost">
-            <Save className="h-4 w-4" /> {t("common.save")}
-          </button>
-          <LayoutMenu value={layout} onChange={setLayout} />
-          <button type="button" onClick={() => setSavedOpen(true)} className="btn-ghost">
-            <FolderOpen className="h-4 w-4" /> {t("common.library")}
-          </button>
-          <ExportMenu onExport={handleExport} />
-        </div>
       </div>
 
       <SavedCVsPanel
@@ -332,14 +312,34 @@ export default function CVBuilderPage() {
         }}
       />
 
-      <div className="flex-1 min-h-0 flex flex-col lg:grid lg:grid-cols-2 lg:min-h-[calc(100vh-64px-81px)]">
-        {/* Editor */}
-        <section
+      <div className="flex-1 min-h-0 flex flex-col lg:grid lg:grid-cols-2 lg:h-[calc(100vh-64px)]">
+        {/* Editor column — single glass-editor surface */}
+        <div
           className={cn(
-            "bg-white/20 backdrop-blur-md glass-editor overflow-y-auto overscroll-contain p-4 lg:p-8 lg:border-r lg:border-white/50 lg:max-h-[calc(100vh-64px-81px)]",
-            mobileTab !== "editor" ? "hidden lg:block" : "flex-1 min-h-0"
+            "glass-editor lg:flex lg:flex-col lg:h-[calc(100vh-64px)] lg:overflow-hidden lg:border-r glass-rule",
+            mobileTab !== "editor" ? "hidden lg:flex" : "flex flex-col flex-1 min-h-0"
           )}
         >
+          {/* Desktop fixed header — title + actions */}
+          <div className="hidden lg:block shrink-0 px-8 pt-8 pb-6 border-b glass-rule">
+            <h1 className="heading-1 mb-6">{t("resume.pageTitle")}</h1>
+            <div className="flex items-center gap-3">
+              <button type="button" onClick={handleNew} className="btn-ghost">
+                <FilePlus className="h-4 w-4" /> {t("common.newDoc")}
+              </button>
+              <button type="button" onClick={() => setSaveOpen(true)} className="btn-ghost">
+                <Save className="h-4 w-4" /> {t("common.save")}
+              </button>
+              <LayoutMenu value={layout} onChange={setLayout} />
+              <button type="button" onClick={() => setSavedOpen(true)} className="btn-ghost">
+                <FolderOpen className="h-4 w-4" /> {t("common.library")}
+              </button>
+              <ExportMenu onExport={handleExport} />
+            </div>
+          </div>
+
+          {/* Scrollable editor content */}
+          <section className="flex-1 min-h-0 overflow-y-auto overscroll-contain scrollbar-minimal p-4 lg:p-8">
           <BuildFromJobCard
             storageKey={CV_JD_KEY}
             loading={building}
@@ -389,11 +389,9 @@ export default function CVBuilderPage() {
           >
             <div className="space-y-3">
               {cv.experiences.map((exp, idx) => (
-                <div key={exp.id} className="rounded-2xl border border-line p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="text-[14px] font-semibold text-ink">{t("resume.experienceN", { n: idx + 1 })}</h4>
-                    <RemoveBtn onClick={() => update("experiences", cv.experiences.filter((e) => e.id !== exp.id))} />
-                  </div>
+                <div key={exp.id} className="relative rounded-2xl border border-line p-4">
+                  <RemoveBtn onClick={() => update("experiences", cv.experiences.filter((e) => e.id !== exp.id))} />
+                  <h4 className="text-[14px] font-semibold text-ink mb-3 pr-8">{t("resume.experienceN", { n: idx + 1 })}</h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <input className="input-base" placeholder={t("resume.jobTitle")} value={exp.title}
                       onChange={(e) => update("experiences", cv.experiences.map((x) => x.id === exp.id ? { ...x, title: e.target.value } : x))} />
@@ -421,11 +419,9 @@ export default function CVBuilderPage() {
           >
             <div className="space-y-3">
               {cv.education.map((ed, idx) => (
-                <div key={ed.id} className="rounded-2xl border border-line p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="text-[14px] font-semibold text-ink">{t("resume.educationN", { n: idx + 1 })}</h4>
-                    <RemoveBtn onClick={() => update("education", cv.education.filter((e) => e.id !== ed.id))} />
-                  </div>
+                <div key={ed.id} className="relative rounded-2xl border border-line p-4">
+                  <RemoveBtn onClick={() => update("education", cv.education.filter((e) => e.id !== ed.id))} />
+                  <h4 className="text-[14px] font-semibold text-ink mb-3 pr-8">{t("resume.educationN", { n: idx + 1 })}</h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <input className="input-base" placeholder={t("resume.school")} value={ed.school}
                       onChange={(e) => update("education", cv.education.map((x) => x.id === ed.id ? { ...x, school: e.target.value } : x))} />
@@ -472,18 +468,19 @@ export default function CVBuilderPage() {
             />
           </Card>
         </section>
+        </div>
 
         {/* Preview - canvas with A4 page */}
         <div
           className={cn(
-            "relative lg:max-h-[calc(100vh-64px-81px)]",
+            "relative lg:h-[calc(100vh-64px)]",
             mobileTab !== "preview" ? "hidden lg:block" : "flex-1 min-h-0"
           )}
           onMouseEnter={() => setHoverPreview(true)}
           onMouseLeave={() => setHoverPreview(false)}
         >
         <section
-          className="bg-transparent overflow-auto h-full flex justify-center px-4 pt-6 pb-24 lg:px-6 lg:max-h-[calc(100vh-64px-81px)]"
+          className="bg-transparent overflow-auto h-full flex justify-center px-4 pt-6 pb-24 lg:px-6"
         >
           <div
             className="mx-auto"
@@ -519,7 +516,7 @@ export default function CVBuilderPage() {
     {/* Unsaved-changes modal */}
     {showNewModal && (
       <div className="fixed inset-0 z-[70] flex items-center justify-center px-4">
-        <div className="absolute inset-0 bg-ink/40 backdrop-blur-sm" onClick={() => setShowNewModal(false)} />
+        <div className="absolute inset-0 modal-backdrop" onClick={() => setShowNewModal(false)} />
         <div className="relative glass-modal w-full max-w-[380px] p-6 animate-in fade-in zoom-in-95 duration-200">
           <button
             type="button"

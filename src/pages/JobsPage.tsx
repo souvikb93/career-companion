@@ -43,7 +43,7 @@ export default function JobsPage() {
 
   const handleJobAdded = useCallback((job: Job) => {
     if (openDelayRef.current) clearTimeout(openDelayRef.current);
-    openDelayRef.current = setTimeout(() => setSelectedId(job.id), 320);
+    openDelayRef.current = setTimeout(() => setSelectedId(job.id), 80);
   }, []);
 
   useEffect(() => () => { if (openDelayRef.current) clearTimeout(openDelayRef.current); }, []);
@@ -81,6 +81,7 @@ export default function JobsPage() {
       />
 
       <main className="relative w-full min-w-0 p-4 sm:p-8">
+        <h1 className="heading-1 mb-6">{t("tracker.pageTitle")}</h1>
         {/* Single toolbar row: pipeline view chips + search + add */}
         <div className="flex flex-wrap items-center gap-3 mb-6">
           <div className="flex flex-nowrap lg:flex-wrap items-center gap-2 flex-1 min-w-0 overflow-x-auto scrollbar-hide">
@@ -119,7 +120,7 @@ export default function JobsPage() {
             type="button"
             onClick={() => setAddOpen(true)}
             aria-label={t("tracker.addJob")}
-            className="hidden sm:grid place-items-center h-12 w-12 rounded-xl bg-ink text-white active-fill transition-colors duration-200 ease-out hover:bg-brand active:bg-brand shadow-lg shadow-ink/10"
+            className="hidden sm:grid h-12 w-12 rounded-xl btn-icon-primary shadow-lg shadow-ink/10"
           >
             <Plus className="h-5 w-5" />
           </button>
@@ -127,7 +128,7 @@ export default function JobsPage() {
 
         <div className="bg-white/40 backdrop-blur-2xl border border-white/50 rounded-2xl overflow-hidden shadow-xl shadow-ink/5 glass-card">
           {filtered.length > 0 && (
-            <div className="hidden lg:grid grid-cols-[1.4fr_1.6fr_1.2fr_1fr_140px_110px_24px] gap-4 px-5 py-3 border-b border-white/40">
+            <div className="hidden lg:grid grid-cols-[1.4fr_1.6fr_1.2fr_1fr_140px_110px_24px] gap-4 px-5 py-3 border-b table-rule">
               {[t("tracker.colCompany"), t("tracker.colRole"), t("tracker.colLocation"), t("tracker.colSalary"), t("tracker.colStatus"), t("tracker.colDate"), ""].map((h, i) => (
                 <p key={i} className="eyebrow whitespace-nowrap">{h}</p>
               ))}
@@ -137,7 +138,7 @@ export default function JobsPage() {
           {filtered.length === 0 ? (
             <EmptyState totalJobs={jobs.length} onAdd={() => setAddOpen(true)} />
           ) : (
-            <ul className="divide-y divide-white/40">
+            <ul className="divide-y row-divider">
               {filtered.map((job) => (
                 <li
                   key={job.id}
@@ -179,7 +180,7 @@ export default function JobsPage() {
           <button
             type="button"
             onClick={() => setAddOpen(true)}
-            className="h-14 w-14 rounded-xl bg-ink text-white active-fill grid place-items-center shadow-lg transition-colors duration-200 ease-out hover:bg-brand active:bg-brand"
+            className="h-14 w-14 rounded-xl btn-icon-primary shadow-lg shadow-ink/10"
             aria-label={t("tracker.addJob")}
           >
             <Plus className="h-6 w-6" />

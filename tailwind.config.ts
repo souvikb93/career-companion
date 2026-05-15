@@ -60,6 +60,7 @@ export default {
           ring: "hsl(var(--sidebar-ring))",
         },
         // Tracka tokens
+        "nav-surface": "hsl(var(--nav-surface))",
         surface: "hsl(var(--surface))",
         "surface-2": "hsl(var(--surface-2))",
         "surface-hover": "hsl(var(--surface-hover))",
@@ -94,12 +95,16 @@ export default {
         "accordion-down": { from: { height: "0" }, to: { height: "var(--radix-accordion-content-height)" } },
         "accordion-up": { from: { height: "var(--radix-accordion-content-height)" }, to: { height: "0" } },
         "panel-in": {
-          from: { opacity: "0", transform: "translateY(4px)" },
-          to: { opacity: "1", transform: "translateY(0)" },
+          from: { opacity: "0" },
+          to: { opacity: "1" },
         },
         "slide-in-right": {
-          from: { transform: "translateX(100%)" },
-          to: { transform: "translateX(0)" },
+          from: { transform: "translateX(100%)", opacity: "0" },
+          to: { transform: "translateX(0)", opacity: "1" },
+        },
+        "modal-in": {
+          from: { opacity: "0", transform: "scale(0.96) translateY(8px)" },
+          to: { opacity: "1", transform: "scale(1) translateY(0)" },
         },
         first: {
           "0%, 100%": { transform: "translate(0, 0) rotate(0deg)" },
@@ -125,8 +130,9 @@ export default {
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "panel-in": "panel-in 180ms ease-out",
-        "slide-in-right": "slide-in-right 180ms ease-out",
+        "panel-in": "panel-in 300ms ease-out both",
+        "slide-in-right": "slide-in-right 420ms cubic-bezier(0.22, 1, 0.36, 1) both",
+        "modal-in": "modal-in 360ms cubic-bezier(0.22, 1, 0.36, 1) both",
         first: "first 30s ease infinite",
         second: "second 25s ease infinite",
         third: "third 35s ease infinite",

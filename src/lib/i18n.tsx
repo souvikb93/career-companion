@@ -32,8 +32,11 @@ function interpolate(str: string, vars?: Record<string, string | number>) {
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>(() => {
     if (typeof window === "undefined") return "de";
-    const v = window.localStorage.getItem(STORAGE_KEY);
-    return v === "en" || v === "de" ? v : "de";
+    const stored = window.localStorage.getItem(STORAGE_KEY);
+    if (stored === "en" || stored === "de") return stored;
+    // No stored preference — detect from browser, default to "de"
+    const browser = navigator.language || "";
+    return browser.toLowerCase().startsWith("en") ? "en" : "de";
   });
 
   const setLang = useCallback((l: Lang) => {

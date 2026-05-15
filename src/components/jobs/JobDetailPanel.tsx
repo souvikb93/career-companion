@@ -53,12 +53,12 @@ export function JobDetailPanel({ job, onClose, onUpdate, onDelete }: Props) {
     <>
       {/* Panel scrim */}
       <div
-        className="fixed inset-0 z-40 bg-ink/40 backdrop-blur-sm animate-panel-in"
+        className="fixed inset-0 z-40 modal-backdrop animate-panel-in"
         onClick={onClose}
       />
 
       {/* Panel */}
-      <aside className="fixed top-0 right-0 z-50 h-screen w-full max-w-[440px] bg-white/70 backdrop-blur-2xl border-l border-white/50 overflow-y-auto animate-slide-in-right side-panel">
+      <aside className="fixed top-0 right-0 z-50 h-screen w-full max-w-[440px] backdrop-blur-2xl overflow-y-auto overscroll-contain scroll-smooth animate-slide-in-right side-panel">
         <div className="p-5 sm:p-8">
 
           {/* Header — role + company editable */}
@@ -299,7 +299,7 @@ export function JobDetailPanel({ job, onClose, onUpdate, onDelete }: Props) {
       {/* Delete confirmation modal — sibling to panel, stacks above at z-[60] */}
       {confirmDelete && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
-          <div className="absolute inset-0 bg-ink/40 backdrop-blur-sm" onClick={() => setConfirmDelete(false)} />
+          <div className="absolute inset-0 modal-backdrop" onClick={() => setConfirmDelete(false)} />
           <div className="relative glass-modal w-full max-w-[360px] p-6 animate-in fade-in zoom-in-95 duration-200">
             <div className="flex flex-col items-center text-center gap-4">
               <div className="h-12 w-12 rounded-full bg-red-50 grid place-items-center">

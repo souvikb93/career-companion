@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Button } from "@/components/ui/button";
+import { applyTheme } from "@/lib/theme";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
@@ -11,6 +11,7 @@ import { ArrowLeft, ArrowRight, Mail, X } from "lucide-react";
 import { AuthCharacters } from "@/components/AuthCharacters";
 import { BackgroundGradientAnimation } from "@/components/BackgroundGradientAnimation";
 import { LanguageToggle } from "@/components/LanguageToggle";
+import { ThemeDevToggle } from "@/components/TopNav";
 import { useT } from "@/lib/i18n";
 import logo from "@/assets/logo.svg";
 
@@ -117,7 +118,7 @@ function InfoModal({ type, onClose }: { type: NonNullable<ModalType>; onClose: (
   const { title, body } = MODAL_CONTENT[type];
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-ink/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 modal-backdrop" onClick={onClose} />
       <div className="relative glass-modal w-full max-w-lg max-h-[80vh] flex flex-col">
         <div className="flex items-center justify-between px-6 py-5 border-b border-line/60">
           <h2 className="text-[17px] font-semibold text-ink">{title}</h2>
@@ -148,6 +149,11 @@ export default function AuthPage() {
   const [isTyping, setIsTyping] = useState(false);
   const [modal, setModal] = useState<ModalType>(null);
   const { t } = useT();
+
+  useEffect(() => {
+    const stored = (localStorage.getItem("tracka_theme") as "light" | "dark" | "auto") || "auto";
+    applyTheme(stored);
+  }, []);
 
   useEffect(() => {
     if (session) navigate("/", { replace: true });
@@ -186,6 +192,9 @@ export default function AuthPage() {
 
         {/* ── Left — characters centred, logo + quote absolutely pinned ── */}
         <div className="relative hidden lg:flex items-center justify-center overflow-hidden">
+          {/* Dark-mode only: subtle veil over mesh */}
+          <div className="absolute inset-0 z-0 auth-left-veil" />
+
           <div className="absolute top-12 left-12 z-10 flex items-center gap-2">
             <img src={logo} alt="Tracka" className="h-9 w-9" />
             <span className="logo-wordmark text-[26px] leading-none text-ink">tracka</span>
@@ -221,11 +230,15 @@ export default function AuthPage() {
               <img src={logo} alt="Tracka" className="h-7 w-7" />
               <span className="logo-wordmark text-[20px] leading-none text-ink">tracka</span>
             </div>
-            <LanguageToggle />
+            <div className="flex items-center gap-1">
+              <ThemeDevToggle />
+              <LanguageToggle />
+            </div>
           </div>
 
           {/* Desktop language toggle */}
-          <div className="hidden lg:block absolute top-12 right-12 z-10">
+          <div className="hidden lg:flex items-center gap-1 absolute top-12 right-12 z-10">
+            <ThemeDevToggle />
             <LanguageToggle />
           </div>
 
@@ -259,7 +272,7 @@ export default function AuthPage() {
                       type="button"
                       onClick={sendLink}
                       disabled={emailLoading}
-                      className="w-full h-12 rounded-xl bg-ink text-white active-fill text-[14px] font-medium hover:bg-brand transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+                      className="split-panel-btn-primary w-full h-12"
                     >
                       {emailLoading ? t("auth.sending") : (
                         <>{t("auth.continueShort")} <ArrowRight className="h-4 w-4" /></>
@@ -277,7 +290,7 @@ export default function AuthPage() {
                     type="button"
                     onClick={signInGoogle}
                     disabled={googleLoading}
-                    className="w-full h-12 rounded-xl border border-line bg-white hover:bg-surface transition-colors flex items-center justify-center gap-3 text-[14px] font-medium text-ink disabled:opacity-60"
+                    className="split-panel-btn w-full h-12 flex items-center justify-center gap-3 text-[14px] font-medium text-ink disabled:opacity-60"
                   >
                     {googleLoading ? (
                       <span className="h-4 w-4 rounded-full border-2 border-ink border-t-transparent animate-spin" />
@@ -310,10 +323,10 @@ export default function AuthPage() {
                     {t("auth.clickLink")}<br />{t("auth.checkSpam")}
                   </p>
                   <div className="mt-8 space-y-3">
-                    <Button variant="outline" onClick={() => setStep("email")} className="w-full h-12 rounded-xl bg-white/40 backdrop-blur-md border-white/50 hover:bg-white/60">
-                      <ArrowLeft className="h-4 w-4 mr-2" /> {t("auth.differentEmail")}
-                    </Button>
-                    <button onClick={sendLink} disabled={emailLoading} className="w-full text-[13px] text-ink-muted hover:text-ink transition-colors">
+                    <button type="button" onClick={() => setStep("email")} className="split-panel-btn w-full h-12 flex items-center justify-center gap-2 text-[14px] font-medium text-ink">
+                      <ArrowLeft className="h-4 w-4" /> {t("auth.differentEmail")}
+                    </button>
+                    <button type="button" onClick={sendLink} disabled={emailLoading} className="w-full text-[13px] text-ink-muted hover:text-ink transition-colors">
                       {emailLoading ? t("auth.sending") : t("auth.resendLink")}
                     </button>
                   </div>
@@ -354,7 +367,7 @@ export default function AuthPage() {
                         onBlur={() => setIsTyping(false)}
                         onKeyDown={(e) => e.key === "Enter" && sendLink()}
                         autoFocus
-                        className="h-11 rounded-xl border-line bg-surface focus:border-brand text-[14px]"
+                        className="h-11 rounded-xl"
                       />
                     </div>
 
@@ -362,7 +375,7 @@ export default function AuthPage() {
                       type="button"
                       onClick={sendLink}
                       disabled={emailLoading}
-                      className="w-full h-11 rounded-xl bg-ink text-white active-fill text-[14px] font-medium hover:bg-brand transition-colors disabled:opacity-60"
+                      className="split-panel-btn-primary w-full h-11"
                     >
                       {emailLoading ? t("auth.sending") : t("auth.continueEmail")}
                     </button>
@@ -377,7 +390,7 @@ export default function AuthPage() {
                       type="button"
                       onClick={signInGoogle}
                       disabled={googleLoading}
-                      className="w-full h-11 rounded-xl border border-line bg-white hover:bg-surface transition-colors flex items-center justify-center gap-3 text-[14px] font-medium text-ink disabled:opacity-60"
+                      className="split-panel-btn w-full h-11 flex items-center justify-center gap-3 text-[14px] font-medium text-ink disabled:opacity-60"
                     >
                       {googleLoading ? (
                         <span className="h-4 w-4 rounded-full border-2 border-ink border-t-transparent animate-spin" />
@@ -401,7 +414,7 @@ export default function AuthPage() {
                 </>
               ) : (
                 <div className="text-center">
-                  <div className="mx-auto h-16 w-16 rounded-2xl border border-line bg-surface grid place-items-center mb-6">
+                  <div className="mx-auto h-16 w-16 rounded-2xl glass-chip grid place-items-center mb-6">
                     <Mail className="h-7 w-7 text-brand" />
                   </div>
                   <h1 className="text-[26px] font-semibold text-ink">{t("auth.checkInbox")}</h1>
@@ -411,9 +424,13 @@ export default function AuthPage() {
                     {t("auth.clickLink")}<br />
                     {t("auth.checkSpam")}
                   </p>
-                  <Button variant="outline" onClick={() => setStep("email")} className="w-full h-11 rounded-xl">
-                    <ArrowLeft className="h-4 w-4 mr-2" /> {t("auth.differentEmail")}
-                  </Button>
+                  <button
+                    type="button"
+                    onClick={() => setStep("email")}
+                    className="split-panel-btn w-full h-11 flex items-center justify-center gap-2 text-[14px] font-medium text-ink"
+                  >
+                    <ArrowLeft className="h-4 w-4" /> {t("auth.differentEmail")}
+                  </button>
                   <button
                     onClick={sendLink}
                     disabled={emailLoading}

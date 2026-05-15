@@ -25,7 +25,8 @@ All tokens are HSL custom properties in `:root`. Use the semantic Tailwind class
 | Token | Tailwind | Value | Use |
 |---|---|---|---|
 | Background base | `bg-background` | `#F3F3F1` | Solid pages (settings, profile) |
-| Surface 1 | `bg-surface` | `#F4F3F0` | Cards on solid pages, sticky TopNav |
+| Nav surface | `bg-nav-surface` | light: `hsl(0 0% 99%)` / dark: `hsl(0 0% 8%)` | TopNav only — whiter in light, darker in dark for layer separation |
+| Surface 1 | `bg-surface` | `#F4F3F0` | Cards on solid pages |
 | Surface 2 | `bg-surface-2` | `#EFEFED` | Hover fills, secondary chips |
 | Surface hover | `bg-surface-hover` | `#FAFAF8` | Row hover on solid pages |
 | Ink (text) | `text-ink` | `#151515` | Primary text, headings |
@@ -39,7 +40,7 @@ All tokens are HSL custom properties in `:root`. Use the semantic Tailwind class
 | Token | Value | Use |
 |---|---|---|
 | `--glass-tint` | `255 255 255` | Translucent layer fill |
-| `--glass-border` | `255 255 255` | Hairline on glass at 40–60% alpha |
+| `--glass-border` | `255 255 255` | Hairline on glass — use via `.glass-rule` (0.08 alpha) not raw |
 | `--glass-shadow` | `21 21 21` (ink) | Layered shadow under glass |
 
 ### 2.2 Typography
@@ -66,12 +67,14 @@ All tokens are HSL custom properties in `:root`. Use the semantic Tailwind class
 ### 2.3 Spacing & radius
 
 - 4 / 8 / 12 / 16 / 20 / 24 / 32 / 40 / 48 / 64 — stick to Tailwind's 4pt scale.
+- **Page header spacing**: Every main page MUST use `heading-1 mb-6` (24px) below the page title before any content or controls. This is the canonical header-to-content gap across Tracker, Resume, and Letter pages.
 - **Radius**:
   - Buttons: `rounded-full` (pills) for primary/ghost CTAs; `rounded-xl` for inline icon buttons.
   - Inputs / chips: `rounded-2xl` (16px).
   - Cards: `rounded-2xl`.
   - Modals / sheets: `rounded-3xl` (24px).
 - **Borders**: 1px hairline only. `border-line` on solid surfaces, `border-white/50` on glass.
+- **Dividers on glass surfaces**: Always use `.glass-rule` — never `border-line`. It resolves to `rgb(0 0 0 / 0.07)` in light and `rgb(255 255 255 / 0.08)` in dark, matching the glass component family (`glass-card`, `glass-nav`, etc.). Applies to all structural dividers: vertical split (`border-r glass-rule`), horizontal header/content (`border-b glass-rule`), and panel edges. MUST NOT use `border-line` on glass pages — it renders too heavy in both modes.
 
 ### 2.4 Motion
 
@@ -99,6 +102,7 @@ Three levels of surface, picked by the background underneath:
 | Level | Class | When |
 |---|---|---|
 | Solid | `.card-surface` / `.card-large` | Settings, Profile, FAQ, CV builder, Cover Letter — pages with a solid `bg-background` |
+| Glass L1.5 (nav) | `.glass-nav` | Sticky top nav bar — translucent frosted, whiter light / darker dark |
 | Glass L2 (content) | `.glass-card` | Cards on pages with the gradient mesh — Jobs tracker, landing |
 | Glass L3 (overlay) | `.glass-modal` | Modals, sheets, popovers when they appear over a mesh page |
 
@@ -111,6 +115,10 @@ Chips/filter pills:
 - Glass → `.glass-chip` / `.glass-chip-active`
 
 **Don't mix.** A page is either glass or solid — never half.
+
+### Backdrop / scrim
+
+Every modal, panel, drawer, and sheet MUST use `.modal-backdrop` for the dimming layer behind it — never `bg-ink/40`, `bg-ink/30`, `bg-black/80`, or any ad-hoc opacity. `.modal-backdrop` resolves to `rgb(0 0 0 / 0.30)` with a 4px blur — identical in light and dark, because it is pure black (not `--ink` which flips to white in dark mode). MUST NOT use `bg-ink/*` for scrims — `--ink` is near-white in dark mode and produces a bright overlay.
 
 ---
 
@@ -443,7 +451,7 @@ Rules:
 
 ### 5.2 App shell
 
-- `TopNav` is `h-16 sticky top-0 z-40 bg-surface border-b border-line`. **For the glass trial it stays opaque** — only convert to `.glass-nav` once we standardise glass across all main pages.
+- `TopNav` is `h-16 sticky top-0 z-40 glass-nav`. The `.glass-nav` token gives a translucent frosted surface (whiter in light, darker in dark) with `backdrop-blur` and a hairline bottom border. **MUST NOT** use opaque `bg-nav-surface` or `bg-surface` — that kills the glass effect.
 - Main content: `min-h-[calc(100dvh-64px)]`.
 
 ### 5.2 Account section (Profile / AI Model / Settings / FAQ)
@@ -587,15 +595,39 @@ These are CRITICAL-priority and apply to every component:
 
 ---
 
-## 7b — Dark mode stance
+## 7b — Dark mode
 
-**Tracka does not currently support dark mode.** The Berlin Glass aesthetic depends on the cream/white background and the animated orange mesh — both require a light context.
+Tracka supports dark mode via `html.dark` class toggle. All tokens remap in the `html.dark {}` block in `src/index.css`.
 
-If dark mode is added in a future version:
-- All glass tokens (`--glass-tint`, `--glass-border`) must be remapped for dark backgrounds.
-- The brand orange (`#FF5A2F`) loses contrast on dark — a lighter tint (`#FF7A56`) would be needed.
-- Never toggle dark mode by inverting colours — redesign the token set.
-- Until the token set is defined, do **not** add `dark:` Tailwind variants to components.
+### Neutral dark palette — MUST rules
+
+1. **Never use blue-hued surfaces.** All dark surfaces MUST be neutral gray (HSL hue `0`, saturation `0%`). No hue 220/navy/slate.
+2. **Glass tint is neutral.** `--glass-tint` MUST be achromatic RGB (e.g. `24 24 24`), never blue-shifted.
+3. **Mesh background is neutral.** `--mesh-bg-start` / `--mesh-bg-end` MUST be pure dark grays (`#0a0a0a` / `#111111`).
+4. **Brand orange stays the same.** `#FF5A2F` — no tint change needed, contrast is sufficient on neutral dark.
+
+### Dark token reference
+
+| Token | Value | Note |
+|---|---|---|
+| `--background` | `0 0% 7%` | Page base |
+| `--surface` | `0 0% 10%` | Cards, nav |
+| `--surface-2` | `0 0% 13%` | Input bg, secondary |
+| `--surface-hover` | `0 0% 16%` | Hover state |
+| `--line` | `0 0% 20%` | Hairlines |
+| `--glass-tint` | `24 24 24` | Glass surface fill |
+| `--panel-bg` | `18 18 18` | Split-panel bg |
+| `--mesh-bg-start` | `#0a0a0a` | Gradient mesh start |
+| `--mesh-bg-end` | `#111111` | Gradient mesh end |
+
+### Input states (dark)
+
+All `input-base` / `textarea-base` / `chat-input` in dark mode:
+- Default: `bg: surface-2`, `border: line`
+- Hover: `bg: surface-hover`
+- Focus: `border: brand` (orange), `bg: surface-2`
+
+These are defined in `src/index.css` dark overrides. Do not add inline dark Tailwind — use the token classes.
 
 ---
 
@@ -647,7 +679,8 @@ A checklist to run through before considering a UI change "done". This expands a
 - [ ] Don't remove `focus-visible` outlines.
 - [ ] Don't add the gradient mesh to dense form pages.
 - [ ] Don't `rounded-2xl` something that should be a pill — pills (`rounded-full`) are reserved for primary/ghost CTAs.
-- [ ] Don't add `dark:` Tailwind variants — dark mode is not currently supported (§7b).
+- [ ] Don't use blue-hued dark surfaces — dark palette MUST be neutral gray (§7b).
+- [ ] Don't add inline `dark:` Tailwind for input states — use `input-base` / `textarea-base` tokens (§7b).
 - [ ] Don't merge the modal scrim and centering container — always separate layers (§4.4).
 - [ ] Don't stack modal buttons vertically — always a horizontal `flex gap-3` row (§4.4).
 - [ ] Don't reference `.btn-action` — it is not defined.

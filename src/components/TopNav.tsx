@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Menu, X, LogOut, Sun, Moon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { applyTheme } from "@/lib/theme";
 import logo from "@/assets/logo.svg";
 import { useT } from "@/lib/i18n";
 import { useAuth } from "@/hooks/useAuth";
@@ -18,21 +19,29 @@ import {
 } from "@/components/ui/material-ui-dropdown-menu";
 import { User, Cpu, Settings, LifeBuoy } from "lucide-react";
 
-/** TEMP: quick dark/light toggle for development — remove before launch */
-function ThemeDevToggle() {
-  const [dark, setDark] = useState(() => document.documentElement.classList.contains("dark"));
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", dark);
-    try { localStorage.setItem("tracka_theme", dark ? "dark" : "light"); } catch { /* noop */ }
-  }, [dark]);
+type ThemeMode = "auto" | "light" | "dark";
+
+/** TEMP: quick light/dark toggle for development — remove before launch */
+export function ThemeDevToggle() {
+  const [mode, setMode] = useState<ThemeMode>(() => {
+    const stored = localStorage.getItem("tracka_theme") as ThemeMode | null;
+    return stored === "light" || stored === "dark" || stored === "auto" ? stored : "auto";
+  });
+  const isDark = mode === "dark" || (mode === "auto" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  const toggle = () => {
+    const next: ThemeMode = isDark ? "light" : "dark";
+    setMode(next);
+    localStorage.setItem("tracka_theme", next);
+    applyTheme(next);
+  };
   return (
     <button
       type="button"
-      onClick={() => setDark((d) => !d)}
-      title={dark ? "Switch to light mode" : "Switch to dark mode"}
+      onClick={toggle}
+      title={isDark ? "Switch to light" : "Switch to dark"}
       className="h-8 w-8 rounded-lg grid place-items-center text-ink-muted hover:text-ink hover:bg-surface-2 transition-colors"
     >
-      {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+      {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
     </button>
   );
 }
@@ -90,7 +99,7 @@ export function TopNav() {
   return (
     <>
       {/* ── Desktop header ── */}
-      <header className="sticky top-0 z-40 w-full bg-surface border-b border-line hidden lg:block">
+      <header className="sticky top-0 z-40 w-full glass-nav hidden lg:block">
         <div className="h-16 px-4 sm:px-8 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <img src={logo} alt="Tracka logo" className="h-10 w-10" />
@@ -146,7 +155,7 @@ export function TopNav() {
       </header>
 
       {/* ── Mobile header ── */}
-      <header className="sticky top-0 z-40 w-full bg-surface border-b border-line lg:hidden">
+      <header className="sticky top-0 z-40 w-full glass-nav lg:hidden">
         <div className="h-16 px-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
             <img src={logo} alt="Tracka logo" className="h-10 w-10" />
@@ -168,7 +177,7 @@ export function TopNav() {
       {drawerOpen && (
         <>
           <div
-            className="fixed inset-0 z-50 bg-ink/30 backdrop-blur-sm animate-panel-in"
+            className="fixed inset-0 z-50 modal-backdrop animate-panel-in"
             onClick={closeDrawer}
           />
           <aside className="fixed top-0 right-0 z-50 h-screen w-full max-w-[300px] bg-white/80 backdrop-blur-3xl border-l border-white/40 shadow-2xl flex flex-col animate-slide-in-right nav-drawer">
@@ -189,7 +198,7 @@ export function TopNav() {
             </div>
 
             {/* Nav body */}
-            <div className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+            <div className="flex-1 overflow-y-auto overscroll-contain scroll-smooth px-3 py-4 space-y-1">
 
               {/* Primary nav */}
               {NAV.map((n) => (

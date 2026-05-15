@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Camera, Trash2 } from "lucide-react";
+import { Camera } from "lucide-react";
 import { useProfile } from "@/lib/profile-store";
 import { useAuth } from "@/hooks/useAuth";
 import { Input } from "@/components/ui/input";
@@ -73,12 +73,6 @@ export default function ProfilePage() {
       toast.error(t("profile.cantReadImage"));
     }
   };
-  const handlePhotoRemove = async () => {
-    const next = { ...localRef.current, avatarUrl: "" };
-    setLocal(next);
-    try { await saveProfile(next); toast.success(t("profile.removedOk")); } catch { toast.error(t("profile.failedSave")); }
-  };
-
   const memberSince = user?.created_at
     ? new Date(user.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" })
     : null;
@@ -116,18 +110,8 @@ export default function ProfilePage() {
                   className="btn-ghost-sm"
                 >
                   <Camera className="h-3.5 w-3.5" />
-                  {local.avatarUrl ? t("profile.replacePhoto") : t("profile.uploadPhoto")}
+                  {t("profile.uploadPhoto")}
                 </button>
-                {local.avatarUrl && (
-                  <button
-                    type="button"
-                    onClick={handlePhotoRemove}
-                    className="btn-danger-sm"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                    {t("profile.removePhoto")}
-                  </button>
-                )}
               </div>
               <input
                 ref={fileRef}
