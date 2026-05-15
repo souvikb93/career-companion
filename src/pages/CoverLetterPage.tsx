@@ -364,7 +364,7 @@ export default function CoverLetterPage() {
       <div className="lg:hidden flex-1 min-h-0">
         {/* Chat tab */}
         {mobileTab === "chat" && (
-          <div className="h-full flex flex-col bg-white/20 backdrop-blur-md">
+          <div className="h-full flex flex-col bg-white/20 backdrop-blur-md glass-editor">
             <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 pt-4 pb-2 space-y-5">
               {introPhase === "typing1" && <TypingIndicator />}
               {(introPhase === "msg1" || introPhase === "typing2" || introPhase === "msg2") && (
@@ -424,7 +424,7 @@ export default function CoverLetterPage() {
           <div className="h-full overflow-y-auto overscroll-contain flex justify-center px-4 pt-6 pb-8 bg-white/10">
             <div style={{ width: `${794 * zoom}px`, height: `${1123 * zoom}px` }}>
               <article
-                className={"bg-white text-ink font-sans shadow-xl origin-top-left relative overflow-hidden " + (layout === "compact" ? "letter-page-compact" : "letter-page")}
+                className={"document-canvas bg-white text-ink font-sans shadow-xl origin-top-left relative overflow-hidden " + (layout === "compact" ? "letter-page-compact" : "letter-page")}
                 style={{ width: "794px", minHeight: "1123px", transform: `scale(${zoom})` }}
               >
                 {layout === "modern" && <div className="absolute left-0 top-0 bottom-0 w-3 bg-brand" />}
@@ -543,7 +543,7 @@ export default function CoverLetterPage() {
       <div className="hidden lg:grid lg:grid-cols-2 lg:min-h-[calc(100vh-64px-81px)]">
 
         {/* ── Chat panel ─────────────────────────────────── */}
-        <section className="border-r border-white/50 flex flex-col bg-white/20 backdrop-blur-md lg:max-h-[calc(100vh-64px-81px)]">
+        <section className="border-r border-white/50 flex flex-col bg-white/20 backdrop-blur-md glass-editor lg:max-h-[calc(100vh-64px-81px)]">
           {/* Messages */}
           <div ref={desktopScrollRef} className="flex-1 overflow-y-auto px-6 pt-6 pb-4 space-y-5">
 
@@ -680,7 +680,7 @@ export default function CoverLetterPage() {
             >
               <article
                 className={cn(
-                  "bg-white text-ink font-sans shadow-2xl origin-top-left relative overflow-hidden outline-none",
+                  "document-canvas bg-white text-ink font-sans shadow-2xl origin-top-left relative overflow-hidden outline-none",
                   layout === "compact" ? "letter-page-compact" : "letter-page",
                 )}
                 style={{ width: "794px", minHeight: "1123px", transform: `scale(${zoom})` }}

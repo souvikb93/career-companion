@@ -214,9 +214,9 @@ export default function AuthPage() {
         </div>
 
         {/* ── Right — card centred, language toggle absolutely pinned ── */}
-        <div className="relative flex flex-col bg-white/30 backdrop-blur-md overflow-hidden">
+        <div className="relative flex flex-col bg-white/30 backdrop-blur-md glass-page-panel overflow-hidden">
           {/* Mobile top bar */}
-          <div className="lg:hidden sticky top-0 z-10 flex items-center justify-between px-6 h-14 bg-white/50 backdrop-blur-md border-b border-white/30 shrink-0">
+          <div className="lg:hidden sticky top-0 z-10 flex items-center justify-between px-6 h-14 bg-white/50 backdrop-blur-md border-b border-white/30 glass-page-topbar shrink-0">
             <div className="flex items-center gap-2">
               <img src={logo} alt="Tracka" className="h-7 w-7" />
               <span className="logo-wordmark text-[20px] leading-none text-ink">tracka</span>
@@ -259,7 +259,7 @@ export default function AuthPage() {
                       type="button"
                       onClick={sendLink}
                       disabled={emailLoading}
-                      className="w-full h-12 rounded-xl bg-ink text-white text-[14px] font-medium hover:bg-brand transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+                      className="w-full h-12 rounded-xl bg-ink text-white active-fill text-[14px] font-medium hover:bg-brand transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
                     >
                       {emailLoading ? t("auth.sending") : (
                         <>{t("auth.continueShort")} <ArrowRight className="h-4 w-4" /></>
@@ -362,7 +362,7 @@ export default function AuthPage() {
                       type="button"
                       onClick={sendLink}
                       disabled={emailLoading}
-                      className="w-full h-11 rounded-xl bg-ink text-white text-[14px] font-medium hover:bg-brand transition-colors disabled:opacity-60"
+                      className="w-full h-11 rounded-xl bg-ink text-white active-fill text-[14px] font-medium hover:bg-brand transition-colors disabled:opacity-60"
                     >
                       {emailLoading ? t("auth.sending") : t("auth.continueEmail")}
                     </button>

@@ -58,7 +58,7 @@ export function JobDetailPanel({ job, onClose, onUpdate, onDelete }: Props) {
       />
 
       {/* Panel */}
-      <aside className="fixed top-0 right-0 z-50 h-screen w-full max-w-[440px] bg-white/70 backdrop-blur-2xl border-l border-white/50 overflow-y-auto animate-slide-in-right">
+      <aside className="fixed top-0 right-0 z-50 h-screen w-full max-w-[440px] bg-white/70 backdrop-blur-2xl border-l border-white/50 overflow-y-auto animate-slide-in-right side-panel">
         <div className="p-5 sm:p-8">
 
           {/* Header — role + company editable */}
@@ -108,7 +108,7 @@ export function JobDetailPanel({ job, onClose, onUpdate, onDelete }: Props) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent
-                  className="z-[55] overflow-hidden rounded-2xl border border-white/60 p-1 bg-white/60 backdrop-blur-xl shadow-lg"
+                  className="z-[55] overflow-hidden rounded-2xl border border-white/60 p-1 bg-white/60 backdrop-blur-xl shadow-lg glass-popover"
                   position="popper"
                   sideOffset={6}
                 >
@@ -153,7 +153,7 @@ export function JobDetailPanel({ job, onClose, onUpdate, onDelete }: Props) {
                 <PopoverContent
                   align="end"
                   sideOffset={8}
-                  className="z-[55] w-auto p-0 border border-white/60 bg-white/70 backdrop-blur-2xl rounded-2xl shadow-lg"
+                  className="z-[55] w-auto p-0 border border-white/60 bg-white/70 backdrop-blur-2xl rounded-2xl shadow-lg glass-popover"
                 >
                   <Calendar
                     mode="single"

@@ -84,12 +84,78 @@
     --glass-border: 255 255 255;      /* hairline on glass */
     --glass-shadow: 21 21 21;         /* ink-derived shadow */
 
+    /* Mesh background */
+    --mesh-bg-start: #fafafa;
+    --mesh-bg-end: #f5f3ef;
+
     /* Motion tokens */
     --motion-fast: 180ms;
     --motion-base: 240ms;
     --motion-slow: 400ms;
     --motion-mesh: 30s;
     --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+
+  /* ── Dark mode token overrides ── */
+  html.dark {
+    --background: 220 15% 8%;
+    --foreground: 0 0% 93%;
+
+    --card: 220 13% 11%;
+    --card-foreground: 0 0% 93%;
+
+    --popover: 220 15% 10%;
+    --popover-foreground: 0 0% 93%;
+
+    --primary: 13 100% 59%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 0 0% 85%;
+    --secondary-foreground: 0 0% 8%;
+
+    --muted: 220 12% 14%;
+    --muted-foreground: 0 0% 55%;
+
+    --accent: 13 100% 59%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 13% 22%;
+    --input: 220 13% 22%;
+    --ring: 13 100% 59%;
+
+    /* Tracka extended */
+    --surface: 220 13% 11%;
+    --surface-2: 220 12% 14%;
+    --surface-hover: 220 12% 17%;
+    --ink: 0 0% 93%;
+    --ink-2: 0 0% 78%;
+    --ink-muted: 0 0% 62%;
+    --line: 220 13% 22%;
+    --brand: 13 100% 59%;
+    --success: 160 84% 42%;
+    --chip-grey: 220 13% 24%;
+    --chip-grey-fg: 220 13% 72%;
+
+    /* Dark panel backgrounds (RGB channels) */
+    --panel-bg: 14 16 21;
+
+    --sidebar-background: 220 13% 11%;
+    --sidebar-foreground: 0 0% 93%;
+    --sidebar-accent: 220 12% 14%;
+    --sidebar-accent-foreground: 0 0% 93%;
+    --sidebar-border: 220 13% 22%;
+
+    /* Dark Berlin Glass — dark navy tint, white hairlines */
+    --glass-tint: 18 22 34;
+    --glass-border: 255 255 255;
+    --glass-shadow: 0 0 0;
+
+    /* Dark mesh background */
+    --mesh-bg-start: #080a0f;
+    --mesh-bg-end: #0c0f18;
   }
 }
 
@@ -110,7 +176,7 @@
   }
   input::placeholder,
   textarea::placeholder {
-    color: rgb(var(--ink) / 0.45);
+    color: hsl(var(--ink) / 0.45);
     font-style: italic;
   }
   h1, h2, h3, h4 {
@@ -159,7 +225,7 @@
     @apply rounded-full;
   }
   .nav-item {
-    @apply uppercase text-[12px] font-semibold text-ink relative pb-1.5 transition-opacity duration-200 ease-out hover:opacity-70;
+    @apply uppercase text-[12px] font-semibold text-ink relative pb-1.5 transition-opacity duration-200 ease-out hover:opacity-70 outline-none;
     letter-spacing: 0.08em;
   }
   .nav-item-active::after {
@@ -175,10 +241,13 @@
     @apply transition-colors duration-200 ease-out hover:bg-surface-2;
   }
   .btn-ghost {
-    @apply inline-flex items-center gap-2 h-11 px-5 rounded-full bg-white/40 border border-white/50 backdrop-blur-md text-ink text-[12px] font-bold uppercase tracking-[0.08em] transition-colors duration-200 ease-out hover:bg-white/60 disabled:opacity-50 disabled:hover:bg-white/40;
+    @apply inline-flex items-center gap-2 h-11 px-5 rounded-full bg-white/50 backdrop-blur-md border border-line text-ink text-[12px] font-bold uppercase tracking-[0.08em] transition-colors duration-200 ease-out hover:bg-surface-2 disabled:opacity-50 disabled:hover:bg-white/50;
   }
   .btn-primary {
     @apply inline-flex items-center gap-2 h-11 px-5 rounded-full bg-ink text-white text-[12px] font-bold uppercase tracking-[0.08em] transition-colors duration-200 ease-out hover:bg-brand active:bg-brand disabled:opacity-50 disabled:hover:bg-ink;
+  }
+  .btn-danger {
+    @apply inline-flex items-center gap-2 h-11 px-5 rounded-full bg-white/50 backdrop-blur-md border border-red-500 text-red-500 text-[12px] font-bold uppercase tracking-[0.08em] transition-colors duration-200 ease-out hover:bg-red-500 hover:text-white disabled:opacity-50;
   }
   .btn-tertiary {
     @apply inline-flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-[0.08em] text-ink bg-transparent border-0 p-0 transition-colors duration-200 ease-out hover:text-brand hover:underline active:text-brand disabled:opacity-50 disabled:hover:text-ink disabled:hover:no-underline;
@@ -196,6 +265,13 @@
      .card-surface for visual consistency.
      ───────────────────────────────────────────── */
 
+  /* Level 1.5 — flush editor / chat panel (light: original subtle, dark: matches glass-card) */
+  .glass-editor {
+    background: rgb(255 255 255 / 0.20);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+  }
+
   /* Level 2 — content card */
   .glass-card {
     background: rgb(var(--glass-tint) / 0.40);
@@ -204,6 +280,13 @@
     backdrop-filter: blur(24px);
     box-shadow: 0 12px 40px -12px rgb(var(--glass-shadow) / 0.08);
     @apply rounded-2xl;
+  }
+  /* Level 2.5 — slide-in side panel (full-height sheet) */
+  .side-panel {
+    background: rgb(var(--glass-tint) / 0.82);
+    border-left: 1px solid rgb(var(--glass-border) / 0.50);
+    -webkit-backdrop-filter: blur(40px);
+    backdrop-filter: blur(40px);
   }
   /* Level 3 — dialog / sheet */
   .glass-modal {
@@ -226,8 +309,11 @@
     background: rgb(var(--glass-tint) / 0.50);
   }
   .glass-chip-active {
-    background: rgb(var(--glass-tint) / 0.40);
+    background: hsl(var(--brand) / 0.08);
     @apply border-brand text-brand;
+  }
+  html.dark .glass-chip-active {
+    background: hsl(var(--brand) / 0.12);
   }
   /* Glass input */
   .glass-input {
@@ -238,7 +324,7 @@
     @apply w-full rounded-2xl px-4 h-11 text-[14px] text-ink outline-none transition-all duration-200 ease-out focus:border-brand;
   }
   .glass-input::placeholder {
-    color: rgb(var(--ink) / 0.45);
+    color: hsl(var(--ink) / 0.45);
     font-style: italic;
   }
   .glass-input:focus {
@@ -350,6 +436,15 @@
   }
   .letter-signature {
     @apply text-[15px] font-semibold text-ink leading-[1.2];
+  }
+
+  /* Document canvas — always renders in light-mode ink regardless of app theme.
+     CV and letter previews are white paper; their text must stay dark in dark mode. */
+  .document-canvas {
+    --ink: 0 0% 8%;
+    --ink-2: 0 0% 16%;
+    --ink-muted: 0 0% 29%;
+    color-scheme: light;
   }
 
   /* Chat typing indicator — three bouncing dots */
@@ -480,5 +575,281 @@
       opacity: 1;
       transform: none;
     }
+  }
+
+  /* ─────────────────────────────────────────────
+     Split-page panel (Auth / Onboarding right half)
+     Light: white frosted glass.
+     Dark mobile: semi-transparent so gradient glows through.
+     Dark desktop: near-opaque so warm mesh doesn't bleed.
+     ───────────────────────────────────────────── */
+  .glass-page-panel {
+    background: rgb(255 255 255 / 0.60);
+    -webkit-backdrop-filter: blur(40px);
+    backdrop-filter: blur(40px);
+  }
+  html.dark .glass-page-panel {
+    background: rgb(var(--panel-bg) / 0.72);
+  }
+  @media (min-width: 1024px) {
+    html.dark .glass-page-panel {
+      background: rgb(var(--panel-bg) / 0.92);
+    }
+  }
+
+  /* Sticky top bar on split pages (mobile only) */
+  .glass-page-topbar {
+    background: rgb(255 255 255 / 0.50);
+    border-bottom: 1px solid rgb(255 255 255 / 0.30);
+    -webkit-backdrop-filter: blur(24px);
+    backdrop-filter: blur(24px);
+  }
+  html.dark .glass-page-topbar {
+    background: rgb(var(--panel-bg) / 0.72);
+    border-bottom-color: rgb(255 255 255 / 0.07);
+  }
+
+  /* Floating popover / dropdown content */
+  .glass-popover {
+    background: rgb(255 255 255 / 0.60);
+    border: 1px solid rgb(255 255 255 / 0.60);
+    -webkit-backdrop-filter: blur(40px);
+    backdrop-filter: blur(40px);
+  }
+  html.dark .glass-popover {
+    background: rgb(var(--glass-tint) / 0.95);
+    border-color: rgb(255 255 255 / 0.08);
+  }
+
+  /* Mobile navigation drawer */
+  .nav-drawer {
+    background: rgb(255 255 255 / 0.80);
+    border-left: 1px solid rgb(255 255 255 / 0.40);
+    -webkit-backdrop-filter: blur(48px);
+    backdrop-filter: blur(48px);
+  }
+  html.dark .nav-drawer {
+    background: rgb(var(--glass-tint) / 0.92);
+    border-left-color: rgb(255 255 255 / 0.07);
+  }
+
+  /* Account layout sidebar */
+  .account-sidebar {
+    background: rgb(255 255 255 / 0.40);
+    border-right: 1px solid rgb(255 255 255 / 0.30);
+    -webkit-backdrop-filter: blur(40px);
+    backdrop-filter: blur(40px);
+  }
+  html.dark .account-sidebar {
+    background: rgb(var(--panel-bg) / 0.60);
+    border-right-color: rgb(255 255 255 / 0.07);
+  }
+
+  /* Nav item active state: filled for drawer/sidebar items */
+  .nav-item-active {
+    background: hsl(var(--ink));
+    color: white;
+  }
+  html.dark .nav-item-active {
+    background: rgb(255 255 255 / 0.12);
+    color: hsl(var(--ink));
+  }
+  /* Top-bar tabs in dark: no fill, underline only (::after handles indicator) */
+  html.dark .nav-item.nav-item-active {
+    background: transparent;
+    color: hsl(var(--ink));
+  }
+
+  /* Nav item hover (inactive) */
+  .nav-item-hover:hover {
+    background: rgb(0 0 0 / 0.05);
+  }
+  html.dark .nav-item-hover:hover {
+    background: rgb(255 255 255 / 0.06);
+  }
+
+  /* Nav horizontal rule (full-width spacer) */
+  .nav-divider {
+    background: rgb(0 0 0 / 0.08);
+  }
+  html.dark .nav-divider {
+    background: rgb(255 255 255 / 0.08);
+  }
+
+  /* Nav hairline border — use as border-color token on bordered elements */
+  .nav-hairline {
+    border-color: rgb(0 0 0 / 0.06);
+  }
+  html.dark .nav-hairline {
+    border-color: rgb(255 255 255 / 0.07);
+  }
+
+  /* Active fill: bg-ink in light → bg-brand in dark
+     Use for non-button elements that must invert:
+     toggles, checkboxes, step indicators, inline CTA chips. */
+  .active-fill {
+    background: hsl(var(--ink));
+    color: white;
+  }
+  html.dark .active-fill {
+    background: hsl(var(--brand));
+  }
+  .active-fill-border {
+    border-color: hsl(var(--ink));
+  }
+  html.dark .active-fill-border {
+    border-color: hsl(var(--brand));
+  }
+
+  /* Secondary button on split-page panels (Auth / Onboarding "Fill manually" etc.) */
+  .split-panel-btn {
+    background: white;
+    border: 1px solid hsl(var(--line));
+  }
+  html.dark .split-panel-btn {
+    background: hsl(var(--surface));
+    border-color: hsl(var(--line));
+  }
+  html.dark .split-panel-btn:hover {
+    background: hsl(var(--surface-hover));
+  }
+
+  /* Segmented control track and thumb */
+  .segmented-track {
+    /* light mode track: uses bg-black/[0.06] inline — no change needed */
+  }
+  html.dark .segmented-track {
+    background: rgb(255 255 255 / 0.08);
+  }
+  /* Active tab text: must be dark (#151515) on the white thumb in dark mode */
+  html.dark .segmented-tab-active {
+    color: hsl(0 0% 8%);
+  }
+
+  /* Glass icon button (inside chips/controls — e.g. ZoomControls) */
+  .glass-icon-btn {
+    @apply rounded-full grid place-items-center text-ink-muted transition-all duration-150;
+  }
+  .glass-icon-btn:hover {
+    background: rgb(255 255 255 / 0.50);
+    color: hsl(var(--ink));
+  }
+  html.dark .glass-icon-btn:hover {
+    background: rgb(255 255 255 / 0.08);
+    color: hsl(var(--ink));
+  }
+
+  /* ─────────────────────────────────────────────
+     Dark mode overrides — glass surfaces, buttons,
+     inputs, cards. Token remapping handles most
+     text/border colours automatically.
+     ───────────────────────────────────────────── */
+
+  /* Glass surfaces */
+  html.dark .glass-editor {
+    background: rgb(var(--glass-tint) / 0.55);
+    border-color: rgb(var(--glass-border) / 0.07);
+    box-shadow: 0 12px 40px -12px rgb(var(--glass-shadow) / 0.50);
+  }
+  html.dark .glass-card {
+    background: rgb(var(--glass-tint) / 0.55);
+    border-color: rgb(var(--glass-border) / 0.07);
+    box-shadow: 0 12px 40px -12px rgb(var(--glass-shadow) / 0.50);
+  }
+  html.dark .side-panel {
+    background: rgb(var(--glass-tint) / 0.94);
+    border-left-color: rgb(var(--glass-border) / 0.07);
+  }
+  html.dark .glass-modal {
+    background: rgb(var(--glass-tint) / 0.90);
+    border-color: rgb(var(--glass-border) / 0.09);
+    box-shadow: 0 24px 64px -16px rgb(var(--glass-shadow) / 0.70);
+  }
+  html.dark .glass-chip {
+    background: rgb(var(--glass-tint) / 0.40);
+    border-color: rgb(var(--glass-border) / 0.08);
+  }
+  html.dark .glass-chip:hover {
+    background: rgb(255 255 255 / 0.06);
+  }
+  html.dark .glass-input {
+    background: rgb(var(--glass-tint) / 0.50);
+    border-color: rgb(var(--glass-border) / 0.10);
+    color: hsl(var(--ink));
+  }
+  html.dark .glass-input:focus {
+    background: rgb(var(--glass-tint) / 0.65);
+  }
+  html.dark .glass-btn {
+    background: rgb(var(--glass-tint) / 0.45);
+    border-color: rgb(var(--glass-border) / 0.10);
+  }
+  html.dark .glass-btn:hover {
+    background: rgb(var(--glass-tint) / 0.60);
+  }
+
+  /* btn-primary: bg-ink becomes near-white in dark → use brand orange instead */
+  html.dark .btn-primary {
+    background: hsl(var(--brand));
+    color: white;
+  }
+  html.dark .btn-primary:hover:not(:disabled),
+  html.dark .btn-primary:active {
+    background: hsl(var(--brand));
+    filter: brightness(1.12);
+  }
+  html.dark .btn-primary:disabled {
+    background: hsl(var(--brand));
+    filter: none;
+  }
+
+  /* Document paper — softer warm tone in dark mode to reduce glare */
+  html.dark .document-canvas {
+    background: #E8E4DF;
+  }
+
+  /* Buttons */
+  html.dark .btn-ghost {
+    background: rgb(var(--glass-tint) / 0.45);
+    border-color: rgb(var(--glass-border) / 0.10);
+  }
+  html.dark .btn-ghost:hover:not(:disabled) {
+    background: hsl(var(--surface-2));
+  }
+  html.dark .btn-ghost:disabled {
+    background: rgb(var(--glass-tint) / 0.45);
+  }
+  html.dark .btn-danger {
+    background: rgb(var(--glass-tint) / 0.45);
+  }
+  html.dark .btn-danger:disabled {
+    background: rgb(var(--glass-tint) / 0.45);
+  }
+
+  /* input-base inside glass-modal should use surface-2, not forced white */
+  html.dark .glass-modal .input-base,
+  html.dark .glass-modal .textarea-base {
+    background: hsl(var(--surface-2));
+  }
+
+  /* input-base / textarea-base / chat-input in dark */
+  html.dark .input-base,
+  html.dark .textarea-base,
+  html.dark .chat-input {
+    border-color: hsl(var(--line));
+    color: hsl(var(--ink));
+    background: hsl(var(--surface-2));
+  }
+
+  /* card-surface in dark */
+  html.dark .card-surface {
+    background: hsl(var(--surface));
+    border-color: hsl(var(--line));
+  }
+
+  /* Settings segmented control active chip */
+  html.dark .theme-segment-active {
+    background: hsl(var(--surface-hover));
+    color: hsl(var(--ink));
   }
 }

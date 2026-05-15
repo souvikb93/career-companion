@@ -23,7 +23,7 @@ export function SegmentedControl<T extends string>({
   return (
     <div
       role="tablist"
-      className={cn("relative flex h-11 rounded-full bg-black/[0.06] p-1", className)}
+      className={cn("relative flex h-11 rounded-full bg-black/[0.06] segmented-track p-1", className)}
     >
       {/* Sliding thumb — transform only, no layout reflow */}
       <div
@@ -48,7 +48,7 @@ export function SegmentedControl<T extends string>({
           className={cn(
             "relative z-10 flex-1 rounded-full text-[14px] transition-colors duration-150 cursor-pointer select-none",
             value === opt.value
-              ? "font-semibold text-ink"
+              ? "font-semibold text-ink segmented-tab-active"
               : "font-medium text-ink-muted hover:text-ink"
           )}
         >

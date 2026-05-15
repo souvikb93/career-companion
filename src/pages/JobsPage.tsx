@@ -94,8 +94,8 @@ export default function JobsPage() {
                   className={cn(
                     "h-10 px-4 rounded-full border text-[13px] font-medium inline-flex items-center gap-2 transition-all duration-180 backdrop-blur-md shrink-0",
                     active
-                      ? "border-brand text-brand bg-white/40"
-                      : "border-white/40 text-ink bg-white/30 hover:bg-white/50",
+                      ? "border-brand text-brand bg-white/40 glass-chip-active"
+                      : "border-white/40 text-ink bg-white/30 hover:bg-white/50 glass-chip",
                   )}
                 >
                   <span>{t(`pipeline.${v.id}`)}</span>
@@ -119,7 +119,7 @@ export default function JobsPage() {
             type="button"
             onClick={() => setAddOpen(true)}
             aria-label={t("tracker.addJob")}
-            className="hidden sm:grid place-items-center h-12 w-12 rounded-xl bg-ink text-white transition-colors duration-200 ease-out hover:bg-brand active:bg-brand shadow-lg shadow-ink/10"
+            className="hidden sm:grid place-items-center h-12 w-12 rounded-xl bg-ink text-white active-fill transition-colors duration-200 ease-out hover:bg-brand active:bg-brand shadow-lg shadow-ink/10"
           >
             <Plus className="h-5 w-5" />
           </button>
@@ -179,7 +179,7 @@ export default function JobsPage() {
           <button
             type="button"
             onClick={() => setAddOpen(true)}
-            className="h-14 w-14 rounded-xl bg-ink text-white grid place-items-center shadow-lg transition-colors duration-200 ease-out hover:bg-brand active:bg-brand"
+            className="h-14 w-14 rounded-xl bg-ink text-white active-fill grid place-items-center shadow-lg transition-colors duration-200 ease-out hover:bg-brand active:bg-brand"
             aria-label={t("tracker.addJob")}
           >
             <Plus className="h-6 w-6" />

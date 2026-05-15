@@ -336,7 +336,7 @@ export default function CVBuilderPage() {
         {/* Editor */}
         <section
           className={cn(
-            "bg-white/20 backdrop-blur-md overflow-y-auto overscroll-contain p-4 lg:p-8 lg:border-r lg:border-white/50 lg:max-h-[calc(100vh-64px-81px)]",
+            "bg-white/20 backdrop-blur-md glass-editor overflow-y-auto overscroll-contain p-4 lg:p-8 lg:border-r lg:border-white/50 lg:max-h-[calc(100vh-64px-81px)]",
             mobileTab !== "editor" ? "hidden lg:block" : "flex-1 min-h-0"
           )}
         >
@@ -490,7 +490,7 @@ export default function CVBuilderPage() {
             style={{ width: `${794 * zoom}px`, height: `${1123 * zoom}px` }}
           >
             <article
-              className="bg-white text-ink shadow-2xl origin-top-left"
+              className="document-canvas bg-white text-ink shadow-2xl origin-top-left"
               style={{
                 width: "794px",
                 minHeight: "1123px",

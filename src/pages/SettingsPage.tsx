@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { useT } from "@/lib/i18n";
 import { deleteAllSavedItems } from "@/lib/saved-items";
 import { clearTrackaStorage } from "@/lib/storage";
+import { applyTheme } from "@/lib/theme";
 
 const THEME_KEY = "tracka_theme";
 const NOTIF_KEY = "tracka_email_notif";
@@ -30,7 +31,7 @@ function Toggle({ enabled, onChange }: { enabled: boolean; onChange: (v: boolean
       onClick={() => onChange(!enabled)}
       className={cn(
         "relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200",
-        enabled ? "bg-ink" : "bg-line"
+        enabled ? "bg-ink active-fill" : "bg-line"
       )}
     >
       <span className={cn(
@@ -169,6 +170,7 @@ export default function SettingsPage() {
   const handleThemeChange = (v: Theme) => {
     setTheme(v);
     try { localStorage.setItem(THEME_KEY, v); } catch { /* noop */ }
+    applyTheme(v);
   };
 
   const handleNotifChange = (val: boolean) => {
@@ -251,7 +253,7 @@ export default function SettingsPage() {
                   className={cn(
                     "flex items-center gap-1.5 h-8 px-3 rounded-xl text-[13px] font-medium transition-colors duration-150",
                     theme === value
-                      ? "bg-white text-ink shadow-sm"
+                      ? "bg-white text-ink shadow-sm theme-segment-active"
                       : "text-ink-muted hover:text-ink"
                   )}
                 >

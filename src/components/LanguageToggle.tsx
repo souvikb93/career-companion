@@ -23,7 +23,7 @@ export function LanguageToggle() {
             aria-pressed={active}
             className={cn(
               "h-8 px-3 rounded-full text-[12px] font-semibold transition-colors duration-200",
-              active ? "bg-ink text-white" : "text-ink-muted hover:text-ink",
+              active ? "bg-ink text-white nav-item-active" : "text-ink-muted hover:text-ink",
             )}
           >
             {o.label}

@@ -191,7 +191,7 @@ const DropdownMenuContent = React.forwardRef<
         ref={ref}
         sideOffset={sideOffset}
         className={cn(
-          "m3-content z-50 min-w-[12rem] overflow-hidden rounded-2xl border border-white/60 p-1 text-popover-foreground shadow-lg bg-white/60 backdrop-blur-xl",
+          "m3-content z-50 min-w-[12rem] overflow-hidden rounded-2xl border border-white/60 p-1 text-popover-foreground shadow-lg bg-white/60 backdrop-blur-xl glass-popover",
           className,
         )}
         style={{ ["--m3-menu-radius" as any]: "16px", ...style }}

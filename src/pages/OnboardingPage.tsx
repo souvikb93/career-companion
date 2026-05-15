@@ -100,7 +100,7 @@ export default function OnboardingPage() {
     navigate("/", { replace: true });
   };
 
-  const secondaryBtnClass = "w-full h-12 rounded-xl border border-line bg-white hover:bg-surface transition-colors flex items-center justify-center gap-2 text-[14px] font-medium text-ink";
+  const secondaryBtnClass = "w-full h-12 rounded-xl border border-line bg-white hover:bg-surface split-panel-btn transition-colors flex items-center justify-center gap-2 text-[14px] font-medium text-ink";
 
   return (
     <div className="relative min-h-screen lg:h-screen lg:overflow-hidden grid lg:grid-cols-2">
@@ -195,12 +195,12 @@ export default function OnboardingPage() {
 
       {/* ── Right panel — frosted, scrollable (desktop always, mobile for non-upload steps) ── */}
       <div className={cn(
-        "relative flex flex-col min-h-screen lg:h-screen bg-white/60 backdrop-blur-xl",
+        "relative flex flex-col min-h-screen lg:h-screen bg-white/60 backdrop-blur-xl glass-page-panel",
         step === "upload" ? "hidden lg:flex" : "flex"
       )}>
 
         {/* Top bar — mobile only (desktop has logo on left panel) */}
-        <div className="sticky top-0 z-20 flex items-center justify-between px-6 sm:px-10 h-14 border-b border-white/30 bg-white/60 backdrop-blur-xl shrink-0 lg:hidden">
+        <div className="sticky top-0 z-20 flex items-center justify-between px-6 sm:px-10 h-14 border-b border-white/30 bg-white/60 backdrop-blur-xl glass-page-topbar shrink-0 lg:hidden">
           <div className="flex items-center gap-2">
             <img src={logo} alt="Tracka" className="h-7 w-7" />
             <span className="logo-wordmark text-[20px] leading-none text-ink">tracka</span>
@@ -338,7 +338,7 @@ export default function OnboardingPage() {
                       <div className={cn(
                         "h-7 w-7 rounded-full text-[12px] font-semibold grid place-items-center transition-colors",
                         i < manualStepIndex ? "bg-brand text-white" :
-                        i === manualStepIndex ? "bg-ink text-white" :
+                        i === manualStepIndex ? "bg-ink text-white active-fill" :
                         "bg-surface-2 text-ink-muted"
                       )}>
                         {i < manualStepIndex ? <Check className="h-3.5 w-3.5" /> : i + 1}
@@ -475,7 +475,7 @@ export default function OnboardingPage() {
                     )}
                     <button
                       onClick={() => setStep(manualStepIndex === MANUAL_STEPS.length - 1 ? "review" : MANUAL_STEPS[manualStepIndex + 1])}
-                      className="h-10 px-5 rounded-xl bg-ink text-white text-[13px] font-medium hover:bg-brand transition-colors flex items-center gap-2"
+                      className="h-10 px-5 rounded-xl bg-ink text-white active-fill text-[13px] font-medium hover:bg-brand transition-colors flex items-center gap-2"
                     >
                       {manualStepIndex === MANUAL_STEPS.length - 1 ? t("onboarding.review") : t("onboarding.next")} <ArrowRight className="h-3.5 w-3.5" />
                     </button>
@@ -542,7 +542,7 @@ export default function OnboardingPage() {
                 <button
                   onClick={confirm}
                   disabled={saving}
-                  className="w-full h-12 rounded-xl bg-ink text-white font-medium hover:bg-brand transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
+                  className="w-full h-12 rounded-xl bg-ink text-white active-fill font-medium hover:bg-brand transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
                 >
                   {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                   {saving ? t("onboarding.saving") : t("onboarding.confirm")}

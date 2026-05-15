@@ -151,10 +151,10 @@ export function TopNav() {
             className="fixed inset-0 z-50 bg-ink/30 backdrop-blur-sm animate-panel-in"
             onClick={closeDrawer}
           />
-          <aside className="fixed top-0 right-0 z-50 h-screen w-full max-w-[300px] bg-white/80 backdrop-blur-3xl border-l border-white/40 shadow-2xl flex flex-col animate-slide-in-right">
+          <aside className="fixed top-0 right-0 z-50 h-screen w-full max-w-[300px] bg-white/80 backdrop-blur-3xl border-l border-white/40 shadow-2xl flex flex-col animate-slide-in-right nav-drawer">
 
             {/* Header */}
-            <div className="flex items-center justify-between px-5 h-16 border-b border-black/[0.06] shrink-0">
+            <div className="flex items-center justify-between px-5 h-16 border-b border-black/[0.06] nav-hairline shrink-0">
               <div className="flex items-center gap-2">
                 <img src={logo} alt="Tracka" className="h-8 w-8" />
                 <span className="logo-wordmark text-[22px] leading-none text-ink">tracka</span>
@@ -181,7 +181,7 @@ export function TopNav() {
                   className={({ isActive }) =>
                     cn(
                       "flex items-center h-12 w-full px-4 rounded-xl text-[16px] font-medium transition-colors duration-150",
-                      isActive ? "bg-ink text-white" : "text-ink hover:bg-black/5"
+                      isActive ? "bg-ink text-white nav-item-active" : "text-ink hover:bg-black/5 nav-item-hover"
                     )
                   }
                 >
@@ -190,7 +190,7 @@ export function TopNav() {
               ))}
 
               {/* Divider */}
-              <div className="h-px bg-black/[0.08] mx-1 my-2" />
+              <div className="h-px bg-black/[0.08] nav-divider mx-1 my-2" />
 
               {/* Settings items — no icons */}
               {SETTINGS_ITEMS.map(({ to, label }) => (
@@ -200,7 +200,7 @@ export function TopNav() {
                   onClick={() => go(to)}
                   className={cn(
                     "w-full flex items-center h-12 px-4 rounded-xl text-[16px] font-medium transition-colors duration-150",
-                    isActive(to) ? "bg-ink text-white" : "text-ink hover:bg-black/5"
+                    isActive(to) ? "bg-ink text-white nav-item-active" : "text-ink hover:bg-black/5 nav-item-hover"
                   )}
                 >
                   {label}
@@ -208,7 +208,7 @@ export function TopNav() {
               ))}
 
               {/* Divider */}
-              <div className="h-px bg-black/[0.08] mx-1 my-2" />
+              <div className="h-px bg-black/[0.08] nav-divider mx-1 my-2" />
 
               {/* Language */}
               <div className="px-4 py-2">
@@ -228,7 +228,7 @@ export function TopNav() {
 
             {/* Footer — user email */}
             {user?.email && (
-              <div className="px-5 py-4 border-t border-black/[0.06] shrink-0">
+              <div className="px-5 py-4 border-t border-black/[0.06] nav-hairline shrink-0">
                 <p className="text-[12px] text-ink-muted truncate">{user.email}</p>
               </div>
             )}

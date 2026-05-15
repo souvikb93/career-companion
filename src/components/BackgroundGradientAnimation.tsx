@@ -82,7 +82,7 @@ export function BackgroundGradientAnimation({
     "--pointer-color": pointerColor,
     "--size": size,
     "--blending-value": blendingValue,
-    background: `linear-gradient(40deg, ${gradientBackgroundStart}, ${gradientBackgroundEnd})`,
+    background: `linear-gradient(40deg, var(--mesh-bg-start, ${gradientBackgroundStart}), var(--mesh-bg-end, ${gradientBackgroundEnd}))`,
   } as React.CSSProperties;
 
   return (
