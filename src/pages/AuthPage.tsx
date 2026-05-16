@@ -230,14 +230,14 @@ export default function AuthPage() {
               <img src={logo} alt="Tracka" className="h-7 w-7" />
               <span className="logo-wordmark text-[20px] leading-none text-ink">tracka</span>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-4">
               <ThemeDevToggle />
               <LanguageToggle />
             </div>
           </div>
 
           {/* Desktop language toggle */}
-          <div className="hidden lg:flex items-center gap-1 absolute top-12 right-12 z-10">
+          <div className="hidden lg:flex items-center gap-4 absolute top-12 right-12 z-10">
             <ThemeDevToggle />
             <LanguageToggle />
           </div>
