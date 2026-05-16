@@ -8,7 +8,9 @@ import { SegmentedControl } from "@/components/SegmentedControl";
 import { useJobs } from "@/lib/jobs-store";
 import { SavedCVsPanel } from "@/components/SavedCVsPanel";
 import { SaveModal } from "@/components/SaveModal";
+import { DownloadModal } from "@/components/DownloadModal";
 import { useSavedResumes } from "@/lib/saved-items";
+import { ExportFormat } from "@/lib/exporters";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -192,6 +194,8 @@ export default function CVBuilderPage() {
   const [building, setBuilding] = useState(false);
   const [savedOpen, setSavedOpen] = useState(false);
   const [saveOpen, setSaveOpen] = useState(false);
+  const [downloadOpen, setDownloadOpen] = useState(false);
+  const [downloadData, setDownloadData] = useState<{ cv: CV; name: string } | null>(null);
   const [newCvId, setNewCvId] = useState<string | undefined>(undefined);
   const [mobileTab, setMobileTab] = useState<"editor" | "preview">("preview");
   const [showNewModal, setShowNewModal] = useState(false);
@@ -241,10 +245,23 @@ export default function CVBuilderPage() {
     setShowNewModal(false);
   };
 
-  const handleDownloadCV = (data: CV, name: string) => {
-    const body = renderCvAsText(data, t);
-    const filename = `cv-${(data.fullName || name).replace(/\s+/g, "-")}`;
-    exportTextAsPDF(data.fullName || name, body, filename);
+  const buildResumeFilename = (fullName?: string): string => {
+    const suffix = t("resume.downloadSuffix");
+    const name = fullName?.trim();
+    return name ? name.replace(/\s+/g, "_") + "_" + suffix : suffix;
+  };
+
+  const handleDownloadCV = (data?: CV, name?: string) => {
+    const targetCv = data || cv;
+    setDownloadData({ cv: targetCv, name: buildResumeFilename(targetCv.fullName) });
+    setDownloadOpen(true);
+  };
+
+  const handleExportCV = (format: ExportFormat, filename: string) => {
+    if (!downloadData) return { title: "", body: "" };
+    const body = renderCvAsText(downloadData.cv, t);
+    const docTitle = downloadData.cv.fullName || downloadData.name;
+    return { title: docTitle, body };
   };
 
   const buildFromJD = async (input: string) => {
@@ -287,7 +304,7 @@ export default function CVBuilderPage() {
           onSave={() => setSaveOpen(true)}
           onLibrary={() => setSavedOpen(true)}
           onCustomize={() => setCustomizeOpen(true)}
-          onDownload={() => handleDownloadCV(cv, cv.fullName || t("resume.defaultSaveName"))}
+          onDownload={handleDownloadCV}
           zoom={zoom}
           onZoom={setZoom}
         />
@@ -317,7 +334,7 @@ export default function CVBuilderPage() {
           toast({ title: t("resume.loaded"), description: item.name });
         }}
         onDelete={(id) => removeCV(id)}
-        onDownload={(item) => handleDownloadCV(item.data, item.name)}
+        onDownload={(item) => handleDownloadCV(item.data, item.name || t("resume.defaultSaveName"))}
       />
 
       <SaveModal
@@ -372,7 +389,7 @@ export default function CVBuilderPage() {
               <CvMoreMenu
                 customizeOpen={customizeOpen}
                 onDesign={() => setCustomizeOpen((v) => !v)}
-                onDownload={() => handleDownloadCV(cv, cv.fullName || t("resume.defaultSaveName"))}
+                onDownload={handleDownloadCV}
                 onLibrary={() => setSavedOpen(true)}
                 zoom={zoom}
                 onZoom={setZoom}
@@ -619,6 +636,19 @@ export default function CVBuilderPage() {
         onChange={handleDocStyleChange}
       />
     </div>
+
+    {/* Download Modal */}
+    <DownloadModal
+      open={downloadOpen}
+      onClose={() => {
+        setDownloadOpen(false);
+        setDownloadData(null);
+      }}
+      title={t("resume.downloadTitle")}
+      defaultName={downloadData?.name || cv.fullName || t("resume.defaultSaveName")}
+      documentType="resume"
+      onExport={handleExportCV}
+    />
     </>
   );
 }
@@ -728,7 +758,7 @@ function CvMoreMenu({ customizeOpen, onDesign, onDownload, onLibrary, zoom, onZo
         )}
         <DropdownMenuItem onSelect={() => { onDownload(); setOpen(false); }}>
           <Download className="h-4 w-4 text-ink-muted" />
-          Download PDF
+          {t("common.download")}
         </DropdownMenuItem>
         <DropdownMenuItem onSelect={() => { onLibrary(); setOpen(false); }}>
           <FolderOpen className="h-4 w-4 text-ink-muted" />

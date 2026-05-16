@@ -8,6 +8,7 @@ import { SegmentedControl } from "@/components/SegmentedControl";
 import { useJobs } from "@/lib/jobs-store";
 import { SavedCVsPanel } from "@/components/SavedCVsPanel";
 import { SaveModal } from "@/components/SaveModal";
+import { DownloadModal } from "@/components/DownloadModal";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -16,7 +17,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/material-ui-dropdown-menu";
 import { useSavedLetters } from "@/lib/saved-items";
-import { exportTextAsPDF } from "@/lib/exporters";
+import { ExportFormat } from "@/lib/exporters";
 import { generateCoverLetter, editCoverLetter, scrapeJobFromUrl, lookupCompanyAddress, letterContentToText, type LetterContent } from "@/lib/groq";
 import { useProfile } from "@/lib/profile-store";
 import { useToast } from "@/hooks/use-toast";
@@ -143,6 +144,8 @@ export default function CoverLetterPage() {
   const [mobileTab, setMobileTab] = useState<"chat" | "preview">("chat");
   const [savedOpen, setSavedOpen] = useState(false);
   const [saveOpen, setSaveOpen] = useState(false);
+  const [downloadOpen, setDownloadOpen] = useState(false);
+  const [downloadData, setDownloadData] = useState<{ letter: LetterContent; name: string } | null>(null);
   const [newLetterId, setNewLetterId] = useState<string | undefined>(undefined);
   const [showNewModal, setShowNewModal] = useState(false);
   const [docStyle, setDocStyle] = useState<DocumentStyle>(() => {
@@ -167,11 +170,25 @@ export default function CoverLetterPage() {
     });
   });
 
+  const buildLetterFilename = (senderName?: string): string => {
+    const suffix = t("letter.downloadSuffix");
+    const name = (senderName || profile.fullName || "").trim();
+    return name ? name.replace(/\s+/g, "_") + "_" + suffix : suffix;
+  };
+
   const handleDownloadCurrentLetter = () => {
-    const body = letter ? letterContentToText(letter) : "";
-    const company = letter?.companyName || "cover-letter";
-    const filename = `cover-letter-${company.replace(/\s+/g, "-")}`;
-    exportTextAsPDF("Cover Letter", body, filename);
+    if (!letter) {
+      toast({ title: t("letter.downloadPlaceholderToast"), description: t("letter.downloadPlaceholderToastDesc") });
+      return;
+    }
+    setDownloadData({ letter, name: buildLetterFilename(letter.senderName) });
+    setDownloadOpen(true);
+  };
+
+  const handleExportLetter = (format: ExportFormat, filename: string) => {
+    if (!downloadData) return { title: "", body: "" };
+    const body = downloadData.letter ? letterContentToText(downloadData.letter) : "";
+    return { title: "Cover Letter", body };
   };
 
   const { list: savedLetters, save: saveLetter, remove: removeLetter } = useSavedLetters<LetterDoc>();
@@ -252,9 +269,9 @@ export default function CoverLetterPage() {
   };
 
   const handleDownloadLetter = (doc: LetterDoc, name: string) => {
-    const body = doc.letter ? letterContentToText(doc.letter) : "";
-    const filename = doc.jobLabel ? `cover-letter-${doc.jobLabel.replace(/\s+/g, "-")}` : name.replace(/\s+/g, "-") || "cover-letter";
-    exportTextAsPDF("Cover Letter", body, filename);
+    if (!doc.letter) return;
+    setDownloadData({ letter: doc.letter, name: buildLetterFilename(doc.letter.senderName) });
+    setDownloadOpen(true);
   };
 
   const hasLetterContent = () => letter !== null || messages.length > 0;
@@ -385,7 +402,7 @@ export default function CoverLetterPage() {
           onSave={() => setSaveOpen(true)}
           onLibrary={() => setSavedOpen(true)}
           onCustomize={() => setCustomizeOpen(true)}
-          onDownload={handleDownloadCurrentLetter}
+          onDownload={() => handleDownloadCurrentLetter()}
           zoom={zoom}
           onZoom={setZoom}
         />
@@ -476,13 +493,13 @@ export default function CoverLetterPage() {
               >
                 {letter === null ? (
                   <>
-                    <div className="letter-head-row"><div className="letter-recipient"><div className="letter-recipient-name">{t("letter.ph_companyName")}</div><div className="letter-meta">{t("letter.ph_companyStreet")}</div><div className="letter-meta">{t("letter.ph_companyCity")}</div></div><div className="letter-sender-block"><div className="letter-sender-name">{t("letter.ph_yourName")}</div><div className="letter-meta">{t("letter.ph_yourEmail")}</div><div className="letter-meta">{t("letter.ph_yourPhone")}</div><div className="letter-meta">{t("letter.ph_yourCity")}</div></div></div>
+                    <div className="letter-head-row"><div className="letter-recipient"><div className="letter-recipient-name">{t("letter.ph_companyName")}</div><div className="letter-meta">{t("letter.ph_companyStreet")}</div><div className="letter-meta">{t("letter.ph_companyCity")}</div></div><div className="letter-sender-block"><div className="letter-sender-name">{profile.fullName || t("letter.ph_yourName")}</div><div className="letter-meta">{profile.email || t("letter.ph_yourEmail")}</div><div className="letter-meta">{profile.phone || t("letter.ph_yourPhone")}</div><div className="letter-meta">{profile.location || t("letter.ph_yourCity")}</div></div></div>
                     <div className="letter-date">{t("letter.ph_date")}</div>
                     <div className="letter-subject">{t("letter.ph_subject")}</div>
                     <div className="letter-salutation">{t("letter.ph_dear")}</div>
                     <p className="letter-body">{LOREM}</p><p className="letter-body">{LOREM}</p><p className="letter-body">{LOREM}</p>
                     <div className="letter-signoff">{t("letter.ph_sincerely")}</div>
-                    <div className="letter-signature">{t("letter.ph_yourName")}</div>
+                    <div className="letter-signature">{profile.fullName || t("letter.ph_yourName")}</div>
                   </>
                 ) : (
                   <>
@@ -562,6 +579,19 @@ export default function CoverLetterPage() {
         }}
       />
 
+      {/* Download Modal */}
+      <DownloadModal
+        open={downloadOpen}
+        onClose={() => {
+          setDownloadOpen(false);
+          setDownloadData(null);
+        }}
+        title={t("letter.downloadTitle")}
+        defaultName={downloadData?.name || letter?.companyName || t("letter.defaultSaveName")}
+        documentType="letter"
+        onExport={handleExportLetter}
+      />
+
       {/* ── Desktop 3-column layout ── */}
       <div
         className="hidden lg:grid lg:h-[calc(100vh-64px)]"
@@ -598,7 +628,7 @@ export default function CoverLetterPage() {
               <LetterMoreMenu
                 customizeOpen={customizeOpen}
                 onDesign={() => setCustomizeOpen((v) => !v)}
-                onDownload={handleDownloadCurrentLetter}
+                onDownload={() => handleDownloadCurrentLetter()}
                 onLibrary={() => setSavedOpen(true)}
                 zoom={zoom}
                 onZoom={setZoom}
@@ -754,13 +784,13 @@ export default function CoverLetterPage() {
                 >
                   {letter === null ? (
                     <>
-                      <div className="letter-head-row"><div className="letter-recipient"><div className="letter-recipient-name">{t("letter.ph_companyName")}</div><div className="letter-meta">{t("letter.ph_companyStreet")}</div><div className="letter-meta">{t("letter.ph_companyCity")}</div></div><div className="letter-sender-block"><div className="letter-sender-name">{t("letter.ph_yourName")}</div><div className="letter-meta">{t("letter.ph_yourEmail")}</div><div className="letter-meta">{t("letter.ph_yourPhone")}</div><div className="letter-meta">{t("letter.ph_yourCity")}</div></div></div>
+                      <div className="letter-head-row"><div className="letter-recipient"><div className="letter-recipient-name">{t("letter.ph_companyName")}</div><div className="letter-meta">{t("letter.ph_companyStreet")}</div><div className="letter-meta">{t("letter.ph_companyCity")}</div></div><div className="letter-sender-block"><div className="letter-sender-name">{profile.fullName || t("letter.ph_yourName")}</div><div className="letter-meta">{profile.email || t("letter.ph_yourEmail")}</div><div className="letter-meta">{profile.phone || t("letter.ph_yourPhone")}</div><div className="letter-meta">{profile.location || t("letter.ph_yourCity")}</div></div></div>
                       <div className="letter-date">{t("letter.ph_date")}</div>
                       <div className="letter-subject">{t("letter.ph_subject")}</div>
                       <div className="letter-salutation">{t("letter.ph_dear")}</div>
                       <p className="letter-body">{LOREM}</p><p className="letter-body">{LOREM}</p><p className="letter-body">{LOREM}</p>
                       <div className="letter-signoff">{t("letter.ph_sincerely")}</div>
-                      <div className="letter-signature">{t("letter.ph_yourName")}</div>
+                      <div className="letter-signature">{profile.fullName || t("letter.ph_yourName")}</div>
                     </>
                   ) : (
                     <>
@@ -1028,7 +1058,7 @@ function LetterMoreMenu({ customizeOpen, onDesign, onDownload, onLibrary, zoom, 
         )}
         <DropdownMenuItem onSelect={() => { onDownload(); setOpen(false); }}>
           <Download className="h-4 w-4 text-ink-muted" />
-          Download PDF
+          {t("common.download")}
         </DropdownMenuItem>
         <DropdownMenuItem onSelect={() => { onLibrary(); setOpen(false); }}>
           <FolderOpen className="h-4 w-4 text-ink-muted" />

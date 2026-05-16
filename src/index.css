@@ -950,11 +950,22 @@
     opacity: 0;
   }
 
+  /* Tip icon — one-shot warm glow on first appearance */
+  @keyframes tip-icon-shine {
+    0%   { filter: brightness(1.6) drop-shadow(0 0 5px rgb(250 204 21 / 0.7)); transform: scale(1.15); }
+    55%  { filter: brightness(1.9) drop-shadow(0 0 8px rgb(250 204 21 / 0.9)); transform: scale(1.2); }
+    100% { filter: brightness(1)   drop-shadow(0 0 0px transparent);           transform: scale(1); }
+  }
+  .animate-tip-icon-shine {
+    animation: tip-icon-shine 650ms ease-out forwards;
+  }
+
   /* Respect prefers-reduced-motion for panel animations */
   @media (prefers-reduced-motion: reduce) {
     .animate-panel-in,
     .animate-slide-in-right,
-    .animate-library-item-in {
+    .animate-library-item-in,
+    .animate-tip-icon-shine {
       animation: none !important;
       opacity: 1;
       transform: none;

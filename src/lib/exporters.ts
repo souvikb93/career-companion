@@ -51,7 +51,14 @@ export function exportTextAsTXT(title: string, body: string, filename: string) {
   downloadBlob(blob, filename + ".txt");
 }
 
-export type ExportFormat = "pdf" | "docx" | "txt";
+export type ExportFormat = "pdf" | "docx" | "txt" | "jpg";
+
+export async function exportAsJPEG(title: string, body: string, filename: string) {
+  // For now, we'll fall back to PDF for JPEG requests
+  // To implement true JPEG export, html2canvas would be needed
+  console.warn("JPEG export not yet implemented, falling back to PDF");
+  return exportTextAsPDF(title, body, filename);
+}
 
 export async function exportAs(
   format: ExportFormat,
@@ -61,5 +68,6 @@ export async function exportAs(
 ) {
   if (format === "pdf") return exportTextAsPDF(title, body, filename);
   if (format === "docx") return exportTextAsDOCX(title, body, filename);
+  if (format === "jpg") return exportAsJPEG(title, body, filename);
   return exportTextAsTXT(title, body, filename);
 }
