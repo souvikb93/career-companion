@@ -85,7 +85,7 @@ export default function JobsPage() {
         <div className="lg:hidden mb-5 space-y-3">
           {/* Edge-to-edge filter strip */}
           <div className="-mx-4 sm:-mx-8">
-            <div className="flex flex-nowrap items-center gap-3 overflow-x-auto scrollbar-hide px-4 sm:px-8 pr-4 sm:pr-8 py-0.5">
+            <div className="flex flex-nowrap items-center gap-2 sm:gap-3 overflow-x-auto scrollbar-hide pl-3 sm:pl-8 pr-0 py-0.5">
               {PIPELINE_VIEWS.map((v) => {
                 const active = view === v.id;
                 return (
@@ -94,7 +94,7 @@ export default function JobsPage() {
                     type="button"
                     onClick={() => setView(v.id)}
                     className={cn(
-                      "h-11 px-5 rounded-2xl border text-[13px] font-medium inline-flex items-center gap-2 transition-all duration-180 tile-surface shrink-0",
+                      "h-11 px-3.5 sm:px-5 rounded-2xl border text-[13px] font-medium inline-flex items-center gap-2 transition-all duration-180 tile-surface shrink-0",
                       active
                         ? "border-brand text-brand"
                         : "border-transparent text-ink",
