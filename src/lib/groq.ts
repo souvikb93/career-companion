@@ -1,9 +1,11 @@
 import * as pdfjsLib from "pdfjs-dist";
-// Custom worker wrapper polyfills Promise.withResolvers (iOS Safari < 17.4)
-// BEFORE pdfjs worker code runs in the worker thread.
-import PDFWorker from "./pdf-worker.ts?worker";
-
-pdfjsLib.GlobalWorkerOptions.workerPort = new PDFWorker();
+// Run pdfjs entirely in the main thread (no Worker).
+// Importing the worker module as a side effect registers
+// globalThis.pdfjsWorker.WorkerMessageHandler, which pdfjs then uses
+// inline via a "fake worker" — avoids all mobile Worker compat issues
+// (module workers not supported on iOS < 15.4, etc).
+// Promise.withResolvers polyfill is already loaded in main.tsx.
+import "pdfjs-dist/build/pdf.worker.min.mjs";
 
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 
