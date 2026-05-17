@@ -419,8 +419,18 @@ export interface ParsedProfile {
   avatarUrl?: string;
 }
 
+function readFileAsArrayBuffer(file: File): Promise<ArrayBuffer> {
+  // file.arrayBuffer() is only available on iOS 14.5+; FileReader works everywhere
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as ArrayBuffer);
+    reader.onerror = () => reject(reader.error ?? new Error("Failed to read file"));
+    reader.readAsArrayBuffer(file);
+  });
+}
+
 async function extractTextFromPDF(file: File): Promise<string> {
-  const arrayBuffer = await file.arrayBuffer();
+  const arrayBuffer = await readFileAsArrayBuffer(file);
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
   const pages: string[] = [];
   for (let i = 1; i <= Math.min(pdf.numPages, 10); i++) {
@@ -432,7 +442,13 @@ async function extractTextFromPDF(file: File): Promise<string> {
 }
 
 async function extractTextFromDOCX(file: File): Promise<string> {
-  const text = await file.text();
+  // file.text() is only available on iOS 14.5+; use FileReader as fallback
+  const text = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(reader.error ?? new Error("Failed to read file"));
+    reader.readAsText(file);
+  });
   return text.replace(/<[^>]+>/g, " ").replace(/\s{2,}/g, " ").trim();
 }
 
