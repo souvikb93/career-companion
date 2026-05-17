@@ -1,9 +1,8 @@
 import * as pdfjsLib from "pdfjs-dist";
-import PDFWorker from "pdfjs-dist/build/pdf.worker.min.mjs?worker";
+// Custom worker wrapper polyfills Promise.withResolvers (iOS Safari < 17.4)
+// BEFORE pdfjs worker code runs in the worker thread.
+import PDFWorker from "./pdf-worker.ts?worker";
 
-// Use a Vite-managed module worker (ESM-compatible, required by pdfjs-dist v4+).
-// workerPort takes a Worker instance directly, which Vite creates with type:"module"
-// when worker.format is set to "es" in vite.config.ts.
 pdfjsLib.GlobalWorkerOptions.workerPort = new PDFWorker();
 
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
