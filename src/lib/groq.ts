@@ -432,15 +432,27 @@ function readFileAsArrayBuffer(file: File): Promise<ArrayBuffer> {
 }
 
 async function extractTextFromPDF(file: File): Promise<string> {
-  const arrayBuffer = await readFileAsArrayBuffer(file);
-  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-  const pages: string[] = [];
-  for (let i = 1; i <= Math.min(pdf.numPages, 10); i++) {
-    const page = await pdf.getPage(i);
-    const content = await page.getTextContent();
-    pages.push(content.items.map((item) => ("str" in item ? item.str : "")).join(" "));
+  let stage = "init";
+  try {
+    stage = "read-file";
+    const arrayBuffer = await readFileAsArrayBuffer(file);
+    stage = "getDocument";
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    const pages: string[] = [];
+    for (let i = 1; i <= Math.min(pdf.numPages, 10); i++) {
+      stage = `page-${i}`;
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      pages.push(content.items.map((item) => ("str" in item ? item.str : "")).join(" "));
+    }
+    return pages.join("\n");
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    const ua = typeof navigator !== "undefined" ? navigator.userAgent : "?";
+    // eslint-disable-next-line no-console
+    console.error("[PDF parse fail]", { stage, msg, ua, error: e });
+    throw new Error(`PDF parse failed at "${stage}": ${msg}`);
   }
-  return pages.join("\n");
 }
 
 async function extractTextFromDOCX(file: File): Promise<string> {

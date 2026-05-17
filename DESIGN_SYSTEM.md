@@ -95,6 +95,17 @@ All tokens are HSL custom properties in `:root`. Use the semantic Tailwind class
 - **Exit animations** should be 60–70% of the enter duration (feel faster to dismiss): enter 240ms → exit ~150ms.
 - Use `ease-out` for entering elements, `ease-in` for exiting.
 
+**Named animation utilities** (defined in `src/index.css`):
+
+| Class | Duration | Use |
+|---|---|---|
+| `.animate-panel-in` | 320ms | Modal backdrop fade-in |
+| `.animate-slide-in-right` | 560ms spring | Side panel slide-in |
+| `.animate-library-item-in` | 460ms spring | Saved-item list entrance |
+| `.animate-tip-icon-shine` | 650ms ease-out | One-shot warm glow on contextual tip icons (first appearance only) |
+
+`.animate-tip-icon-shine` — applies a `brightness` + `drop-shadow` pulse using `animation-fill-mode: forwards`, single iteration. Only attach this class when the icon is appearing for the very first time (e.g. `count === 0` from localStorage). For subsequent appearances of the same tip, render the icon without the class. Covered by the `prefers-reduced-motion` block.
+
 **Canonical scrim:** always `.modal-backdrop` — never `bg-ink/*` or raw `bg-black/*`. See §2.3 Backdrop/scrim for the full spec including dark mode values.
 
 ---
@@ -325,6 +336,21 @@ Glass modal recipe — use `.glass-modal` for the panel. **Always separate the b
 - Clicking the scrim also closes (wire `onClick` on the backdrop div).
 - Escape key support is expected (add `useEffect` keydown listener or Radix Dialog).
 
+**Progressive-disclosure tip pattern (DownloadModal):**
+
+Some modals contain a contextual tip that is only useful the first few times. Rules:
+
+- Use `localStorage` (not `sessionStorage`) to persist a display counter across sessions.
+- Show the tip for the **first 2 opens only**; hide permanently from the 3rd open onwards.
+- Key naming convention: `tracka_<feature>_tip_opens` (e.g. `tracka_download_tip_opens`).
+- Read the counter **inside the `useEffect` that fires on `open`** — not in a `useState` initializer — so it reflects the latest value if the modal is toggled multiple times.
+- On first open (`count === 0`): render tip + apply `.animate-tip-icon-shine` to the icon.
+- On second open (`count === 1`): render tip, no shine animation.
+- On third+ open (`count >= 2`): omit the tip block entirely from the DOM.
+- Icon: `<Lightbulb>` from Lucide. Colour: `text-ink dark:text-yellow-400`.
+- Tip box surface: `bg-surface-2/50 border border-line/50 rounded-xl px-3.5 py-3`.
+- Never use `Sparkles` or AI-suggestive icons for factual tips — reserve `Sparkles` for AI-generated content only.
+
 **Z-index slots:**
 | Layer | z-index | Use |
 |---|---|---|
@@ -529,6 +555,13 @@ Rules:
 - Never show more than **2 toasts stacked**. If a third fires, replace the oldest.
 - **Never** use a toast for actions that require user confirmation — use a modal.
 - Variants: `default` (neutral) and `destructive` (red). No other variants — info/warning map to `default`.
+
+**Placeholder / empty-state action guard toasts:**
+
+When a user triggers an action (e.g. download) on a document that is still in placeholder state, block the action silently then fire a `default` toast. Copy rules:
+- Title: name the state clearly (`"Placeholder letter"`).
+- Description: explain what to do, not what went wrong. Use "personalize" or "customize" — never "write" (too prescriptive). E.g. `"This is currently a placeholder letter. Please personalize it before downloading."`
+- Never use `destructive` variant — the user hasn't made an error, the content just isn't ready.
 
 ### 4.12 Loading states
 
@@ -786,6 +819,17 @@ Always use these classes — do not write `text-[13px] leading-relaxed` inline.
 - Default size 16px (`h-4 w-4`), large 20px, inline-text 14px.
 - Icon colour follows text colour — `text-ink-muted` for secondary, inherits otherwise.
 - Always include an `aria-label` on icon-only buttons (UX rule `aria-labels`).
+
+**Contextual / semantic icon colours:**
+
+| Icon | Lucide name | Light | Dark | Use |
+|---|---|---|---|---|
+| AI / generated content | `Sparkles` | `text-brand` | `text-brand` | AI-generated output, AI actions only |
+| Tip / hint | `Lightbulb` | `text-ink` | `text-yellow-400` | Factual contextual tips (non-AI) |
+
+- MUST NOT use `Sparkles` for non-AI tips or hints — it implies AI involvement.
+- MUST NOT use `Lightbulb` in brand-orange — it will be mistaken for a CTA.
+- The warm yellow (`text-yellow-400`) on `Lightbulb` is **dark mode only**. In light mode it must be `text-ink` for contrast compliance.
 
 ---
 

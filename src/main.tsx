@@ -1,4 +1,4 @@
-import "./lib/promise-with-resolvers-polyfill";
+import "./lib/legacy-webkit-polyfills";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
