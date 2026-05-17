@@ -474,9 +474,14 @@ async function extractTextFromFileServer(file: File): Promise<string> {
   const form = new FormData();
   form.append("file", file);
 
+  // Send anon key if available; function must have JWT verification disabled
+  // in Supabase dashboard (Settings → Enforce JWT Verification → OFF).
+  const authHeaders: Record<string, string> = supabaseKey
+    ? { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` }
+    : {};
   const res = await fetch(`${supabaseUrl}/functions/v1/hyper-api`, {
     method: "POST",
-    headers: supabaseKey ? { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` } : {},
+    headers: authHeaders,
     body: form,
   });
 
