@@ -112,6 +112,15 @@ export default function OnboardingPage() {
     <div className="relative min-h-screen lg:h-screen lg:overflow-hidden grid lg:grid-cols-2">
       <BackgroundGradientAnimation containerClassName="absolute inset-0" interactive={false} />
 
+      {/* Single shared file input — outside both mobile/desktop trees so the ref is always valid */}
+      <input
+        ref={fileRef}
+        type="file"
+        accept=".pdf,.docx,.doc"
+        className="hidden"
+        onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
+      />
+
       {/* ── Left panel — characters centred, logo + quote absolutely pinned (desktop) ── */}
       <div className="relative hidden lg:flex items-center justify-center p-12 overflow-hidden">
         <div className="absolute top-12 left-12 z-10 flex items-center gap-2">
@@ -163,14 +172,6 @@ export default function OnboardingPage() {
                 <p className="text-[13px] text-ink-muted mt-1">{t("onboarding.browseHintMobile")}</p>
               </div>
             </div>
-
-            <input
-              ref={fileRef}
-              type="file"
-              accept=".pdf,.docx,.doc"
-              className="hidden"
-              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
-            />
 
             <div className="flex items-center gap-3 my-7">
               <div className="flex-1 h-px bg-line/60" />
@@ -259,14 +260,6 @@ export default function OnboardingPage() {
                     <p className="text-[13px] text-ink-muted mt-1">{t("onboarding.browseHint")}</p>
                   </div>
                 </div>
-
-                <input
-                  ref={fileRef}
-                  type="file"
-                  accept=".pdf,.docx,.doc"
-                  className="hidden"
-                  onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
-                />
 
                 <div className="flex items-center gap-3 mt-6">
                   <div className="flex-1 h-px bg-line" />

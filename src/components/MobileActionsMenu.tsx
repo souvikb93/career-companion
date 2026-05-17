@@ -47,7 +47,7 @@ export function MobileActionsMenu({ onNew, onSave, onLibrary, onCustomize, onDow
         {onCustomize && (
           <DropdownMenuItem onSelect={() => { onCustomize(); setOpen(false); }}>
             <SlidersHorizontal className="h-4 w-4 text-ink-muted" />
-            Design
+            {t("design.panelTitle")}
           </DropdownMenuItem>
         )}
 
@@ -56,7 +56,7 @@ export function MobileActionsMenu({ onNew, onSave, onLibrary, onCustomize, onDow
         {onDownload && (
           <DropdownMenuItem onSelect={() => { onDownload(); setOpen(false); }}>
             <Download className="h-4 w-4 text-ink-muted" />
-            Download PDF
+            {t("common.download")}
           </DropdownMenuItem>
         )}
         <DropdownMenuItem onSelect={() => { onLibrary(); setOpen(false); }}>
