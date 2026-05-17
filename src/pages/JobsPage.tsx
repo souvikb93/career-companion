@@ -40,6 +40,8 @@ export default function JobsPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const openDelayRef = useRef<ReturnType<typeof setTimeout>>();
+  const filterScrollRef = useRef<HTMLDivElement>(null);
+  const [filterFade, setFilterFade] = useState(true);
 
   const handleJobAdded = useCallback((job: Job) => {
     if (openDelayRef.current) clearTimeout(openDelayRef.current);
@@ -47,6 +49,19 @@ export default function JobsPage() {
   }, []);
 
   useEffect(() => () => { if (openDelayRef.current) clearTimeout(openDelayRef.current); }, []);
+
+  // Show fade only when there's more content to scroll to on the right
+  const checkFilterFade = useCallback(() => {
+    const el = filterScrollRef.current;
+    if (!el) return;
+    setFilterFade(el.scrollLeft + el.clientWidth < el.scrollWidth - 8);
+  }, []);
+
+  useEffect(() => {
+    checkFilterFade();
+    window.addEventListener("resize", checkFilterFade);
+    return () => window.removeEventListener("resize", checkFilterFade);
+  }, [checkFilterFade]);
 
 
   const counts = useMemo(() => {
@@ -81,10 +96,75 @@ export default function JobsPage() {
       />
 
       <main className="relative w-full min-w-0 p-4 sm:p-8">
-        <h1 className="heading-1 mb-6">{t("tracker.pageTitle")}</h1>
-        {/* Single toolbar row: pipeline view chips + search + add */}
-        <div className="flex flex-wrap items-center gap-3 mb-6">
-          <div className="flex flex-nowrap lg:flex-wrap items-center gap-2 flex-1 min-w-0 overflow-x-auto scrollbar-hide">
+        <h1 className="heading-1 mb-5">{t("tracker.pageTitle")}</h1>
+
+        {/* ── MOBILE toolbar (below lg) ─────────────────────────────────── */}
+        <div className="lg:hidden mb-5 space-y-3">
+          {/* Edge-to-edge filter strip */}
+          <div className="relative -mx-4 sm:-mx-8">
+            <div
+              ref={filterScrollRef}
+              onScroll={checkFilterFade}
+              className="flex flex-nowrap items-center gap-3 overflow-x-auto scrollbar-hide px-4 sm:px-8 pr-10 sm:pr-14 py-0.5"
+            >
+              {PIPELINE_VIEWS.map((v) => {
+                const active = view === v.id;
+                return (
+                  <button
+                    key={v.id}
+                    type="button"
+                    onClick={() => setView(v.id)}
+                    className={cn(
+                      "h-11 px-5 rounded-2xl border text-[13px] font-medium inline-flex items-center gap-2 transition-all duration-180 tile-surface shrink-0",
+                      active
+                        ? "border-brand text-brand"
+                        : "border-transparent text-ink",
+                    )}
+                  >
+                    <span>{t(`pipeline.${v.id}`)}</span>
+                    <span className={cn("text-[12px]", active ? "text-brand" : "text-ink-muted")}>
+                      {counts[v.id]}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            {/* Right-edge fade — only visible when more content exists to the right */}
+            <div
+              aria-hidden
+              className={cn(
+                "pointer-events-none absolute right-0 inset-y-0 w-14 transition-opacity duration-200",
+                filterFade ? "opacity-100" : "opacity-0"
+              )}
+              style={{ background: "linear-gradient(to left, rgb(var(--glass-tint) / 0.88), transparent)" }}
+            />
+          </div>
+
+          {/* Search row */}
+          <div className="flex items-center gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-muted z-10" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder={t("tracker.searchPlaceholder")}
+                className="glass-input pl-10 pr-4 h-11 w-full"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => setAddOpen(true)}
+              aria-label={t("tracker.addJob")}
+              className="hidden sm:grid h-11 w-11 rounded-xl btn-icon-primary shadow-lg shadow-ink/10 shrink-0"
+            >
+              <Plus className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+
+        {/* ── DESKTOP toolbar (lg+) ─────────────────────────────────────── */}
+        <div className="hidden lg:flex flex-wrap items-center gap-3 mb-6">
+          <div className="flex flex-wrap items-center gap-3 flex-1 min-w-0">
             {PIPELINE_VIEWS.map((v) => {
               const active = view === v.id;
               return (
@@ -93,7 +173,7 @@ export default function JobsPage() {
                   type="button"
                   onClick={() => setView(v.id)}
                   className={cn(
-                    "h-10 px-4 rounded-2xl border text-[13px] font-medium inline-flex items-center gap-2 transition-all duration-180 tile-surface shrink-0",
+                    "h-11 px-5 rounded-2xl border text-[13px] font-medium inline-flex items-center gap-2 transition-all duration-180 tile-surface shrink-0",
                     active
                       ? "border-brand text-brand"
                       : "border-transparent text-ink hover:border-brand/25",
@@ -107,7 +187,7 @@ export default function JobsPage() {
               );
             })}
           </div>
-          <div className="relative w-full sm:w-[260px]">
+          <div className="relative w-[260px]">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-muted z-10" />
             <input
               value={query}
@@ -120,7 +200,7 @@ export default function JobsPage() {
             type="button"
             onClick={() => setAddOpen(true)}
             aria-label={t("tracker.addJob")}
-            className="hidden sm:grid h-12 w-12 rounded-xl btn-icon-primary shadow-lg shadow-ink/10"
+            className="h-12 w-12 rounded-xl btn-icon-primary shadow-lg shadow-ink/10 grid place-items-center"
           >
             <Plus className="h-5 w-5" />
           </button>

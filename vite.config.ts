@@ -17,4 +17,8 @@ export default defineConfig(() => ({
     },
     dedupe: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime", "@tanstack/react-query", "@tanstack/query-core"],
   },
+  // Required for pdfjs-dist v4+ which ships ESM-only workers
+  worker: {
+    format: "es",
+  },
 }));

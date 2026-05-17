@@ -1,7 +1,10 @@
 import * as pdfjsLib from "pdfjs-dist";
-import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
+import PDFWorker from "pdfjs-dist/build/pdf.worker.min.mjs?worker";
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
+// Use a Vite-managed module worker (ESM-compatible, required by pdfjs-dist v4+).
+// workerPort takes a Worker instance directly, which Vite creates with type:"module"
+// when worker.format is set to "es" in vite.config.ts.
+pdfjsLib.GlobalWorkerOptions.workerPort = new PDFWorker();
 
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 
