@@ -40,29 +40,12 @@ export default function JobsPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const openDelayRef = useRef<ReturnType<typeof setTimeout>>();
-  const filterScrollRef = useRef<HTMLDivElement>(null);
-  const [filterFade, setFilterFade] = useState(true);
-
   const handleJobAdded = useCallback((job: Job) => {
     if (openDelayRef.current) clearTimeout(openDelayRef.current);
     openDelayRef.current = setTimeout(() => setSelectedId(job.id), 80);
   }, []);
 
   useEffect(() => () => { if (openDelayRef.current) clearTimeout(openDelayRef.current); }, []);
-
-  // Show fade only when there's more content to scroll to on the right
-  const checkFilterFade = useCallback(() => {
-    const el = filterScrollRef.current;
-    if (!el) return;
-    setFilterFade(el.scrollLeft + el.clientWidth < el.scrollWidth - 8);
-  }, []);
-
-  useEffect(() => {
-    checkFilterFade();
-    window.addEventListener("resize", checkFilterFade);
-    return () => window.removeEventListener("resize", checkFilterFade);
-  }, [checkFilterFade]);
-
 
   const counts = useMemo(() => {
     const c: Record<PipelineView, number> = {
@@ -101,12 +84,8 @@ export default function JobsPage() {
         {/* ── MOBILE toolbar (below lg) ─────────────────────────────────── */}
         <div className="lg:hidden mb-5 space-y-3">
           {/* Edge-to-edge filter strip */}
-          <div className="relative -mx-4 sm:-mx-8">
-            <div
-              ref={filterScrollRef}
-              onScroll={checkFilterFade}
-              className="flex flex-nowrap items-center gap-3 overflow-x-auto scrollbar-hide px-4 sm:px-8 pr-10 sm:pr-14 py-0.5"
-            >
+          <div className="-mx-4 sm:-mx-8">
+            <div className="flex flex-nowrap items-center gap-3 overflow-x-auto scrollbar-hide px-4 sm:px-8 pr-4 sm:pr-8 py-0.5">
               {PIPELINE_VIEWS.map((v) => {
                 const active = view === v.id;
                 return (
@@ -129,15 +108,6 @@ export default function JobsPage() {
                 );
               })}
             </div>
-            {/* Right-edge fade — only visible when more content exists to the right */}
-            <div
-              aria-hidden
-              className={cn(
-                "pointer-events-none absolute right-0 inset-y-0 w-14 transition-opacity duration-200",
-                filterFade ? "opacity-100" : "opacity-0"
-              )}
-              style={{ background: "linear-gradient(to left, rgb(var(--glass-tint) / 0.88), transparent)" }}
-            />
           </div>
 
           {/* Search row */}
