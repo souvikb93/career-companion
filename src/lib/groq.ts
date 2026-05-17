@@ -502,8 +502,8 @@ async function extractTextFromPDF(file: File): Promise<string> {
     } catch (serverErr) {
       // eslint-disable-next-line no-console
       console.error("[server PDF parse also failed]", serverErr);
-      // Surface the more useful client error for diagnostics
-      throw clientErr;
+      const serverMsg = serverErr instanceof Error ? serverErr.message : String(serverErr);
+      throw new Error(`Client: ${clientErr instanceof Error ? clientErr.message : clientErr} | Server: ${serverMsg}`);
     }
   }
 }
