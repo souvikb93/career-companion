@@ -431,7 +431,11 @@ function readFileAsArrayBuffer(file: File): Promise<ArrayBuffer> {
   });
 }
 
-async function extractTextFromPDF(file: File): Promise<string> {
+// Client-side PDF text extraction via pdfjs. Works on modern desktop
+// browsers. Fails on older iOS WebKit (mobile Safari/Chrome on older
+// iPhones) because pdfjs-dist v5 calls JS APIs that iOS WebKit < 16.4
+// is missing. When this throws, callers fall back to the server.
+async function extractTextFromPDFClient(file: File): Promise<string> {
   let stage = "init";
   try {
     stage = "read-file";
@@ -439,8 +443,6 @@ async function extractTextFromPDF(file: File): Promise<string> {
     stage = "getDocument";
     const pdf = await pdfjsLib.getDocument({
       data: arrayBuffer,
-      // Minimise feature surface so pdfjs doesn't hit modern-only APIs
-      // on older iOS WebKit. We only need raw text.
       disableFontFace: true,
       useSystemFonts: false,
       isEvalSupported: false,
@@ -457,22 +459,73 @@ async function extractTextFromPDF(file: File): Promise<string> {
     return pages.join("\n");
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
-    const ua = typeof navigator !== "undefined" ? navigator.userAgent : "?";
-    // eslint-disable-next-line no-console
-    console.error("[PDF parse fail]", { stage, msg, ua, error: e });
     throw new Error(`PDF parse failed at "${stage}": ${msg}`);
   }
 }
 
-async function extractTextFromDOCX(file: File): Promise<string> {
-  // file.text() is only available on iOS 14.5+; use FileReader as fallback
-  const text = await new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = () => reject(reader.error ?? new Error("Failed to read file"));
-    reader.readAsText(file);
+// Server-side fallback via Supabase edge function `parse-cv`. Runs in
+// Deno on Vercel/Supabase infra — has every modern JS API pdfjs needs.
+// Used when the client path fails (older iOS WebKit).
+async function extractTextFromFileServer(file: File): Promise<string> {
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  if (!supabaseUrl) throw new Error("VITE_SUPABASE_URL not configured");
+
+  const form = new FormData();
+  form.append("file", file);
+
+  const res = await fetch(`${supabaseUrl}/functions/v1/parse-cv`, {
+    method: "POST",
+    headers: supabaseKey ? { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` } : {},
+    body: form,
   });
-  return text.replace(/<[^>]+>/g, " ").replace(/\s{2,}/g, " ").trim();
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error((err as { error?: string })?.error || `Server parse failed (${res.status})`);
+  }
+  const { text } = (await res.json()) as { text: string };
+  if (!text || !text.trim()) throw new Error("Server returned empty text");
+  return text;
+}
+
+// Top-level: try client first (fast, free on desktop), fall back to
+// server (covers older iOS WebKit that breaks pdfjs internals).
+async function extractTextFromPDF(file: File): Promise<string> {
+  try {
+    return await extractTextFromPDFClient(file);
+  } catch (clientErr) {
+    // eslint-disable-next-line no-console
+    console.warn("[client PDF parse failed, trying server]", clientErr);
+    try {
+      return await extractTextFromFileServer(file);
+    } catch (serverErr) {
+      // eslint-disable-next-line no-console
+      console.error("[server PDF parse also failed]", serverErr);
+      // Surface the more useful client error for diagnostics
+      throw clientErr;
+    }
+  }
+}
+
+async function extractTextFromDOCX(file: File): Promise<string> {
+  // Client-side DOCX is naive (just strip XML tags from raw bytes). On
+  // failure or empty result, fall back to server.
+  try {
+    const text = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => reject(reader.error ?? new Error("Failed to read file"));
+      reader.readAsText(file);
+    });
+    const cleaned = text.replace(/<[^>]+>/g, " ").replace(/\s{2,}/g, " ").trim();
+    if (!cleaned) throw new Error("Empty DOCX text");
+    return cleaned;
+  } catch (clientErr) {
+    // eslint-disable-next-line no-console
+    console.warn("[client DOCX parse failed, trying server]", clientErr);
+    return await extractTextFromFileServer(file);
+  }
 }
 
 export async function parseCVFile(file: File): Promise<ParsedProfile> {
