@@ -437,7 +437,16 @@ async function extractTextFromPDF(file: File): Promise<string> {
     stage = "read-file";
     const arrayBuffer = await readFileAsArrayBuffer(file);
     stage = "getDocument";
-    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    const pdf = await pdfjsLib.getDocument({
+      data: arrayBuffer,
+      // Minimise feature surface so pdfjs doesn't hit modern-only APIs
+      // on older iOS WebKit. We only need raw text.
+      disableFontFace: true,
+      useSystemFonts: false,
+      isEvalSupported: false,
+      disableAutoFetch: true,
+      disableStream: true,
+    }).promise;
     const pages: string[] = [];
     for (let i = 1; i <= Math.min(pdf.numPages, 10); i++) {
       stage = `page-${i}`;
