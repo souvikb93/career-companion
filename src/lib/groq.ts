@@ -474,7 +474,7 @@ async function extractTextFromFileServer(file: File): Promise<string> {
   const form = new FormData();
   form.append("file", file);
 
-  const res = await fetch(`${supabaseUrl}/functions/v1/parse-cv`, {
+  const res = await fetch(`${supabaseUrl}/functions/v1/hyper-api`, {
     method: "POST",
     headers: supabaseKey ? { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` } : {},
     body: form,
