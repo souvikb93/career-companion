@@ -467,15 +467,28 @@ async function extractTextFromDOCX(file: File): Promise<string> {
 }
 
 export async function parseCVFile(file: File): Promise<ParsedProfile> {
-  let text = "";
-  if (file.type === "application/pdf" || file.name.endsWith(".pdf")) {
-    text = await extractTextFromPDF(file);
-  } else {
-    text = await extractTextFromDOCX(file);
+  let stage = "init";
+  try {
+    let text = "";
+    stage = "extract";
+    if (file.type === "application/pdf" || file.name.endsWith(".pdf")) {
+      text = await extractTextFromPDF(file);
+    } else {
+      text = await extractTextFromDOCX(file);
+    }
+
+    if (!text.trim()) throw new Error("Could not extract text from this file. Please try a different CV.");
+    stage = "ai-parse";
+    return await aiExtractProfile(text);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    // eslint-disable-next-line no-console
+    console.error("[parseCVFile fail]", { stage, msg, error: e, stack: e instanceof Error ? e.stack : null });
+    throw new Error(`CV parse failed @ ${stage}: ${msg}`);
   }
+}
 
-  if (!text.trim()) throw new Error("Could not extract text from this file. Please try a different CV.");
-
+async function aiExtractProfile(text: string): Promise<ParsedProfile> {
   const uid = () => Math.random().toString(36).slice(2, 9);
 
   const prompt = `Extract structured profile information from this CV text. Return ONLY valid JSON with no markdown.
