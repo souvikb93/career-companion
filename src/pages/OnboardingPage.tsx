@@ -45,6 +45,7 @@ export default function OnboardingPage() {
   const [dragOver, setDragOver] = useState(false);
   const [doneSteps, setDoneSteps] = useState<number[]>([]);
   const [activeStep, setActiveStep] = useState(-1);
+  const [uploadFailCount, setUploadFailCount] = useState(0);
 
   const update = <K extends keyof ParsedProfile>(k: K, v: ParsedProfile[K]) =>
     setProfile((p) => ({ ...p, [k]: v }));
@@ -63,7 +64,7 @@ export default function OnboardingPage() {
       const parsed = await parseCVFile(file);
       clearTimeout(t1);
       clearTimeout(t2);
-      // Ensure steps 0+1 are done and step 2 has been spinning for at least 400ms
+      setUploadFailCount(0);
       setDoneSteps([0, 1]);
       setActiveStep(2);
       await new Promise((r) => setTimeout(r, 500));
@@ -75,10 +76,30 @@ export default function OnboardingPage() {
     } catch (e) {
       clearTimeout(t1);
       clearTimeout(t2);
-      toast.error(e instanceof Error ? e.message : t("onboarding.cantParse"));
       setDoneSteps([]);
       setActiveStep(-1);
       setStep("upload");
+
+      const newFailCount = uploadFailCount + 1;
+      setUploadFailCount(newFailCount);
+
+      // Categorise the error for a human-friendly message
+      const raw = (e instanceof Error ? e.message : String(e)).toLowerCase();
+      const isUnsupportedFormat = /unsupported|format|type|docx|pdf/i.test(raw) && !/parse|extract|text/i.test(raw);
+      const isEmpty = /empty|no text|0 byte/i.test(raw);
+
+      let msg: string;
+      if (newFailCount >= 2) {
+        msg = t("onboarding.cantParseRetry");
+      } else if (isUnsupportedFormat) {
+        msg = t("onboarding.cantParseFormat");
+      } else if (isEmpty) {
+        msg = t("onboarding.cantParseEmpty");
+      } else {
+        msg = t("onboarding.cantParseFirst");
+      }
+
+      toast.error(msg, { duration: 6000 });
     }
   };
 
@@ -283,7 +304,7 @@ export default function OnboardingPage() {
               <div className="text-center py-8">
                 <h1 className="text-[26px] font-semibold text-ink mb-2">{t("onboarding.readingTitle")}</h1>
                 <p className="text-[14px] text-ink-muted mb-10">{t("onboarding.readingDesc")}</p>
-                <div className="space-y-5 text-left max-w-xs mx-auto">
+                <div className="space-y-5 inline-block text-left">
                   {[t("onboarding.step1"), t("onboarding.step2"), t("onboarding.step3")].map((label, i) => {
                     const done  = doneSteps.includes(i);
                     const active = activeStep === i;

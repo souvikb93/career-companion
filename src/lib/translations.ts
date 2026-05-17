@@ -376,6 +376,10 @@ export const TRANSLATIONS = {
       title: "Title",
       failedSave: "Failed to save profile. Please try again.",
       cantParse: "Could not parse CV",
+      cantParseFirst: "This file could not be processed. Please make sure it's a valid resume in PDF or DOCX format.",
+      cantParseFormat: "That file type isn't supported. Please upload your CV as a PDF or DOCX file.",
+      cantParseEmpty: "This file appears to be empty or contains no readable text. Try a different version of your CV.",
+      cantParseRetry: "Sorry, this still isn't working. You can fill in your information manually instead — it only takes a minute.",
     },
     notFound: {
       title: "404",
@@ -951,6 +955,10 @@ export const TRANSLATIONS = {
       title: "Titel",
       failedSave: "Profil konnte nicht gespeichert werden. Bitte erneut versuchen.",
       cantParse: "Lebenslauf konnte nicht verarbeitet werden",
+      cantParseFirst: "Diese Datei konnte nicht verarbeitet werden. Bitte stelle sicher, dass es ein gültiger Lebenslauf im PDF- oder DOCX-Format ist.",
+      cantParseFormat: "Dieses Dateiformat wird nicht unterstützt. Bitte lade deinen Lebenslauf als PDF oder DOCX hoch.",
+      cantParseEmpty: "Diese Datei scheint leer zu sein oder enthält keinen lesbaren Text. Versuche eine andere Version deines Lebenslaufs.",
+      cantParseRetry: "Es tut uns leid, das funktioniert leider immer noch nicht. Du kannst deine Daten auch manuell eingeben — das dauert nur eine Minute.",
     },
     notFound: {
       title: "404",
