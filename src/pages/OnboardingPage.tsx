@@ -9,6 +9,7 @@ import { parseCVFile, type ParsedProfile } from "@/lib/groq";
 import { useProfile, EMPTY_PROFILE } from "@/lib/profile-store";
 import { AuthCharacters } from "@/components/AuthCharacters";
 import { BackgroundGradientAnimation } from "@/components/BackgroundGradientAnimation";
+import { MobileNavBar } from "@/components/MobileNavBar";
 import { useT } from "@/lib/i18n";
 import { toast } from "sonner";
 import logo from "@/assets/logo.svg";
@@ -164,15 +165,14 @@ export default function OnboardingPage() {
       {step === "upload" && (
         <div className="relative flex flex-col min-h-screen lg:hidden">
           {/* Top bar */}
-          <div className="sticky top-0 z-20 flex items-center justify-between px-6 h-14 border-b border-white/30 bg-white/50 backdrop-blur-md shrink-0">
-            <div className="flex items-center gap-2">
-              <img src={logo} alt="Tracka" className="h-7 w-7" />
-              <span className="logo-wordmark text-[20px] leading-none text-ink">tracka</span>
-            </div>
-            <button onClick={skip} className="text-[13px] text-ink-muted hover:text-ink hover:underline underline-offset-2 transition-colors">
-              {t("onboarding.skip")}
-            </button>
-          </div>
+          <MobileNavBar
+            logoLink={false}
+            right={
+              <button onClick={skip} className="text-[13px] text-ink-muted hover:text-ink hover:underline underline-offset-2 transition-colors">
+                {t("onboarding.skip")}
+              </button>
+            }
+          />
 
           {/* Form — takes only natural height */}
           <div className="shrink-0 px-8 pt-10 pb-4">
@@ -228,17 +228,14 @@ export default function OnboardingPage() {
       )}>
 
         {/* Top bar — mobile only (desktop has logo on left panel) */}
-        <div className="sticky top-0 z-20 flex items-center justify-between px-6 sm:px-10 h-14 border-b border-white/30 bg-white/60 backdrop-blur-xl glass-page-topbar shrink-0 lg:hidden">
-          <div className="flex items-center gap-2">
-            <img src={logo} alt="Tracka" className="h-7 w-7" />
-            <span className="logo-wordmark text-[20px] leading-none text-ink">tracka</span>
-          </div>
-          {step !== "parsing" && (
+        <MobileNavBar
+          logoLink={false}
+          right={step !== "parsing" ? (
             <button onClick={skip} className="text-[13px] text-ink-muted hover:text-ink hover:underline underline-offset-2 transition-colors">
               {t("onboarding.skip")}
             </button>
-          )}
-        </div>
+          ) : undefined}
+        />
         {/* Desktop skip — just the link, top-right of right panel */}
         {step !== "parsing" && (
           <div className="hidden lg:flex justify-end px-10 pt-6 shrink-0">

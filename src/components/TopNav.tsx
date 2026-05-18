@@ -10,6 +10,7 @@ import { useProfile } from "@/lib/profile-store";
 import { toast } from "sonner";
 import { LanguageToggle } from "./LanguageToggle";
 import { Avatar } from "./Avatar";
+import { MobileNavBar } from "./MobileNavBar";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -155,13 +156,8 @@ export function TopNav() {
       </header>
 
       {/* ── Mobile header ── */}
-      <header className="sticky top-0 z-40 w-full glass-nav lg:hidden">
-        <div className="h-16 px-4 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
-            <img src={logo} alt="Tracka logo" className="h-10 w-10" />
-            <span className="logo-wordmark text-[28px] leading-none text-ink">tracka</span>
-          </Link>
-
+      <MobileNavBar
+        right={
           <button
             type="button"
             onClick={() => setDrawerOpen(true)}
@@ -170,8 +166,8 @@ export function TopNav() {
           >
             <Menu className="h-5 w-5" />
           </button>
-        </div>
-      </header>
+        }
+      />
 
       {/* ── Slide-in drawer (mobile + desktop) ── */}
       {drawerOpen && (

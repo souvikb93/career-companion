@@ -22,7 +22,7 @@ export function LanguageToggle() {
             onClick={() => setLang(o.value)}
             aria-pressed={active}
             className={cn(
-              "h-8 px-3 rounded-full text-[12px] font-semibold transition-colors duration-200",
+              "h-7 px-2.5 rounded-full text-[11px] font-medium tracking-wide transition-colors duration-200",
               active ? "bg-ink text-white nav-item-active" : "text-ink-muted hover:text-ink",
             )}
           >

@@ -12,6 +12,7 @@ import { AuthCharacters } from "@/components/AuthCharacters";
 import { BackgroundGradientAnimation } from "@/components/BackgroundGradientAnimation";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { ThemeDevToggle } from "@/components/TopNav";
+import { MobileNavBar } from "@/components/MobileNavBar";
 import { useT } from "@/lib/i18n";
 import logo from "@/assets/logo.svg";
 
@@ -225,16 +226,15 @@ export default function AuthPage() {
         {/* ── Right — card centred, language toggle absolutely pinned ── */}
         <div className="relative flex flex-col bg-white/30 backdrop-blur-md glass-page-panel overflow-hidden">
           {/* Mobile top bar */}
-          <div className="lg:hidden sticky top-0 z-10 flex items-center justify-between px-6 h-14 bg-white/50 backdrop-blur-md border-b border-white/30 glass-page-topbar shrink-0">
-            <div className="flex items-center gap-2">
-              <img src={logo} alt="Tracka" className="h-7 w-7" />
-              <span className="logo-wordmark text-[20px] leading-none text-ink">tracka</span>
-            </div>
-            <div className="flex items-center gap-4">
-              <ThemeDevToggle />
-              <LanguageToggle />
-            </div>
-          </div>
+          <MobileNavBar
+            logoLink={false}
+            right={
+              <>
+                <ThemeDevToggle />
+                <LanguageToggle />
+              </>
+            }
+          />
 
           {/* Desktop language toggle */}
           <div className="hidden lg:flex items-center gap-4 absolute top-12 right-12 z-10">
