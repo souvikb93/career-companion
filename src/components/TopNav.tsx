@@ -23,6 +23,7 @@ export function TopNav() {
     { to: "/", label: t("nav.tracker"), end: true },
     { to: "/cv", label: t("nav.resume") },
     { to: "/cover-letter", label: t("nav.letters") },
+    { to: "/lab/notlex", label: "Lab" },
   ];
 
   const MENU = [

@@ -17,6 +17,7 @@ import AIModelPage from "./pages/AIModelPage";
 import SettingsPage from "./pages/SettingsPage";
 import SupportPage from "./pages/SupportPage";
 import NotFound from "./pages/NotFound.tsx";
+import NotlexPage from "./lab/notlex/NotlexPage";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,7 @@ const App = () => (
             <JobsProvider>
               <Routes>
                 <Route path="/auth" element={<AuthPage />} />
+                <Route path="/lab/notlex" element={<NotlexPage />} />
                 <Route
                   element={
                     <ProtectedRoute>
